@@ -1,0 +1,6 @@
+[submodule "mlir-aie"]
+	path = mlir-aie
+	url = https://github.com/ueqri/mlir-aie.git
+[submodule "npu-pnr"]
+	path = npu-pnr
+	url = https://github.com/ueqri/npu-pnr.git
