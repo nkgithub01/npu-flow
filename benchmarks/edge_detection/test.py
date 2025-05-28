@@ -18,9 +18,9 @@ def edge_detect(in_image):
     image_filtered = cv2.filter2D(in_gray, -1, kernel, borderType=cv2.BORDER_REPLICATE)
     _, image_thresh = cv2.threshold(image_filtered, 10, 255, cv2.THRESH_BINARY)
     image_thresh_bgr = cv2.cvtColor(image_thresh, cv2.COLOR_GRAY2RGBA)
-    alpha = 1.0;
-    beta = 1.0;
-    gamma = 0.0;
+    alpha = 1.0
+    beta = 1.0
+    gamma = 0.0
     out_image = cv2.addWeighted(image_thresh_bgr, alpha, in_image, beta, gamma)
     return out_image
 
@@ -51,6 +51,10 @@ def main(opts):
     log_folder = "log/"
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
+
+    output_folder = "output/"
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
 
     output_file = opts.outfile
     
@@ -139,10 +143,10 @@ def main(opts):
     output_image_1 = cv2.cvtColor(output_image_1, cv2.COLOR_RGBA2BGR)
     output_image_2 = cv2.cvtColor(output_image_2, cv2.COLOR_RGBA2BGR)
     output_image_3 = cv2.cvtColor(output_image_3, cv2.COLOR_RGBA2BGR)
-    cv2.imwrite(f"golden_{output_file}", golden_output_image)
-    cv2.imwrite(f"Col_1_{output_file}", output_image_1)
-    cv2.imwrite(f"Col_2_{output_file}", output_image_2)
-    cv2.imwrite(f"Col_3_{output_file}", output_image_3)
+    cv2.imwrite(output_folder + f"golden_{output_file}", golden_output_image)
+    cv2.imwrite(output_folder + f"Col_1_{output_file}", output_image_1)
+    cv2.imwrite(output_folder + f"Col_2_{output_file}", output_image_2)
+    cv2.imwrite(output_folder + f"Col_3_{output_file}", output_image_3)
     
     _, output_1_L1_error = image_compare(output_image_1, golden_output_image)
     _, output_2_L1_error = image_compare(output_image_2, golden_output_image)

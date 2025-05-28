@@ -1,25 +1,15 @@
-##===- Makefile -----------------------------------------------------------===##
-# 
-# This file licensed under the Apache License v2.0 with LLVM Exceptions.
-# See https://llvm.org/LICENSE.txt for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-# 
-##===----------------------------------------------------------------------===##
-
 srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-include ${srcdir}/../../makefile-common
+include ${srcdir}/../makefile-common
 
-VPATH := ${srcdir}/../../../aie_kernels/aie2
-
-device ?= $(if $(filter 1,$(NPU2)),npu2,npu)
+device = npu2
 EDGEDETECT_WIDTH = 1920
 EDGEDETECT_HEIGHT = 1080
 
 targetname = edge_detect
 
 aie_py_src=${targetname}.py
-use_placed?=0
+use_placed?=1
 
 ifeq (${use_placed}, 1)
 aie_py_src=${targetname}_placed.py
@@ -29,11 +19,9 @@ all: build/final_${EDGEDETECT_WIDTH}.xclbin
 
 mlir: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir
 
-build/%.cc.o: %.cc
+build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc
 	mkdir -p ${@D}
-ifeq ($(device),npu)
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
-else ifeq ($(device),npu2)
+ifeq ($(device),npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
 else
 	echo "Device type not supported"
@@ -53,22 +41,8 @@ build/final_${EDGEDETECT_WIDTH}.xclbin: build/aie2_lineBased_8b_${EDGEDETECT_WID
 		--no-xchesscc --no-xbridge \
 		--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
-${targetname}.exe: ${srcdir}/test.cpp
-	rm -rf _build
-	mkdir -p _build
-	cd _build && ${powershell} cmake `${getwslpath} ${srcdir}` -DTARGET_NAME=${targetname} -DEDGEDETECT_WIDTH=${EDGEDETECT_WIDTH} -DEDGEDETECT_HEIGHT=${EDGEDETECT_HEIGHT} -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
-	cd _build && ${powershell} cmake --build . --config Release
-ifeq "${powershell}" "powershell.exe"
-	cp _build/${targetname}.exe $@
-else
-	cp _build/${targetname} $@ 
-endif
-
-run: ${targetname}.exe build/final_${EDGEDETECT_WIDTH}.xclbin
-	${powershell} ./$< -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --image "${srcdir}/input_image.jpg"
-
 run_py: build/final_${EDGEDETECT_WIDTH}.xclbin
-	${powershell} python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --width=${EDGEDETECT_WIDTH} --height=${EDGEDETECT_HEIGHT} --image="${srcdir}/input_image.jpg"
+	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --width=${EDGEDETECT_WIDTH} --height=${EDGEDETECT_HEIGHT} --image="${srcdir}/input_image.jpg"
 
 clean:
 	rm -rf build _build ${targetname}.exe ${targetname}Out_test.jpg

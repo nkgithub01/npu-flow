@@ -294,9 +294,7 @@ def edge_detect(dev, width, height):
 
 try:
     device_name = str(sys.argv[1])
-    if device_name == "npu":
-        dev = AIEDevice.npu1_1col
-    elif device_name == "npu2":
+    if device_name == "npu2":
         dev = AIEDevice.npu2
     else:
         raise ValueError("[ERROR] Device name {} is unknown".format(sys.argv[1]))
