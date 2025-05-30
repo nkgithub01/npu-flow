@@ -13,7 +13,7 @@ from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
-
+from aie.helpers.taplib import TensorAccessPattern
 
 def edge_detect(image_width, image_height):
     num_compute_flow_column = 3
@@ -273,16 +273,16 @@ def edge_detect(image_width, image_height):
         rt.start(*workers)
         shim = Tile(0,0)
         rt.fill(inOF_L3L2s[0].prod(), I1, placement=shim)
-        rt.drain(outOF_L2L3s[0].cons(), O, wait=True, placement=shim)
+        rt.drain(outOF_L2L3s[0].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=0*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
         shim = Tile(1,0)
         rt.fill(inOF_L3L2s[1].prod(), I2, placement=shim)
-        rt.drain(outOF_L2L3s[1].cons(), O, wait=True, placement=shim)
+        rt.drain(outOF_L2L3s[1].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=1*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
         shim = Tile(2,0)
         rt.fill(inOF_L3L2s[2].prod(), I2, placement=shim)
-        rt.drain(outOF_L2L3s[2].cons(), O, wait=True, placement=shim)
+        rt.drain(outOF_L2L3s[2].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=2*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(NPU2, rt).resolve_program(SequentialPlacer())
+    return Program(NPU2(), rt).resolve_program(SequentialPlacer())
 
 
 if __name__ == "__main__":
