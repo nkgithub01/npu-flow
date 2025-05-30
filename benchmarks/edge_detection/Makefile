@@ -6,7 +6,9 @@ targetname = edge_detect
 aie_py_src=${targetname}.py
 
 use_placed?=1
-ifeq (${use_placed}, 1)
+ifeq (${use_placed}, 0)
+aie_py_src=${targetname}.py
+else ifeq (${use_placed}, 1)
 aie_py_src=${targetname}_placed.py
 endif
 
@@ -29,11 +31,11 @@ build/combined_gray2rgba_addWeighted.a: build/gray2rgba.cc.o build/addWeighted.c
 
 build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< -wd ${EDGEDETECT_WIDTH} -ht ${EDGEDETECT_HEIGHT} > $@
+	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} > $@
 
 build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< -wd ${EDGEDETECT_WIDTH} -ht ${EDGEDETECT_HEIGHT} -t ${trace_size}> $@
+	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -t ${trace_size}> $@
 
 build/final_${EDGEDETECT_WIDTH}.xclbin: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
 	mkdir -p ${@D}
@@ -49,12 +51,12 @@ build/final_trace_${EDGEDETECT_WIDTH}.xclbin: build/aie2_trace_lineBased_8b_${ED
 
 run: build/final_${EDGEDETECT_WIDTH}.xclbin
 	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${iters} \
-			-wd ${EDGEDETECT_WIDTH} -ht ${EDGEDETECT_HEIGHT} --image "${srcdir}/input_image.jpg" 
+			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} --image "${srcdir}/input_image.jpg" 
 
 run_trace: build/final_trace_${EDGEDETECT_WIDTH}.xclbin
 	@mkdir -p trace
 	python3 ${srcdir}/test.py -x build/final_trace_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${iters} \
-			-wd ${EDGEDETECT_WIDTH} -ht ${EDGEDETECT_HEIGHT} --image "${srcdir}/input_image.jpg" \
+			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} --image "${srcdir}/input_image.jpg" \
 			-t ${trace_size} --trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt

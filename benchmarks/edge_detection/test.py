@@ -38,9 +38,8 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Program arguments parsing
     # -----------------------------------------------------------------------------------
-    testImageWidth = int(opts.width)
-    testImageHeight = int(opts.height)
-    testImageSize = testImageWidth * testImageHeight
+    test_image_width = int(opts.image_width)
+    test_image_height = int(opts.image_height)
     epsilon = 2.0
     
     xclbin_path = opts.xclbin
@@ -54,8 +53,6 @@ def main(opts):
 
     num_iter = opts.iters
     npu_time_total = 0
-    npu_time_min = 9999999
-    npu_time_max = 0
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
 
@@ -65,8 +62,8 @@ def main(opts):
     if opts.image != '':
         in_image = cv2.imread(opts.image)
     else:
-        in_image = np.random.randint(0, 256, (testImageWidth, testImageHeight, 4), dtype=np.uint8)
-    in_image = cv2.resize(in_image, (testImageWidth, testImageHeight))
+        in_image = np.random.randint(0, 256, (test_image_width, test_image_height, 4), dtype=np.uint8)
+    in_image = cv2.resize(in_image, (test_image_width, test_image_height))
     in_image = cv2.cvtColor(in_image, cv2.COLOR_BGR2RGBA)
 
     # -----------------------------------------------------------------------------------
@@ -158,17 +155,17 @@ def main(opts):
 if __name__ == "__main__":
     p = test_utils.create_default_argparser()
     p.add_argument(
-        "-wd",
-        "--width",
-        dest="width",
-        default=32,
+        "-iwd",
+        "--image_width",
+        dest="image_width",
+        default=1920,
         help="Width of image",
     )
     p.add_argument(
-        "-ht",
-        "--height",
-        dest="height",
-        default=32,
+        "-iht",
+        "--image_height",
+        dest="image_height",
+        default=1080,
         help="Height of image",
     )
     p.add_argument(
