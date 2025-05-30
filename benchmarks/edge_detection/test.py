@@ -1,11 +1,10 @@
 
 import sys
-import math
 import time
 import os
 import numpy as np
 import cv2
-from aie.utils.xrt import setup_aie, extract_trace, write_out_trace, execute
+from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils
 
 
@@ -39,9 +38,9 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Program arguments parsing
     # -----------------------------------------------------------------------------------
-    testImageWidth = int(opts.width)
-    testImageHeight = int(opts.height)
-    testImageSize = testImageWidth * testImageHeight
+    test_image_width = int(opts.image_width)
+    test_image_height = int(opts.image_height)
+    num_compute_flow_column = int(opts.num_compute_flow_column)
     epsilon = 2.0
     
     xclbin_path = opts.xclbin
@@ -55,8 +54,6 @@ def main(opts):
 
     num_iter = opts.iters
     npu_time_total = 0
-    npu_time_min = 9999999
-    npu_time_max = 0
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
 
@@ -66,8 +63,8 @@ def main(opts):
     if opts.image != '':
         in_image = cv2.imread(opts.image)
     else:
-        in_image = np.random.randint(0, 256, (testImageWidth, testImageHeight, 4), dtype=np.uint8)
-    in_image = cv2.resize(in_image, (testImageWidth, testImageHeight))
+        in_image = np.random.randint(0, 256, (test_image_width, test_image_height, 4), dtype=np.uint8)
+    in_image = cv2.resize(in_image, (test_image_width, test_image_height))
     in_image = cv2.cvtColor(in_image, cv2.COLOR_BGR2RGBA)
 
     # -----------------------------------------------------------------------------------
@@ -81,8 +78,10 @@ def main(opts):
     dtype_in = np.dtype("uint8")
     dtype_out = np.dtype("uint8")
 
-    shape_in = in_image.shape
-    shape_out = (3, *in_image.shape)
+    shape_in = (num_compute_flow_column, *in_image.shape)
+    shape_out = (num_compute_flow_column, *in_image.shape)
+
+    image_buffer_in = np.array([in_image for _ in range(num_compute_flow_column)], dtype=dtype_in)
 
     # -----------------------------------------------------------------------------------
     # Get device, load the xclbin & kernel and register them
@@ -107,9 +106,9 @@ def main(opts):
     for i in range(num_iter):
         start = time.time_ns()
         if enable_trace:
-            data_buffer, trace_buffer = execute(app, in_image, in_image, enable_trace, False)
+            data_buffer, trace_buffer = execute(app=app, input_one=image_buffer_in, enable_trace=enable_trace, trace_after_output=False)
         else:
-            data_buffer = execute(app, in_image, in_image, enable_trace, False)
+            data_buffer = execute(app=app, input_one=image_buffer_in, enable_trace=enable_trace, trace_after_output=False)
         stop = time.time_ns()
 
         if enable_trace and i == num_iter - 1:
@@ -123,63 +122,65 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Save the AIE output image and Compare the AIE output and the golden reference
     # -----------------------------------------------------------------------------------
-    output_image_1 = data_buffer[0].squeeze()
-    output_image_2 = data_buffer[1].squeeze()
-    output_image_3 = data_buffer[2].squeeze()
     golden_output_image = cv2.cvtColor(golden_output_image, cv2.COLOR_RGBA2BGR)
-    output_image_1 = cv2.cvtColor(output_image_1, cv2.COLOR_RGBA2BGR)
-    output_image_2 = cv2.cvtColor(output_image_2, cv2.COLOR_RGBA2BGR)
-    output_image_3 = cv2.cvtColor(output_image_3, cv2.COLOR_RGBA2BGR)
     cv2.imwrite(output_folder + f"golden_{output_file}", golden_output_image)
-    cv2.imwrite(output_folder + f"Col_1_{output_file}", output_image_1)
-    cv2.imwrite(output_folder + f"Col_2_{output_file}", output_image_2)
-    cv2.imwrite(output_folder + f"Col_3_{output_file}", output_image_3)
-    
-    _, output_1_L1_error = image_compare(output_image_1, golden_output_image)
-    _, output_2_L1_error = image_compare(output_image_2, golden_output_image)
-    _, output_3_L1_error = image_compare(output_image_3, golden_output_image)
 
-    if output_1_L1_error < epsilon and output_2_L1_error < epsilon and output_3_L1_error < epsilon:
+    output_images = []
+    output_L1_errors = []
+    for idx in range(num_compute_flow_column):
+        output_images.append(data_buffer[idx].squeeze())
+        output_images[idx] = cv2.cvtColor(output_images[idx], cv2.COLOR_RGBA2BGR)
+        cv2.imwrite(output_folder + f"Col_{idx}_{output_file}", output_images[idx])
+        
+        print(f"Column {idx}:")
+        _, output_L1_error = image_compare(output_images[idx], golden_output_image, verbose=True)
+        output_L1_errors.append(output_L1_error)
+
+    if all(error < epsilon for error in output_L1_errors):
         print("\nPASS!\n")
         exit(0)
     else:
         print("\nFailed.")
-        if not output_1_L1_error < epsilon:
-            print("First Column Failed")
-            image_compare(output_image_1, golden_output_image)
-        if not output_2_L1_error < epsilon:
-            print("Second Column Failed")
-            image_compare(output_image_2, golden_output_image)
-        if not output_3_L1_error < epsilon:
-            print("Thrid Column Failed")
-            image_compare(output_image_3, golden_output_image)
         exit(-1)
 
 
 if __name__ == "__main__":
     p = test_utils.create_default_argparser()
     p.add_argument(
-        "-wd",
-        "--width",
-        dest="width",
-        default=32,
+        "-iwd",
+        "--image_width",
+        type=int,
+        dest="image_width",
+        default=1920,
         help="Width of image",
     )
     p.add_argument(
-        "-ht",
-        "--height",
-        dest="height",
-        default=32,
+        "-iht",
+        "--image_height",
+        type=int,
+        dest="image_height",
+        default=1080,
         help="Height of image",
     )
     p.add_argument(
+        "-nc", 
+        "--num_compute_flow_column", 
+        type=int,
+        required=False,
+        dest="num_compute_flow_column",
+        default=4,
+        help="Number of compute flow columns on the AIE array that will be used in parallel",
+    )
+    p.add_argument(
         "--image",
+        type=str,
         dest="image",
         default='',
         help="Input image file path",
     )
     p.add_argument(
         "--outfile",
+        type=str,
         dest="outfile",
         default='edgeDetectOut_test.jpg',
         help="Output image file path",
