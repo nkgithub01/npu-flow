@@ -15,6 +15,7 @@ from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
+# Edge Detection using AIE array
 def edge_detect(image_width, image_height, num_compute_flow_column):
     
     height_minus1 = image_height - 1
@@ -92,7 +93,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
 
     workers = []
 
-    # Task for the core to perform
+    # Task for the core on the second row to perform: RGBA to Gray conversion
     def rgba2gray_fn(of_in, of_out, rgba2gray_line):
         # inOF_L3L2
         # OF_2to3 -> of_intermediates[0]
@@ -102,16 +103,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
         of_in.release(1)
         of_out.release(1)
 
-    # Worker to run the task
-    for j in range(num_compute_flow_column):
-        workers.append(
-            Worker(
-                rgba2gray_fn,
-                [inOF_L3L2s[j].cons(), of_intermediates[j][0].prod(), rgba2gray_line_kernel],
-            )
-        )
-
-    # Task for the core to perform
+    # Task for the core on the thrid row to perform: 2D filtering
     def filter_fn(of_in, of_out, filter2d_line):
         # OF_2to3 -> intermediates[0]
         # OF_3to4 -> intermediates[1]
@@ -170,21 +162,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
             of_in.release(2)
             of_out.release(1)
 
-    # Worker to run the task
-    for j in range(num_compute_flow_column):
-        workers.append(
-            Worker(
-                filter_fn,
-                [
-                    of_intermediates[j][0].cons(),
-                    of_intermediates[j][1].prod(),
-                    filter2d_line_kernel,
-                ],
-                while_true=False,
-            )
-        )
-
-    # Task for the core to perform
+    # Task for the core on forth row to perform: thresholding
     def threshold_fn(of_in, of_out, threshold_line):
         v_thr = 10
         v_max = 255
@@ -196,20 +174,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
         of_in.release(1)
         of_out.release(1)
 
-    # Worker to run the task
-    for j in range(num_compute_flow_column):
-        workers.append(
-            Worker(
-                threshold_fn,
-                [
-                    of_intermediates[j][1].cons(),
-                    of_intermediates[j][2].prod(),
-                    threshold_line_kernel,
-                ],
-            )
-        )
-
-    # Task for the core to perform
+    # Task for the core on fifth row to perform: Gray to RGBA conversion and weighted addition
     def gray2rgba_addWeight_fn(
         of_in,
         of_in2,
@@ -253,6 +218,33 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
     for j in range(num_compute_flow_column):
         workers.append(
             Worker(
+                rgba2gray_fn,
+                [inOF_L3L2s[j].cons(), of_intermediates[j][0].prod(), rgba2gray_line_kernel],
+            )
+        )
+        workers.append(
+            Worker(
+                filter_fn,
+                [
+                    of_intermediates[j][0].cons(),
+                    of_intermediates[j][1].prod(),
+                    filter2d_line_kernel,
+                ],
+                while_true=False,
+            )
+        )
+        workers.append(
+            Worker(
+                threshold_fn,
+                [
+                    of_intermediates[j][1].cons(),
+                    of_intermediates[j][2].prod(),
+                    threshold_line_kernel,
+                ],
+            )
+        )
+        workers.append(
+            Worker(
                 gray2rgba_addWeight_fn,
                 [
                     of_intermediates[j][2].cons(),
@@ -273,10 +265,10 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
         for col_idx in range(num_compute_flow_column):
             shim = Tile(col_idx, 0)
             tap = TensorAccessPattern(
-                tensor_dims=[1, 1, 1, tensor_size*num_compute_flow_column],
+                tensor_dims=[1, 1, 1, tensor_size*num_compute_flow_column], # unused dims are set to 1
                 sizes=[1, 1, 1, tensor_size*num_compute_flow_column],
                 offset=col_idx * tensor_size,
-                strides=[0, 0, 0, 0]
+                strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
             rt.fill(inOF_L3L2s[col_idx].prod(), I, tap=tap, placement=shim)
             rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True, placement=shim)
