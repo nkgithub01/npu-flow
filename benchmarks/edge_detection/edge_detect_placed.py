@@ -18,13 +18,11 @@ import aie.utils.trace as trace_utils
 from aie.utils.trace import PortEvent
 from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent
 
-def edge_detect(image_width, image_height, trace_size):
+def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
     height_minus1 = image_height - 1
     line_width = image_width
     line_width_in_bytes = image_width * 4
     tensor_size = image_width * image_height * 4  # 4 channels (RGBA)
-
-    num_compute_flow_column = 3
 
     @device(AIEDevice.npu2)
     def device_body():
@@ -32,7 +30,7 @@ def edge_detect(image_width, image_height, trace_size):
         line_ty = np.ndarray[(line_width,), np.dtype[np.uint8]]
         tensor_3x3_ty = np.ndarray[(3, 3), np.dtype[np.int16]]
 
-        i_tensor_ty = np.ndarray[(tensor_size,), np.dtype[np.uint8]]
+        i_tensor_ty = np.ndarray[(tensor_size * num_compute_flow_column,), np.dtype[np.uint8]]
         o_tensor_ty = np.ndarray[(tensor_size * num_compute_flow_column,), np.dtype[np.uint8]]
 
         # AIE Core Function declarations
@@ -280,17 +278,16 @@ def edge_detect(image_width, image_height, trace_size):
         # Set up a packet-switched flow from core/mem to shim for tracing information
         # Max can only trace 31 tiles
         tiles_to_trace = shim_tiles
-        # traceShim = tile(3, 0)
         if trace_size > 0:
-            trace_utils.configure_packet_tracing_flow(tiles_to_trace, shim_tiles[2])
+            trace_utils.configure_packet_tracing_flow(tiles_to_trace, shim_tiles[-1])
 
         # To/from AIE-array data movement
-        @runtime_sequence(i_tensor_ty, i_tensor_ty, o_tensor_ty)
-        def sequence(I1, I2, O):
+        @runtime_sequence(i_tensor_ty, o_tensor_ty)
+        def sequence(I, O):
             if trace_size > 0:
                 trace_utils.configure_packet_tracing_aie2(
                     tiles_to_trace=tiles_to_trace,
-                    shim=shim_tiles[2],
+                    shim=shim_tiles[-1],
                     trace_size=trace_size,
                     coretile_events=[
                         CoreEvent.INSTR_EVENT_0,
@@ -306,26 +303,23 @@ def edge_detect(image_width, image_height, trace_size):
                     ]
                 )
             in_tasks = []
-            in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[0], I1, sizes=[1, 1, 1, tensor_size]))
-            in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[1], I2, sizes=[1, 1, 1, tensor_size]))
-            in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[2], I2, sizes=[1, 1, 1, tensor_size]))
-
             out_tasks = []
-            out_tasks.append(shim_dma_single_bd_task(outOF_L2L3s[0], O, offset = 0*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
-            out_tasks.append(shim_dma_single_bd_task(outOF_L2L3s[1], O, offset = 1*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
-            out_tasks.append(shim_dma_single_bd_task(outOF_L2L3s[2], O, offset = 2*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
+            for col_idx in range(num_compute_flow_column):
+                in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[col_idx], I, offset = col_idx*tensor_size, sizes=[1, 1, 1, tensor_size]))
+                out_tasks.append(shim_dma_single_bd_task(outOF_L2L3s[col_idx], O, offset = col_idx*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
 
             dma_start_task(*in_tasks, *out_tasks)
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
 
-            trace_utils.gen_trace_done_aie2(shim_tiles[2])
+            trace_utils.gen_trace_done_aie2(shim_tiles[-1])
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument(
         "-iwd", 
         "--image_width", 
+        type=int,
         required=False,
         dest="image_width",
         default=1920,
@@ -334,14 +328,25 @@ if __name__ == "__main__":
     p.add_argument(
         "-iht", 
         "--image_height", 
+        type=int,
         required=False,
         dest="image_height",
         default=1080,
         help="Image height",
     )
     p.add_argument(
+        "-nc", 
+        "--num_compute_flow_column", 
+        type=int,
+        required=False,
+        dest="num_compute_flow_column",
+        default=4,
+        help="Number of compute flow columns on the AIE array that will be used in parallel",
+    )
+    p.add_argument(
         "-t",
         "--trace_size",
+        type=int,
         required=False,
         dest="trace_size",
         default=0,
@@ -350,5 +355,5 @@ if __name__ == "__main__":
     opts = p.parse_args(sys.argv[1:])
     
     with mlir_mod_ctx() as ctx:
-        edge_detect(int(opts.image_width), int(opts.image_height), int(opts.trace_size))
+        edge_detect(int(opts.image_width), int(opts.image_height), int(opts.num_compute_flow_column), int(opts.trace_size))
         print(ctx.module)
