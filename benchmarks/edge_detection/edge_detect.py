@@ -9,11 +9,11 @@ import sys
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer
-from aie.iron.device import NPU1Col1, NPU2, Tile
+from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 
 
-def edge_detect(dev, width, height):
+def edge_detect(width, height):
     numCol = 3
     
     heightMinus1 = height - 1
@@ -279,20 +279,29 @@ def edge_detect(dev, width, height):
         rt.drain(outOF_L2L3s[2].cons(), O3, wait=True, placement=shim)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(dev, rt).resolve_program(SequentialPlacer())
+    return Program(NPU2, rt).resolve_program(SequentialPlacer())
 
 
-try:
-    device_name = str(sys.argv[1])
-    if device_name == "npu":
-        dev = NPU1Col1()
-    elif device_name == "npu2":
-        dev = NPU2()
-    else:
-        raise ValueError("[ERROR] Device name {} is unknown".format(sys.argv[1]))
-    width = 36 if (len(sys.argv) != 4) else int(sys.argv[2])
-    height = 64 if (len(sys.argv) != 4) else int(sys.argv[3])
-except ValueError:
-    print("Argument has inappropriate value")
-module = edge_detect(dev, width, height)
-print(module)
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "-wd", 
+        "--width", 
+        required=False,
+        dest="width",
+        default=36,
+        help="Image width",
+    )
+    p.add_argument(
+        "-ht", 
+        "--height", 
+        required=False,
+        dest="height",
+        default=64,
+        help="Image height",
+    )
+    
+    opts = p.parse_args(sys.argv[1:])
+
+    module = edge_detect(width, height)
+    print(module)

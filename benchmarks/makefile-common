@@ -1,5 +1,6 @@
 MLIR_AIE_DIR = ~/npu-flow/mlir-aie
 AIE_KERNELS_DIR = ${MLIR_AIE_DIR}/aie_kernels/aie2
+AIE_PARSE_TRACE_DIR = ${MLIR_AIE_DIR}/programming_examples/utils
 AIEOPT_DIR ?= $(shell realpath $(dir $(shell which aie-opt))/..)
 
 WARNING_FLAGS = -Wno-parentheses -Wno-attributes -Wno-macro-redefined -Wno-empty-body

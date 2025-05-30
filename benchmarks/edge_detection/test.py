@@ -44,27 +44,21 @@ def main(opts):
     testImageSize = testImageWidth * testImageHeight
     epsilon = 2.0
     
-    design = "edge_detect"
     xclbin_path = opts.xclbin
     insts_path = opts.instr
 
-    log_folder = "log/"
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
+    output_file = opts.outfile
+    
     output_folder = "output/"
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    output_file = opts.outfile
-    
-    num_iter = 1
+    num_iter = opts.iters
     npu_time_total = 0
     npu_time_min = 9999999
     npu_time_max = 0
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
-    trace_file = "log/trace_" + design + ".txt"
 
     # -----------------------------------------------------------------------------------
     # Read the input image or generate random one if no input file argument provided
@@ -77,7 +71,7 @@ def main(opts):
     in_image = cv2.cvtColor(in_image, cv2.COLOR_BGR2RGBA)
 
     # -----------------------------------------------------------------------------------
-    # Calculate OpenCV referennce for edgeDetect
+    # Calculate OpenCV reference for edgeDetect
     # -----------------------------------------------------------------------------------
     golden_output_image = edge_detect(in_image)
     
@@ -104,7 +98,7 @@ def main(opts):
         dtype_out,
         enable_trace=enable_trace,
         trace_size=trace_size,
-        trace_after_output=True,
+        trace_after_output=False,
     )
 
     # -----------------------------------------------------------------------------------
@@ -112,21 +106,14 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     for i in range(num_iter):
         start = time.time_ns()
-        entire_buffer = execute(app, in_image, in_image, enable_trace, True)
+        if enable_trace:
+            data_buffer, trace_buffer = execute(app, in_image, in_image, enable_trace, False)
+        else:
+            data_buffer = execute(app, in_image, in_image, enable_trace, False)
         stop = time.time_ns()
 
-        if enable_trace:
-            # Separate data and trace
-            data_buffer, trace_buffer = extract_trace(
-                entire_buffer, shape_out, dtype_out, trace_size
-            )
-            # Scale the data
-            data_buffer = data_buffer
-            # Write out the trace
-            write_out_trace(trace_buffer, trace_file)
-        else:
-            data_buffer = entire_buffer
-            trace_buffer = None
+        if enable_trace and i == num_iter - 1:
+            write_out_trace(trace_buffer.view(np.uint32), str(opts.trace_file))
 
         npu_time = stop - start
         npu_time_total = npu_time_total + npu_time

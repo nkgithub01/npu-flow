@@ -6,14 +6,18 @@
 # (c) Copyright 2021 Xilinx Inc.
 import numpy as np
 import sys
+import argparse
 
 from aie.dialects.aie import *
 from aie.dialects.aiex import *
 from aie.helpers.dialects.ext.scf import _for as range_
 from aie.extras.context import mlir_mod_ctx
 
+import aie.utils.trace as trace_utils
+from aie.utils.trace import PortEvent
+from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent
 
-def edge_detect(dev, width, height):
+def edge_detect(width, height, trace_size):
     heightMinus1 = height - 1
     lineWidth = width
     lineWidthInBytes = width * 4
@@ -21,7 +25,7 @@ def edge_detect(dev, width, height):
 
     numCol = 3
 
-    @device(dev)
+    @device(AIEDevice.npu2)
     def device_body():
         line_bytes_ty = np.ndarray[(lineWidthInBytes,), np.dtype[np.uint8]]
         line_ty = np.ndarray[(lineWidth,), np.dtype[np.uint8]]
@@ -274,9 +278,34 @@ def edge_detect(dev, width, height):
                     inOF_L2L1s[col].release(ObjectFifoPort.Consume, 1)
                     outOF_L1L2s[col].release(ObjectFifoPort.Produce, 1)
 
+        # Set up a packet-switched flow from core/mem to shim for tracing information
+        # Max can only trace 31 tiles
+        tiles_to_trace = ShimTiles
+        # traceShim = tile(3, 0)
+        if trace_size > 0:
+            trace_utils.configure_packet_tracing_flow(tiles_to_trace, ShimTiles[2])
+
         # To/from AIE-array data movement
         @runtime_sequence(i_tensor_ty, i_tensor_ty, o_tensor_ty)
         def sequence(I1, I2, O):
+            if trace_size > 0:
+                trace_utils.configure_packet_tracing_aie2(
+                    tiles_to_trace=tiles_to_trace,
+                    shim=ShimTiles[2],
+                    trace_size=trace_size,
+                    coretile_events=[
+                        CoreEvent.INSTR_EVENT_0,
+                        CoreEvent.INSTR_EVENT_1,
+                        PortEvent(CoreEvent.PORT_RUNNING_0, 1, True),  # master(1)
+                        PortEvent(CoreEvent.PORT_RUNNING_1, 1, False),  # slave(1)
+                    ],
+                    shimtile_events=[
+                        ShimTileEvent.DMA_S2MM_0_START_TASK,
+                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
+                        ShimTileEvent.DMA_MM2S_0_START_TASK,
+                        ShimTileEvent.DMA_MM2S_0_FINISHED_TASK,
+                    ]
+                )
             in_tasks = []
             in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[0], I1, sizes=[1, 1, 1, tensorSize]))
             in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[1], I2, sizes=[1, 1, 1, tensorSize]))
@@ -291,18 +320,36 @@ def edge_detect(dev, width, height):
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
 
+            trace_utils.gen_trace_done_aie2(ShimTiles[2])
 
-try:
-    device_name = str(sys.argv[1])
-    if device_name == "npu2":
-        dev = AIEDevice.npu2
-    else:
-        raise ValueError("[ERROR] Device name {} is unknown".format(sys.argv[1]))
-    width = 36 if (len(sys.argv) != 4) else int(sys.argv[2])
-    height = 64 if (len(sys.argv) != 4) else int(sys.argv[3])
-except ValueError:
-    print("Argument has inappropriate value")
-with mlir_mod_ctx() as ctx:
-    # print(ctx.module.operation.verify())
-    edge_detect(dev, width, height)
-    print(ctx.module)
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "-wd", 
+        "--width", 
+        required=False,
+        dest="width",
+        default=36,
+        help="Image width",
+    )
+    p.add_argument(
+        "-ht", 
+        "--height", 
+        required=False,
+        dest="height",
+        default=64,
+        help="Image height",
+    )
+    p.add_argument(
+        "-t",
+        "--trace_size",
+        required=False,
+        dest="trace_size",
+        default=0,
+        help="Trace buffer size",
+    )
+    opts = p.parse_args(sys.argv[1:])
+    
+    with mlir_mod_ctx() as ctx:
+        edge_detect(int(opts.width), int(opts.height), int(opts.trace_size))
+        print(ctx.module)
