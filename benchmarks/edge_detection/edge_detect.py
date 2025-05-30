@@ -15,8 +15,7 @@ from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
-def edge_detect(image_width, image_height):
-    num_compute_flow_column = 3
+def edge_detect(image_width, image_height, num_compute_flow_column):
     
     height_minus1 = image_height - 1
     line_width = image_width
@@ -28,7 +27,7 @@ def edge_detect(image_width, image_height):
     line_ty = np.ndarray[(line_width,), np.dtype[np.uint8]]
     tensor_3x3_ty = np.ndarray[(3, 3), np.dtype[np.int16]]
 
-    i_tensor_ty = np.ndarray[(tensor_size,), np.dtype[np.int8]]
+    i_tensor_ty = np.ndarray[(tensor_size * num_compute_flow_column,), np.dtype[np.int8]]
     o_tensor_ty = np.ndarray[(tensor_size * num_compute_flow_column,), np.dtype[np.int8]]
 
     # AIE Core Function declarations
@@ -269,17 +268,18 @@ def edge_detect(image_width, image_height):
 
     # Runtime operations to move data to/from the AIE-array
     rt = Runtime()
-    with rt.sequence(i_tensor_ty, i_tensor_ty, o_tensor_ty) as (I1, I2, O):
+    with rt.sequence(i_tensor_ty, o_tensor_ty) as (I, O):
         rt.start(*workers)
-        shim = Tile(0,0)
-        rt.fill(inOF_L3L2s[0].prod(), I1, placement=shim)
-        rt.drain(outOF_L2L3s[0].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=0*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
-        shim = Tile(1,0)
-        rt.fill(inOF_L3L2s[1].prod(), I2, placement=shim)
-        rt.drain(outOF_L2L3s[1].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=1*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
-        shim = Tile(2,0)
-        rt.fill(inOF_L3L2s[2].prod(), I2, placement=shim)
-        rt.drain(outOF_L2L3s[2].cons(), O, tap=TensorAccessPattern(tensor_dims=[1,1,1,tensor_size*num_compute_flow_column], sizes=[1,1,1,tensor_size*num_compute_flow_column], offset=2*tensor_size, strides=[0,0,0,0]), wait=True, placement=shim)
+        for col_idx in range(num_compute_flow_column):
+            shim = Tile(col_idx, 0)
+            tap = TensorAccessPattern(
+                tensor_dims=[1, 1, 1, tensor_size*num_compute_flow_column],
+                sizes=[1, 1, 1, tensor_size*num_compute_flow_column],
+                offset=col_idx * tensor_size,
+                strides=[0, 0, 0, 0]
+            )
+            rt.fill(inOF_L3L2s[col_idx].prod(), I, tap=tap, placement=shim)
+            rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True, placement=shim)
 
     # Place components (assign them resources on the device) and generate an MLIR module
     return Program(NPU2(), rt).resolve_program(SequentialPlacer())
@@ -305,8 +305,17 @@ if __name__ == "__main__":
         default=1080,
         help="Image height",
     )
+    p.add_argument(
+        "-nc", 
+        "--num_compute_flow_column", 
+        type=int,
+        required=False,
+        dest="num_compute_flow_column",
+        default=4,
+        help="Number of compute flow columns on the AIE array that will be used in parallel",
+    )
     
     opts = p.parse_args(sys.argv[1:])
 
-    module = edge_detect(opts.image_width, opts.image_height)
+    module = edge_detect(opts.image_width, opts.image_height, opts.num_compute_flow_column)
     print(module)
