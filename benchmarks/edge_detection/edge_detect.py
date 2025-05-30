@@ -6,6 +6,7 @@
 # (c) Copyright 2024 AMD Inc.
 import numpy as np
 import sys
+import argparse
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer
@@ -303,5 +304,5 @@ if __name__ == "__main__":
     
     opts = p.parse_args(sys.argv[1:])
 
-    module = edge_detect(width, height)
+    module = edge_detect(opts.width, opts.height)
     print(module)

@@ -1,11 +1,10 @@
 
 import sys
-import math
 import time
 import os
 import numpy as np
 import cv2
-from aie.utils.xrt import setup_aie, extract_trace, write_out_trace, execute
+from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils
 
 
