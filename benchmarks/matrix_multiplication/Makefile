@@ -2,80 +2,81 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 include ${srcdir}/../makefile-common
 
-targetname = matrix_multiplication
-aie_py_src=${targetname}.py
+device_name := npu2
+dtype_in := i16
+dtype_out := i32
 
-use_placed?=1
+target_name := matrix_multiplication
+aie_py_src := ${target_name}.py
+
+use_placed := 1
 ifeq (${use_placed}, 0)
-aie_py_src=${targetname}.py
+aie_py_src=${target_name}.py
 else ifeq (${use_placed}, 1)
-aie_py_src=${targetname}_placed.py
+aie_py_src=${target_name}_placed.py
 endif
 
 # M, K, N: final GEMM dimensions
-M?=512
-K?=512
-N?=512
+M:=512
+K:=512
+N:=512
 
 # m, k, n: single AIE core GEMM dimensions
-m?=32
-k?=32
-n?=32
+m:=32
+k:=32
+n:=32
 
 n_aie_cols?=4
 b_col_maj?=0
 
-kernels=mm_${m}x${k}x${n}
-aieargs+=-m $m -k $k -n $n --n-aie-cols ${n_aie_cols} --b-col-maj ${b_col_maj}
-runargs+=--b_col_maj ${b_col_maj}
-target_suffix=${M}x${K}x${N}_${m}x${k}x${n}_${n_aie_cols}c
-use_placed?=0
-use_iron?=0
+kernels:=mm_${m}x${k}x${n}
+aieargs:=-m $m -k $k -n $n --n-aie-cols ${n_aie_cols} --b-col-maj ${b_col_maj}
+runargs:=--b_col_maj ${b_col_maj}
+target_suffix:=${M}x${K}x${N}_${m}x${k}x${n}_${n_aie_cols}c
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
 use_linear_buf_alloc?=1
-
 ifeq (${use_linear_buf_alloc}, 1)
 buffer_aloc_flag=basic-sequential
 else
 buffer_aloc_flag=bank-aware
 endif
 
-ifeq (${use_placed}, 1)
-aie_py_src=${targetname}_placed.py
-ifeq (${use_iron}, 1)
-$(error Cannot specify both placed design and IRON)
-endif
-endif
+# Trace size
+TRACE_SIZE = 16384
+NUM_ITERATION = 10
+mlir_target?=build/aie_${target_suffix}.mlir
+trace_mlir_target?=build/aie_trace_${target_suffix}.mlir
+xclbin_target?=build/final_${target_suffix}.xclbin
+trace_xclbin_target?=build/trace_${target_suffix}.xclbin
+insts_target?=build/insts_${target_suffix}.txt
 
-ifeq (${use_iron}, 1)
-aie_py_src=${targetname}_iron.py
-endif
+runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -dtype_acc=${dtype_out}
+aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
 
-include ${srcdir}/../makefile-common
+.PHONY: all
+all: ${xclbin_target}
 
-ifeq ($(devicename),npu2)
-kernels_dir=${srcdir}/../../../../aie_kernels/aie2p
-else 
-kernels_dir=${srcdir}/../../../../aie_kernels/aie2
-endif
-
-build/mm_b_row_maj_${m}x${k}x${n}.o: ${kernels_dir}/mm.cc
+build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc
 	mkdir -p ${@D}
-ifeq (${devicename}, npu)
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-else ifeq (${devicename}, npu2)
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-endif
+	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
 
-build/mm_b_col_maj_${m}x${k}x${n}.o: ${kernels_dir}/mm_b_col_maj.cc
+${mlir_target}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-ifeq (${devicename}, npu)
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-else ifeq (${devicename}, npu2)
+	python3 $< ${aieargs} > $@
+
+${trace_mlir_target}: ${srcdir}/${aie_py_src}
+	mkdir -p ${@D}
+	python3 $< ${aieargs} --trace_size ${trace_size} > $@
+
+build/mm_b_row_maj_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/mm.cc
+	mkdir -p ${@D}
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-endif
+
+build/mm_b_col_maj_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/mm_b_col_maj.cc
+	mkdir -p ${@D}
+	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
 
 ifneq (${b_col_maj}, 1)
 build/mm_${m}x${k}x${n}.o: build/mm_b_row_maj_${m}x${k}x${n}.o 
@@ -87,63 +88,37 @@ build/mm_${m}x${k}x${n}.o: build/mm_b_col_maj_${m}x${k}x${n}.o
 	ar rvs $@ $^
 endif
 
-
-
-
-
-
-
-
-# Trace size
-TRACE_SIZE = 16384
-NUM_ITERATION = 10
-
-all: build/final_${EDGEDETECT_WIDTH}.xclbin
-
-mlir: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir
-
-build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc
+${xclbin_target}: ${mlir_target} ${kernels:%=build/%.o}
 	mkdir -p ${@D}
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
+	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
-build/combined_gray2rgba_addWeighted.a: build/gray2rgba.cc.o build/addWeighted.cc.o
+${trace_xclbin_target}: ${trace_mlir_target} ${kernels:%=build/%.o}
 	mkdir -p ${@D}
-	ar rvs $@ $< $(word 2,$^)
+	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
-build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
-	mkdir -p ${@D}
-	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} > $@
+.PHONY: run
+run: ${xclbin_target}
+	export XRT_HACK_UNSECURE_LOADING_XCLBIN=1
+	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target:build/%=%} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} 
 
-build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
-	mkdir -p ${@D}
-	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} -t ${TRACE_SIZE}> $@
-
-build/final_${EDGEDETECT_WIDTH}.xclbin: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
-	mkdir -p ${@D}
-	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge \
-				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
-
-build/final_trace_${EDGEDETECT_WIDTH}.xclbin: build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
-	mkdir -p ${@D}
-	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge \
-				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
-
-run: build/final_${EDGEDETECT_WIDTH}.xclbin
-	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg" 
-
-run_trace: build/final_trace_${EDGEDETECT_WIDTH}.xclbin
+.PHONY: run_trace
+run_trace: ${trace_xclbin_target}
 	@mkdir -p trace
-	python3 ${srcdir}/test.py -x build/final_trace_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg" \
+	export XRT_HACK_UNSECURE_LOADING_XCLBIN=1
+	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target:build/%=%} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} \
 			-t ${TRACE_SIZE} --trace_file trace/trace.txt
-	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir --output trace/trace.json
+	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir ${trace_xclbin_target} --colshift 1 --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt
 
+.PHONY: clean_trace
 clean_trace:
 	rm -rf trace
 
+.PHONY: clean
 clean: clean_trace
-	rm -rf build ${targetname}Out_test.jpg output
+	rm -rf build output
+
