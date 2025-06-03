@@ -41,15 +41,15 @@ def main(opts):
     
     npu_time_total = 0
 
-    print(f"Input matrix A size: {M}x{K}")
-    print(f"Input matrix B size: {K}x{N}")
+    if verbosity > 0:
+        print(f"Input matrix A size: {M}x{K}")
+        print(f"Input matrix B size: {K}x{N}")
 
     # -----------------------------------------------------------------------------------
     # Configure the design's buffer size
     # -----------------------------------------------------------------------------------
     dtype_in = dtype_map[opts.dtype_in_str]
     dtype_out = dtype_map[opts.dtype_out_str]
-
 
     shape_in_A = (M, K)
     shape_in_B = (K, N)
@@ -60,10 +60,12 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     Mat_A = np.random.randint(0, 256, shape_in_A, dtype=dtype_in)
     Mat_B = np.random.randint(0, 256, shape_in_B, dtype=dtype_in)
-    Mat_C_ref = Mat_A @ Mat_B
+    Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
     
-
-
+    if verbosity > 0:
+        print(f"Input matrix A:\n{Mat_A}")
+        print(f"Input matrix B:\n{Mat_B}")
+        print(f"Reference output matrix C:\n{Mat_C_ref}")
     # -----------------------------------------------------------------------------------
     # Get device, load the xclbin & kernel and register them
     # -----------------------------------------------------------------------------------
@@ -105,7 +107,9 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Compare the AIE output and the golden reference result
     # -----------------------------------------------------------------------------------
-    Mat_C = data_buffer.view(dtype_out)
+    Mat_C = data_buffer
+    if verbosity > 0:
+        print(f"Output matrix C:\n{Mat_C}")
 
     if dtype_out == np.int8:
         relative_tolerance = 0
@@ -162,13 +166,6 @@ if __name__ == "__main__":
     p.add_argument(
         "-N",
         type=int,
-        dest="N",
-        default=512,
-        help="Input matrix B width (number of columns)",
-    )
-    p.add_argument(
-        "-dtype_in",
-        type=str,
         dest="N",
         default=512,
         help="Input matrix B width (number of columns)",
