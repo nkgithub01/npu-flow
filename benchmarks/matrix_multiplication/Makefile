@@ -52,7 +52,7 @@ xclbin_target?=build/final_${target_suffix}.xclbin
 trace_xclbin_target?=build/trace_${target_suffix}.xclbin
 insts_target?=build/insts_${target_suffix}.txt
 
-runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -dtype_acc=${dtype_out}
+runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out}
 aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
 
 .PHONY: all
