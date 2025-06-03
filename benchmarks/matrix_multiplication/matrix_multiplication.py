@@ -1,9 +1,6 @@
-#
-# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
-# See https://llvm.org/LICENSE.txt for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-# (c) Copyright 2024 Advanced Micro Devices, Inc. or its affiliates
+# This benchmark based on the MLIR AIE Github repository example 
+# at https://github.com/Xilinx/mlir-aie/tree/main/programming_examples/basic/matrix_multiplication/whole_array
+
 import argparse
 from ml_dtypes import bfloat16
 import numpy as np

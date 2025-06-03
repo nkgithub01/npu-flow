@@ -1,9 +1,6 @@
-#
-# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
-# See https://llvm.org/LICENSE.txt for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-# (c) Copyright 2023 AMD Inc.
+# This benchmark based on the MLIR AIE Github repository example 
+# at https://github.com/Xilinx/mlir-aie/tree/main/programming_examples/basic/matrix_multiplication/whole_array
+
 import argparse
 from ml_dtypes import bfloat16
 import numpy as np
@@ -29,24 +26,17 @@ def main():
         prog="AIE Matrix Multiplication MLIR Design (Whole Array)",
         description="Emits MLIR code for a matrix multiplication design of the given input size",
     )
-    argparser.add_argument("--dev", type=str, choices=["npu", "npu2"], default="npu")
+    argparser.add_argument("--dev", type=str, choices=["npu2"], default="npu2")
     argparser.add_argument("-M", type=int, default=512)
     argparser.add_argument("-K", type=int, default=512)
     argparser.add_argument("-N", type=int, default=512)
     argparser.add_argument("-m", type=int, default=64)
     argparser.add_argument("-k", type=int, default=64)
-    argparser.add_argument("-n", type=int, default=32)
-    argparser.add_argument("--n-aie-cols", type=int, choices=[1, 2, 4, 8], default=4)
+    argparser.add_argument("-n", type=int, default=64)
+    argparser.add_argument("--n-aie-cols", type=int, choices=[1, 2, 4, 8], default=8)
     argparser.add_argument("--b-col-maj", type=int, choices=[0, 1], default=0)
-    argparser.add_argument(
-        "--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="i16"
-    )
-    argparser.add_argument(
-        "--dtype_out",
-        type=str,
-        choices=["bf16", "i8", "i16", "f32", "i32"],
-        default="i16",
-    )
+    argparser.add_argument("--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="i16")
+    argparser.add_argument("--dtype_out", type=str, choices=["bf16", "i8", "i16", "f32", "i32"], default="i16")
     argparser.add_argument("--trace_size", type=int, default=0)
     argparser.add_argument(
         "--generate-taps",
@@ -56,7 +46,7 @@ def main():
     )
     args = argparser.parse_args()
     with mlir_mod_ctx() as ctx:
-        maybe_taps = my_matmul(
+        maybe_taps = matrix_multiply(
             args.dev,
             args.M,
             args.K,
@@ -82,7 +72,7 @@ def ceildiv(a, b):
     return (a + b - 1) // b
 
 
-def my_matmul(
+def matrix_multiply(
     dev,
     M,
     K,
@@ -110,40 +100,24 @@ def my_matmul(
         np.dtype(dtype_out).itemsize >= np.dtype(dtype_in).itemsize
     ), f"Output dtype ({dtype_out}) must be equal or larger to input dtype ({dtype_in})"
 
-    if dev == "npu":
-        if dtype_in_str == "bf16":
-            r = 4
-            s = 8
-            t = 4
-        elif dtype_in_str == "i8":
-            r = 4
-            s = 8
-            t = 8
-        elif dtype_in_str == "i16":
-            r = 4
-            s = 4
-            t = 4
-    else:
-        if dtype_in_str == "bf16":
-            r = 8
-            s = 8
-            t = 8
-        elif dtype_in_str == "i8":
-            r = 8
-            s = 8
-            t = 8
-        elif dtype_in_str == "i16":
-            r = 4
-            s = 4
-            t = 8
+    # r, s, t are the dimensions required by the intrinsic microkernel MAC instructions.
+    if dtype_in_str == "bf16":
+        r = 8
+        s = 8
+        t = 8
+    elif dtype_in_str == "i8":
+        r = 8
+        s = 8
+        t = 8
+    elif dtype_in_str == "i16":
+        r = 4
+        s = 4
+        t = 8
 
-    # npu is a 4 row x 4 col array
-    if dev == "npu" and n_aie_cols > 4:
-        raise AssertionError("Invalid configuration: NPU (Phoenix/Hawk) has 4 columns")
-    # npu2 is a 4 row x 8 col array
+    # npu2 is a 4 row x 8 col AIE array
     if dev == "npu2" and n_aie_cols > 8:
         raise AssertionError(
-            "Invalid configuration: NPU2 (Strix/Strix Halo/Krackan) has 8 columns"
+            "Invalid configuration: NPU2 (Strix/Strix Halo/Krackan) has only 8 columns"
         )
 
     # Input matrix A:
@@ -193,14 +167,7 @@ def my_matmul(
     # Integer division when n_aie_cols < 4, otherwise set to 1
     n_A_tiles_per_shim = n_aie_rows // n_aie_cols if n_aie_cols < 4 else 1
 
-    if dev == "npu":
-        if n_aie_cols == 1:
-            dev_ty = AIEDevice.npu1_1col
-        elif n_aie_cols == 2:
-            dev_ty = AIEDevice.npu1_2col
-        elif n_aie_cols == 4:
-            dev_ty = AIEDevice.npu1_4col
-    else:
+    if dev == "npu2":
         dev_ty = AIEDevice.npu2
 
     # These will hold TensorAccessPattern objects that represent the runtime
