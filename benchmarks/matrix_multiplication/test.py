@@ -59,7 +59,7 @@ def main(opts):
     Mat_A = np.random.randint(0, 256, shape_in_A, dtype=dtype_in)
     Mat_B = np.random.randint(0, 256, shape_in_B, dtype=dtype_in)
     if b_col_maj:
-        Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
+        Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out).T.reshape(K, N)
     else:
         Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
     
