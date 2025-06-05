@@ -12,6 +12,10 @@ from aie.dialects.aiex import *
 from aie.helpers.dialects.ext.scf import _for as range_
 from aie.helpers.taplib import TensorTiler2D, TensorAccessSequence
 
+import aie.utils.trace as trace_utils
+from aie.utils.trace import PortEvent
+from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent
+
 dtype_map = {
     "bf16": bfloat16,
     "i8": np.int8,
@@ -370,6 +374,12 @@ def matrix_multiply(
 
                             C_l1l2_fifos[row][col].release(ObjectFifoPort.Produce, 1)
 
+        # Set up a packet-switched flow from core/mem to shim for tracing information
+        # Max can only trace 31 tiles
+        tiles_to_trace = shim_tiles
+        if trace_size > 0:
+            trace_utils.configure_packet_tracing_flow(tiles_to_trace, shim_tiles[-1])
+
         # To/from AIE-array data movement
         @runtime_sequence(
             np.ndarray[(M * K,), np.dtype[dtype_in]],
@@ -377,6 +387,24 @@ def matrix_multiply(
             np.ndarray[(M * N,), np.dtype[dtype_out]],
         )
         def sequence(A, B, C):
+            if trace_size > 0:
+                trace_utils.configure_packet_tracing_aie2(
+                    tiles_to_trace=tiles_to_trace,
+                    shim=shim_tiles[-1],
+                    trace_size=trace_size,
+                    coretile_events=[
+                        CoreEvent.INSTR_EVENT_0,
+                        CoreEvent.INSTR_EVENT_1,
+                        PortEvent(CoreEvent.PORT_RUNNING_0, 1, True),  # master(1)
+                        PortEvent(CoreEvent.PORT_RUNNING_1, 1, False),  # slave(1)
+                    ],
+                    shimtile_events=[
+                        ShimTileEvent.DMA_S2MM_0_START_TASK,
+                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
+                        ShimTileEvent.DMA_MM2S_0_START_TASK,
+                        ShimTileEvent.DMA_MM2S_0_FINISHED_TASK,
+                    ]
+                )
             # We are limited in the number of BDs. After synchronizing, we can reuse BDs.
             # We only transfer 4 rows of tiles at once before starting a new transfer block.
             tb_max_n_rows = (
@@ -554,6 +582,8 @@ def matrix_multiply(
                 dma_await_task(*out_tasks)
             if len(in_tasks) > 0:
                 dma_free_task(*in_tasks)
+
+            trace_utils.gen_trace_done_aie2(shim_tiles[-1])
 
     if generate_taps:
         # If generate taps is true, return a representation of tensor access patterns

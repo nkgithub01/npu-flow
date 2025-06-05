@@ -47,13 +47,13 @@ buffer_aloc_flag=bank-aware
 endif
 
 # Trace size
-VERBOSITY = 1
-TRACE_SIZE = 16384
-NUM_ITERATION = 10
+VERBOSITY := 1
+TRACE_SIZE := 16384
+NUM_ITERATION := 10
 mlir_target?=build/aie_${target_suffix}.mlir
 trace_mlir_target?=build/aie_trace_${target_suffix}.mlir
-xclbin_target?=build/final_${target_suffix}.xclbin
-trace_xclbin_target?=build/trace_${target_suffix}.xclbin
+xclbin_target?=build/GEMM_${target_suffix}.xclbin
+trace_xclbin_target?=build/GEMM_trace_${target_suffix}.xclbin
 insts_target?=build/insts_${target_suffix}.bin
 
 runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY}
@@ -72,7 +72,7 @@ ${mlir_target}: ${srcdir}/${aie_py_src}
 
 ${trace_mlir_target}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< ${aieargs} --trace_size ${trace_size} > $@
+	python3 $< ${aieargs} --trace_size ${TRACE_SIZE} > $@
 
 build/mm_b_row_maj_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/mm.cc
 	mkdir -p ${@D}
@@ -115,7 +115,7 @@ run_trace: ${trace_xclbin_target}
 	export XRT_HACK_UNSECURE_LOADING_XCLBIN=1
 	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} \
 			-t ${TRACE_SIZE} --trace_file trace/trace.txt
-	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir ${trace_xclbin_target} --colshift 1 --output trace/trace.json
+	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir ${trace_mlir_target} --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt
 
 .PHONY: clean_trace
