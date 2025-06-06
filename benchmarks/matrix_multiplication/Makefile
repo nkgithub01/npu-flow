@@ -3,8 +3,8 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 include ${srcdir}/../makefile-common
 
 device_name := npu2
-dtype_in := i16
-dtype_out := i32
+dtype_in := i8
+dtype_out := i16
 
 target_name := matrix_multiplication
 aie_py_src := ${target_name}.py

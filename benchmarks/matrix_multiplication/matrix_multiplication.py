@@ -2,7 +2,6 @@
 # at https://github.com/Xilinx/mlir-aie/tree/main/programming_examples/basic/matrix_multiplication/whole_array
 
 import argparse
-from ml_dtypes import bfloat16
 import numpy as np
 
 from aie.iron import Kernel, ObjectFifo, Program, Runtime, Worker
@@ -12,10 +11,8 @@ from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessSequence, TensorTiler2D
 
 dtype_map = {
-    "bf16": bfloat16,
     "i8": np.int8,
     "i16": np.int16,
-    "f32": np.float32,
     "i32": np.int32,
 }
 
@@ -34,8 +31,8 @@ def main():
     argparser.add_argument("-n", type=int, default=32)
     argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=4)
     argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
-    argparser.add_argument("--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="i16")
-    argparser.add_argument("--dtype_out", type=str, choices=["bf16", "i8", "i16", "f32", "i32"], default="i16")
+    argparser.add_argument("--dtype_in", type=str, choices=["i8", "i16"], default="i8")
+    argparser.add_argument("--dtype_out", type=str, choices=["i8", "i16", "i32"], default="i16")
     argparser.add_argument(
         "--generate-taps",
         action="store_true",
@@ -87,18 +84,11 @@ def my_matmul(
     dtype_in = dtype_map[dtype_in_str]
     dtype_out = dtype_map[dtype_out_str]
 
-    assert np.issubdtype(dtype_in, np.integer) == np.issubdtype(
-        dtype_out, np.integer
-    ), f"Input dtype ({dtype_in}) and output dtype ({dtype_out}) must either both be integral or both be float"
     assert (
         np.dtype(dtype_out).itemsize >= np.dtype(dtype_in).itemsize
     ), f"Output dtype ({dtype_out}) must be equal or larger to input dtype ({dtype_in})"
 
-    if dtype_in_str == "bf16":
-        r = 8
-        s = 8
-        t = 8
-    elif dtype_in_str == "i8":
+    if dtype_in_str == "i8":
         r = 8
         s = 8
         t = 8

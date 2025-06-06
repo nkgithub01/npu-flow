@@ -2,17 +2,14 @@
 import sys
 import time
 import numpy as np
-from ml_dtypes import bfloat16
 
 from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils
 
 
 dtype_map = {
-    "bf16": bfloat16,
     "i8": np.int8,
     "i16": np.int16,
-    "f32": np.float32,
     "i32": np.int32,
 }
 
@@ -48,6 +45,11 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     dtype_in = dtype_map[opts.dtype_in_str]
     dtype_out = dtype_map[opts.dtype_out_str]
+    # The test only supports integer.
+    dtype_is_int = np.issubdtype(dtype_in, np.integer)
+    assert dtype_is_int, "Input data type must be an integer type (i8, i16)."
+    dtype_in_min = np.iinfo(dtype_in).min
+    dtype_in_max = np.iinfo(dtype_in).max
 
     shape_in_A = (M, K)
     shape_in_B = (K, N)
@@ -56,8 +58,8 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Generate the input matrices A and B and the reference output matrix C
     # -----------------------------------------------------------------------------------
-    Mat_A = np.random.randint(0, 256, shape_in_A, dtype=dtype_in)
-    Mat_B = np.random.randint(0, 256, shape_in_B, dtype=dtype_in)
+    Mat_A = np.random.randint(dtype_in_min/2, dtype_in_max/2, shape_in_A, dtype=dtype_in)
+    Mat_B = np.random.randint(dtype_in_min/2, dtype_in_max/2, shape_in_B, dtype=dtype_in)
     if b_col_maj:
         Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out).T.reshape(K, N)
     else:
@@ -112,24 +114,8 @@ def main(opts):
     if verbosity > 0:
         print(f"Output matrix C:\n{Mat_C}")
 
-    if dtype_out == np.int8:
-        relative_tolerance = 0
-        absolute_tolerance = 0
-    elif dtype_out == np.int16:
-        relative_tolerance = 0
-        absolute_tolerance = 0
-    elif dtype_out == np.int32:
-        relative_tolerance = 0
-        absolute_tolerance = 0
-    elif dtype_out == bfloat16:
-        relative_tolerance = 0.05
-        absolute_tolerance = 0.5
-    elif dtype_out == np.float32:
-        relative_tolerance = 0.05
-        absolute_tolerance = 0.5
-    else:
-        relative_tolerance = 0
-        absolute_tolerance = 0
+    relative_tolerance = 0
+    absolute_tolerance = 0
 
     if do_verify:
         are_close = np.allclose(Mat_C, Mat_C_ref, rtol=relative_tolerance, atol=absolute_tolerance)
@@ -180,14 +166,14 @@ if __name__ == "__main__":
         "-dtype_in", 
         type=str, 
         dest="dtype_in_str",
-        choices=["bf16", "i8", "i16"], 
+        choices=["i8", "i16"], 
         default="i16"
     )
     p.add_argument(
         "-dtype_out", 
         type=str, 
         dest="dtype_out_str",
-        choices=["bf16", "i8", "i16", "f32", "i32"], 
+        choices=["i8", "i16", "i32"], 
         default="i16"
     )
     opts = p.parse_args(sys.argv[1:])
