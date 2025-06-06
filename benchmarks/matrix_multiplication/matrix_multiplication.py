@@ -7,7 +7,7 @@ import numpy as np
 
 from aie.iron import Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer
-from aie.iron.device import NPU1Col1, NPU1Col2, NPU1Col4, NPU2, Tile
+from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessSequence, TensorTiler2D
 
@@ -32,18 +32,10 @@ def main():
     argparser.add_argument("-m", type=int, default=64)
     argparser.add_argument("-k", type=int, default=64)
     argparser.add_argument("-n", type=int, default=32)
-    argparser.add_argument("--n-aie-cols", type=int, choices=[1, 2, 4, 8], default=4)
-    argparser.add_argument("--b-col-maj", type=int, choices=[0, 1], default=0)
-    argparser.add_argument(
-        "--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="i16"
-    )
-    argparser.add_argument(
-        "--dtype_out",
-        type=str,
-        choices=["bf16", "i8", "i16", "f32", "i32"],
-        default="i16",
-    )
-    argparser.add_argument("--trace_size", type=int, default=0)
+    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=4)
+    argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
+    argparser.add_argument("--dtype_in", type=str, choices=["bf16", "i8", "i16"], default="i16")
+    argparser.add_argument("--dtype_out", type=str, choices=["bf16", "i8", "i16", "f32", "i32"], default="i16")
     argparser.add_argument(
         "--generate-taps",
         action="store_true",
@@ -63,7 +55,6 @@ def main():
         args.dtype_in,
         args.dtype_out,
         args.b_col_maj,
-        args.trace_size,
         args.generate_taps,
     )
     if args.generate_taps:
@@ -88,7 +79,6 @@ def my_matmul(
     dtype_in_str,
     dtype_out_str,
     b_col_maj,
-    trace_size,
     generate_taps=False,
 ):
     n_aie_rows = 4
@@ -104,36 +94,19 @@ def my_matmul(
         np.dtype(dtype_out).itemsize >= np.dtype(dtype_in).itemsize
     ), f"Output dtype ({dtype_out}) must be equal or larger to input dtype ({dtype_in})"
 
-    if dev == "npu":
-        if dtype_in_str == "bf16":
-            r = 4
-            s = 8
-            t = 4
-        elif dtype_in_str == "i8":
-            r = 4
-            s = 8
-            t = 8
-        elif dtype_in_str == "i16":
-            r = 4
-            s = 4
-            t = 4
-    else:
-        if dtype_in_str == "bf16":
-            r = 8
-            s = 8
-            t = 8
-        elif dtype_in_str == "i8":
-            r = 8
-            s = 8
-            t = 8
-        elif dtype_in_str == "i16":
-            r = 4
-            s = 4
-            t = 8
+    if dtype_in_str == "bf16":
+        r = 8
+        s = 8
+        t = 8
+    elif dtype_in_str == "i8":
+        r = 8
+        s = 8
+        t = 8
+    elif dtype_in_str == "i16":
+        r = 4
+        s = 4
+        t = 8
 
-    # npu is a 4 row x 4 col array
-    if dev == "npu" and n_aie_cols > 4:
-        raise AssertionError("Invalid configuration: NPU (Phoenix/Hawk) has 4 columns")
     # npu2 is a 4 row x 8 col array
     if dev == "npu2" and n_aie_cols > 8:
         raise AssertionError(
@@ -187,15 +160,12 @@ def my_matmul(
     # Integer division when n_aie_cols < 4, otherwise set to 1
     n_A_tiles_per_shim = n_aie_rows // n_aie_cols if n_aie_cols < 4 else 1
 
-    if dev == "npu":
-        if n_aie_cols == 1:
-            dev_ty = NPU1Col1()
-        elif n_aie_cols == 2:
-            dev_ty = NPU1Col2()
-        elif n_aie_cols == 4:
-            dev_ty = NPU1Col4()
-    else:
+    if dev == "npu2":
         dev_ty = NPU2()
+    else:
+        raise AssertionError(
+            "Invalid device type: only NPU2 (Strix/Strix Halo/Krackan) is supported"
+        )
 
     # These will hold TensorAccessPattern objects that represent the runtime
     # npu_dma_memcpy_nd operations of this design. They are only used if generate_taps is true

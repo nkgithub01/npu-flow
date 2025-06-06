@@ -173,6 +173,10 @@ def matrix_multiply(
 
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
+    else:
+        raise AssertionError(
+            "Invalid device type: only NPU2 (Strix/Strix Halo/Krackan) is supported"
+        )
 
     # These will hold TensorAccessPattern objects that represent the runtime
     # npu_dma_memcpy_nd operations of this design. They are only used if generate_taps is true
