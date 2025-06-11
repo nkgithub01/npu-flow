@@ -1,4 +1,5 @@
 
+import os
 import sys
 import time
 import numpy as np
@@ -36,6 +37,10 @@ def main(opts):
     
     npu_time_total = 0
 
+    output_folder = "output/"
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
     if verbosity > 0:
         print(f"Input matrix A size: {M}x{K}")
         print(f"Input matrix B size: {K}x{N}")
@@ -65,10 +70,10 @@ def main(opts):
     else:
         Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
     
-    if verbosity > 0:
-        print(f"Input matrix A:\n{Mat_A}")
-        print(f"Input matrix B:\n{Mat_B}")
-        print(f"Reference output matrix C:\n{Mat_C_ref}")
+    if verbosity > 1:
+        print(f"Input matrix A: {Mat_A.shape}\n{Mat_A}")
+        print(f"Input matrix B: {Mat_B.shape}\n{Mat_B}")
+        print(f"Reference output matrix C: {Mat_C_ref.shape}\n{Mat_C_ref}")
     # -----------------------------------------------------------------------------------
     # Get device, load the xclbin & kernel and register them
     # -----------------------------------------------------------------------------------
@@ -110,9 +115,11 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Compare the AIE output and the golden reference result
     # -----------------------------------------------------------------------------------
-    Mat_C = data_buffer
-    if verbosity > 0:
-        print(f"Output matrix C:\n{Mat_C}")
+    Mat_C = np.array(data_buffer, dtype=dtype_out)
+    if verbosity > 1:
+        print(f"Output matrix C: {Mat_C.shape}\n{Mat_C}")
+        np.savetxt(output_folder+"reference_matrix_C.txt", Mat_C_ref, fmt="%d")
+        np.savetxt(output_folder+"output_matrix_C.txt", Mat_C, fmt="%d")
 
     relative_tolerance = 0
     absolute_tolerance = 0
@@ -125,6 +132,12 @@ def main(opts):
             exit(0)
         else:
             print("\nFailed.")
+            for i in range(M):
+                for j in range(N):
+                    if not np.isclose(Mat_C[i, j], Mat_C_ref[i, j], rtol=relative_tolerance, atol=absolute_tolerance):
+                        print(f"First mismatch at ({i}, {j}): AIE={Mat_C[i, j]}, Ref={Mat_C_ref[i, j]}")
+                        exit(-1)
+            print(f"\nRelative tolerance: {relative_tolerance}, Absolute tolerance: {absolute_tolerance}\n")
             exit(-1)
     else:
         print("\nVerification skipped, assuming PASS.\n")

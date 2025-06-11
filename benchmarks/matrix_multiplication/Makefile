@@ -29,7 +29,7 @@ m:=32
 k:=32
 n:=32
 
-n_aie_cols?=4
+n_aie_cols?=8
 b_col_maj?=0
 
 kernels:=mm_${m}x${k}x${n}
@@ -47,7 +47,7 @@ buffer_aloc_flag=bank-aware
 endif
 
 # Trace size
-VERBOSITY := 1
+VERBOSITY := 2
 TRACE_SIZE := 16384
 NUM_ITERATION := 10
 mlir_target?=build/aie_${target_suffix}.mlir

@@ -220,9 +220,9 @@ def matrix_multiply(
             A_l3l2_fifos[i] = object_fifo(
                 f"A_L3L2_{i}",
                 (
-                    shim_tiles[2 * i] if n_aie_cols == 8 else shim_tiles[i]
+                    shim_tiles[i]
                 ),  # alternate columns in full 4x8 NPU2 case
-                mem_tiles[2 * i] if n_aie_cols == 8 else mem_tiles[i],
+                mem_tiles[i],
                 fifo_depth,
                 A_l2_ty,
             )
@@ -232,9 +232,7 @@ def matrix_multiply(
             A_l2l1_fifos[row] = object_fifo(
                 f"A_L2L1_{row}",
                 (
-                    mem_tiles[2 * row]
-                    if n_aie_cols == 8
-                    else mem_tiles[row // n_A_tiles_per_shim]
+                    mem_tiles[row // n_A_tiles_per_shim]
                 ),
                 core_tiles[row][0:n_aie_cols],  # broadcast along one row
                 fifo_depth,
@@ -411,9 +409,7 @@ def matrix_multiply(
                 (M, K),  # Size of A matrix
                 (m * n_A_tiles_per_shim, k),  # Size of A (smallest) tile
                 (1, K // k),  # Size of "group" of tiles
-                pattern_repeat=N
-                // n
-                // n_aie_cols,  # Repeat data so can distribute across whole column
+                pattern_repeat=N // n // n_aie_cols,  # Repeat data so can distribute across whole column
             )
             if b_col_maj:
                 B_tiles = TensorTiler2D.step_tiler(
@@ -522,9 +518,7 @@ def matrix_multiply(
                             #     |                |
                             #     |                |
                             #      ----------------
-                            tile_offset = (
-                                (row_base + tile_row) * n_aie_cols + col
-                            ) % len(A_tiles)
+                            tile_offset = ((row_base + tile_row) * n_shim_mem_A + col) % len(A_tiles)
 
                             # always equal to n_aie_rows since we have n_aie_rows row tiles for matrix A
                             if col < n_aie_rows:
