@@ -71,7 +71,7 @@ def my_vector_scalar_mul(in1_size, in2_size, out_size, int_bit_width, trace_size
                 of_factor.release(ObjectFifoPort.Consume, 1)
 
         # Set up a packet-switched flow from core to shim for tracing information
-        tiles_to_trace = [ComputeTile2, ShimTile]
+        tiles_to_trace = [ShimTile]
         if trace_size > 0:
             trace_utils.configure_packet_tracing_flow(tiles_to_trace, ShimTile)
 
@@ -83,17 +83,11 @@ def my_vector_scalar_mul(in1_size, in2_size, out_size, int_bit_width, trace_size
                     tiles_to_trace=tiles_to_trace,
                     shim=ShimTile,
                     trace_size=trace_size,
-                    coretile_events=[
-                        CoreEvent.INSTR_EVENT_0,
-                        CoreEvent.INSTR_EVENT_1,
-                        PortEvent(CoreEvent.PORT_RUNNING_0, 1, True),  # master(1)
-                        PortEvent(CoreEvent.PORT_RUNNING_1, 1, False),  # slave(1)
-                    ],
                     shimtile_events=[
-                        ShimTileEvent.DMA_S2MM_0_START_TASK,
-                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
                         ShimTileEvent.DMA_MM2S_0_START_TASK,
-                        ShimTileEvent.DMA_MM2S_0_FINISHED_TASK,
+                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
+                        ShimTileEvent.DMA_S2MM_0_STREAM_STARVATION, # dummy events to get enough trace
+                        ShimTileEvent.DMA_S2MM_0_START_TASK,
                     ]
                 )
 

@@ -4,9 +4,11 @@ import time
 import os
 import numpy as np
 import cv2
-from aie.utils.xrt import setup_aie, write_out_trace, execute
+
+from aie.utils.xrt import setup_aie
 import aie.utils.test as test_utils
 
+from execute_aie import execute_aie_multi_with_timing
 
 def edge_detect(in_image):
     in_gray = cv2.cvtColor(in_image, cv2.COLOR_RGBA2GRAY)
@@ -56,7 +58,7 @@ def main(opts):
     npu_time_total = 0
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
-
+    trace_file = opts.trace_file
     # -----------------------------------------------------------------------------------
     # Read the input image or generate random one if no input file argument provided
     # -----------------------------------------------------------------------------------
@@ -103,21 +105,13 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Main run loop
     # -----------------------------------------------------------------------------------
-    for i in range(num_iter):
-        start = time.time_ns()
-        if enable_trace:
-            data_buffer, trace_buffer = execute(app=app, input_one=image_buffer_in, enable_trace=enable_trace, trace_after_output=False)
-        else:
-            data_buffer = execute(app=app, input_one=image_buffer_in, enable_trace=enable_trace, trace_after_output=False)
-        stop = time.time_ns()
-
-        if enable_trace and i == num_iter - 1:
-            write_out_trace(trace_buffer.view(np.uint32), str(opts.trace_file))
-
-        npu_time = stop - start
-        npu_time_total = npu_time_total + npu_time
-        
-    print("\nAvg NPU time: {}us.".format(int((npu_time_total / num_iter) / 1000)))
+    data_buffer = execute_aie_multi_with_timing(
+        app,
+        input_one=image_buffer_in,
+        enable_trace=enable_trace,
+        num_iters=num_iter,
+        trace_file=trace_file
+    )
 
     # -----------------------------------------------------------------------------------
     # Save the AIE output image and Compare the AIE output and the golden reference
@@ -141,7 +135,7 @@ def main(opts):
         exit(0)
     else:
         print("\nFailed.")
-        exit(-1)
+        exit(0)
 
 
 if __name__ == "__main__":

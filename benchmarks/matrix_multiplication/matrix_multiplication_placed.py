@@ -385,12 +385,6 @@ def matrix_multiply(
                     tiles_to_trace=tiles_to_trace,
                     shim=shim_tiles[-1],
                     trace_size=trace_size,
-                    coretile_events=[
-                        CoreEvent.INSTR_EVENT_0,
-                        CoreEvent.INSTR_EVENT_1,
-                        PortEvent(CoreEvent.PORT_RUNNING_0, 1, True),  # master(1)
-                        PortEvent(CoreEvent.PORT_RUNNING_1, 1, False),  # slave(1)
-                    ],
                     shimtile_events=[
                         ShimTileEvent.DMA_S2MM_0_START_TASK,
                         ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,

@@ -12,51 +12,74 @@ def main(args):
     process_data = [entry for entry in data if entry.get("name") == "process_name"]
     
     # Map shim PID to tile name
-    shim_pid_to_name = {
+    shim_pids = {
         entry["pid"]: entry.get("args", {}).get("name", "")
         for entry in process_data
         if "shim" in entry.get("args", {}).get("name", "")
     }
 
-    # Sort process entries by timestamp
+    # Sort pid process entries by timestamp
     event_data = [entry for entry in data if entry.get("name") != "process_name" and "ts" in entry]
     sorted_event = sorted(event_data, key=lambda x: x["ts"])
 
-    # Measure time deltas
-    event_delta = {}
-    for pid, shim_name in shim_pid_to_name.items():
-        pid_data = [entry for entry in sorted_event if entry.get("pid") == pid]
-        start_time = None
-        for entry in pid_data:
-            if entry["name"] == "DMA_MM2S_0_START_TASK" and entry["ph"] == "B":
-                start_time = entry["ts"]
-            elif entry["name"] == "DMA_S2MM_0_FINISHED_TASK" and entry["ph"] == "B":
-                if start_time is None:
-                    raise Exception("S2MM_FINISHED_TASK without MM2S_START_TASK")
-                delta = entry["ts"] - start_time
-                event_delta.setdefault(shim_name, []).append(delta)
-                start_time = None
+    # Extract earliest START_TASK and latest FINISHED_TASK per shim_pid
+    dma_event_map = {pid: [] for pid in shim_pids.keys()}
+    for shim_pid in shim_pids.keys():
+        pid_data = [entry for entry in sorted_event if entry.get("pid") == shim_pid]
 
-    # Collect and print results
-    output_lines = []
-    for name, diffs in event_delta.items():
-        trimmed = diffs[args.warmup:]
-        if trimmed:
-            line = f"{name} | Min: {min(trimmed)} cycles, Max: {max(trimmed)} cycles, Avg: {sum(trimmed) / len(trimmed):.2f} cycles"
-            print(line)
-            output_lines.append(line)
+        start_times = [
+            entry["ts"]
+            for entry in pid_data
+            if entry["name"] == "DMA_MM2S_0_START_TASK" and entry["ph"] == "B"
+        ]
+        end_times = [
+            entry["ts"]
+            for entry in pid_data
+            if entry["name"] == "DMA_S2MM_0_FINISHED_TASK" and entry["ph"] == "B"
+        ]
 
-    # Write to output file if specified
-    if args.output:
+        if not start_times or not end_times:
+            raise Exception(
+                f"Missing START_TASK or FINISHED_TASK for pid {shim_pid}. "
+                "Trace size might not be large enough."
+            )
+
+        # Store tuple of (earliest_start, latest_end)
+        dma_event_map[shim_pid].append((min(start_times), max(end_times)))
+
+
+    lengths = [len(lst) for lst in dma_event_map.values()]
+    assert all(l == lengths[0] for l in lengths), (
+        "Number of DMA events do not match between Shims. "
+        "Trace size might not be large enough."
+    )
+    # Calculate cycle duration per iteration
+    output = []
+    for i in range(lengths[0]):
+        ith_dma_event = [dma_event_map[pid][i] for pid in dma_event_map]
+        min_start = min(start for start, _ in ith_dma_event)
+        max_end = max(end for _, end in ith_dma_event)
+        output.append((min_start,max_end,max_end - min_start))
+
+    if args.output: 
         with open(args.output, 'w') as f:
-            for line in output_lines:
-                f.write(line + "\n")
-        
+            f.write("iter,start_cycle_num,end_cycle_num,duration_in_cycles\n")
+            for i, line in enumerate(output):
+                f.write(f"{i},{line[0]},{line[1]},{line[2]}\n")
+            durations = [line[2] for line in output]
+            summary = (
+                "\n======== Cycle Summary ==========\n"
+                f"Total iterations: {len(durations)}\n"
+                f"Min     : {min(durations)} cycles\n"
+                f"Max     : {max(durations)} cycles\n"
+                f"Average : {sum(durations) / len(durations):.2f} cycles\n"
+            )
+            f.write(summary)
+            print(summary)        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze shim DMA latencies from trace JSON.")
     parser.add_argument("-i", "--input", type=str, required=True, help="Path to the trace JSON file")
-    parser.add_argument("-w", "--warmup", type=int, default=0, help="Number of warm-up iterations to skip")
     parser.add_argument("-o", "--output", type=str, required=True, help="Path to output summary txt file")
     args = parser.parse_args()
     main(args)

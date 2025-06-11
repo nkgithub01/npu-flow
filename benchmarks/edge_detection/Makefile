@@ -15,10 +15,12 @@ endif
 NUM_COMPUTE_COLUMNS = 4
 EDGEDETECT_WIDTH = 1920
 EDGEDETECT_HEIGHT = 1080
-TRACE_SIZE = 16384
-NUM_ITERATION = 10
+TRACE_SIZE = 134217728
+NUM_ITERATION ?= 1	
 
 all: build/final_${EDGEDETECT_WIDTH}.xclbin
+
+build_trace: build/final_trace_${EDGEDETECT_WIDTH}.xclbin
 
 mlir: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir
 

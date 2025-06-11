@@ -8,6 +8,7 @@
 import numpy as np
 import sys
 import argparse
+import time
 
 from aie.dialects.aie import *
 from aie.dialects.aiex import *
@@ -15,8 +16,8 @@ from aie.helpers.dialects.ext.scf import _for as range_
 from aie.extras.context import mlir_mod_ctx
 
 import aie.utils.trace as trace_utils
-from aie.utils.trace import PortEvent
-from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent
+from aie.utils.trace import PortEvent, ShimTilePortEvent
+from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent, MemEvent
 
 def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
     height_minus1 = image_height - 1
@@ -194,6 +195,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
                         line_width,
                         kernel,
                     )
+                    
                     OF_3to4s[col_idx].release(ObjectFifoPort.Produce, 1)
     
                     # Steady State : Middle
@@ -275,11 +277,9 @@ def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
                     inOF_L2L1s[col_idx].release(ObjectFifoPort.Consume, 1)
                     outOF_L1L2s[col_idx].release(ObjectFifoPort.Produce, 1)
 
-        # Set up a packet-switched flow from core/mem to shim for tracing information
-        # Max can only trace 31 tiles
         tiles_to_trace = shim_tiles
-        if trace_size > 0:
-            trace_utils.configure_packet_tracing_flow(tiles_to_trace, shim_tiles[-1])
+        if trace_size > 0: 
+            trace_utils.configure_packet_tracing_flow(tiles_to_trace, shim_tiles[0])
 
         # To/from AIE-array data movement
         @runtime_sequence(i_tensor_ty, o_tensor_ty)
@@ -287,32 +287,25 @@ def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
             if trace_size > 0:
                 trace_utils.configure_packet_tracing_aie2(
                     tiles_to_trace=tiles_to_trace,
-                    shim=shim_tiles[-1],
+                    shim=shim_tiles[0],
                     trace_size=trace_size,
-                    coretile_events=[
-                        CoreEvent.INSTR_EVENT_0,
-                        CoreEvent.INSTR_EVENT_1,
-                        PortEvent(CoreEvent.PORT_RUNNING_0, 1, True),  # master(1)
-                        PortEvent(CoreEvent.PORT_RUNNING_1, 1, False),  # slave(1)
-                    ],
                     shimtile_events=[
-                        ShimTileEvent.DMA_S2MM_0_START_TASK,
-                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
                         ShimTileEvent.DMA_MM2S_0_START_TASK,
-                        ShimTileEvent.DMA_MM2S_0_FINISHED_TASK,
-                    ]
+                        ShimTileEvent.DMA_S2MM_0_FINISHED_TASK,
+                        ShimTileEvent.DMA_S2MM_0_STREAM_STARVATION, #dummy event to get enough trace
+                    ],
                 )
             in_tasks = []
             out_tasks = []
             for col_idx in range(num_compute_flow_column):
-                in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[col_idx], I, offset = col_idx*tensor_size, sizes=[1, 1, 1, tensor_size]))
+                in_tasks.append(shim_dma_single_bd_task(inOF_L3L2s[col_idx], I, offset = col_idx*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
                 out_tasks.append(shim_dma_single_bd_task(outOF_L2L3s[col_idx], O, offset = col_idx*tensor_size, sizes=[1, 1, 1, tensor_size], issue_token=True))
 
             dma_start_task(*in_tasks, *out_tasks)
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
 
-            trace_utils.gen_trace_done_aie2(shim_tiles[-1])
+            trace_utils.gen_trace_done_aie2(shim_tiles[0])
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

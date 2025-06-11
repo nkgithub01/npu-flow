@@ -48,7 +48,7 @@ endif
 
 # Trace size
 VERBOSITY := 2
-TRACE_SIZE := 16384
+TRACE_SIZE := 1048576
 NUM_ITERATION := 10
 mlir_target?=build/aie_${target_suffix}.mlir
 trace_mlir_target?=build/aie_trace_${target_suffix}.mlir
@@ -113,7 +113,7 @@ run: ${xclbin_target}
 run_trace: ${trace_xclbin_target}
 	@mkdir -p trace
 	export XRT_HACK_UNSECURE_LOADING_XCLBIN=1
-	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} \
+	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target} -k MLIR_AIE --iters 1 ${runargs} \
 			-t ${TRACE_SIZE} --trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir ${trace_mlir_target} --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt
