@@ -61,18 +61,11 @@ if __name__ == "__main__":
         default="netlist.json",
     )
     argparser.add_argument(
-        "--dtype_in", 
+        "--dtype", 
         type=str, 
-        dest="dtype_in_str",
-        choices=["i8", "i16"], 
-        default="i16"
-    )
-    argparser.add_argument(
-        "--dtype_out", 
-        type=str, 
-        dest="dtype_out_str",
+        dest="dtype_str",
         choices=["i8", "i16", "i32"], 
-        default="i16"
+        default="i32"
     )
     argparser.add_argument(
         "--trace_size", 

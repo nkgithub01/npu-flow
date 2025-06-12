@@ -1,4 +1,4 @@
-
+import json
 import os
 import sys
 import time
@@ -7,14 +7,49 @@ import numpy as np
 from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils
 
+RELEASE_VERBOSITY_LEVEL = 1
+DEBUG_VERBOSITY_LEVEL = 2
+
 dtype_map = {
     "i8": np.int8,
     "i16": np.int16,
     "i32": np.int32,
 }
 
-RELEASE_VERBOSITY_LEVEL = 1
-DEBUG_VERBOSITY_LEVEL = 2
+
+def parse_netlist(dtype_str, netlist_file):
+    with open(netlist_file) as json_file:
+        netlist = json.load(json_file)
+        shim_tile_ids = []
+        obj_fifos_data_shape = {}
+        shim_tile_in_out_fifo_ids = dict(input=[], output=[])
+
+        # Track SHIM tile ids
+        for node in netlist['nodes']:
+            if node["type"] == "SHIM":
+                shim_tile_ids.append(node["tile_id"])
+
+        # Track object FIFOs from or to shim tiles
+        for net in netlist['nets']:
+            dtype = dtype_map[dtype_str]
+            data_size = np.dtype(dtype).itemsize
+            data_shape = (net["byte_size_per_depth"] // data_size,)
+            obj_fifos_data_shape[net["net_id"]] = data_shape
+
+            if net["src_tile_id"] in shim_tile_ids:
+                shim_tile_in_out_fifo_ids["input"].append(net["net_id"])
+            if any(dst_tile_id in shim_tile_ids for dst_tile_id in net["dst_tile_ids"]):
+                shim_tile_in_out_fifo_ids["output"].append(net["net_id"])
+
+        in_data_shape = 0
+        for input_fifo_id in shim_tile_in_out_fifo_ids["input"]:
+            in_data_shape += obj_fifos_data_shape[input_fifo_id][0]
+        out_data_shape = 0
+        for output_fifo_id in shim_tile_in_out_fifo_ids["output"]:
+            out_data_shape += obj_fifos_data_shape[output_fifo_id][0]
+
+    return (in_data_shape,), (out_data_shape,)
+
 
 def main(opts):
     # -----------------------------------------------------------------------------------
@@ -40,25 +75,25 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Configure the design's buffer size
     # -----------------------------------------------------------------------------------
-    dtype_in = dtype_map[opts.dtype_in_str]
-    dtype_out = dtype_map[opts.dtype_out_str]
+    in_data_shape, out_data_shape = parse_netlist(opts.dtype_str, opts.input_netlist_file)
+    dtype = dtype_map[opts.dtype_str]
 
     # The test only supports integer.
-    dtype_is_int = np.issubdtype(dtype_in, np.integer) and np.issubdtype(dtype_out, np.integer)
+    dtype_is_int = np.issubdtype(dtype, np.integer)
     assert dtype_is_int, "Input and output data type must be an integer type (i8, i16, i32)."
-    dtype_in_min = np.iinfo(dtype_in).min
-    dtype_in_max = np.iinfo(dtype_in).max
+    dtype_min = np.iinfo(dtype).min
+    dtype_max = np.iinfo(dtype).max
 
-    shape_in_A = None
-    shape_in_B = None
-    shape_out_C = None
+    shape_in_one = in_data_shape
+    shape_in_two = in_data_shape
+    shape_out = out_data_shape
 
     # -----------------------------------------------------------------------------------
     # Generate the input and the reference output
     # -----------------------------------------------------------------------------------
-    NPU_input_one = None
-    NPU_input_two = None
-    NPU_output_ref = None
+    NPU_input_one = np.zeros(shape_in_one, dtype=dtype)
+    NPU_input_two = np.zeros(shape_in_two, dtype=dtype)
+    NPU_output_ref = np.zeros(shape_out, dtype=dtype)
 
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one: {NPU_input_one.shape}\n{NPU_input_one}")
@@ -73,12 +108,12 @@ def main(opts):
     app = setup_aie(
         xclbin_path,
         insts_path,
-        shape_in_A,
-        dtype_in,
-        shape_in_B,
-        dtype_in,
-        shape_out_C,
-        dtype_out,
+        shape_in_one,
+        dtype,
+        shape_in_two,
+        dtype,
+        shape_out,
+        dtype,
         enable_trace=enable_trace,
         trace_size=trace_size,
         trace_after_output=False,
@@ -109,7 +144,7 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Compare the AIE output and the golden reference result
     # -----------------------------------------------------------------------------------
-    NPU_output = np.array(data_buffer, dtype=dtype_out)
+    NPU_output = np.array(data_buffer, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU output: {NPU_output.shape}\n{NPU_output}")
         np.savetxt(output_folder+"NPU_output_two.txt", NPU_output, fmt="%d")
@@ -139,27 +174,20 @@ def main(opts):
 
 
 if __name__ == "__main__":
-    p = test_utils.create_default_argparser()
-    p.add_argument(
+    argparser = test_utils.create_default_argparser()
+    argparser.add_argument(
         "-nl",
         "--netlist", 
         type=str, 
-        dest="netlist",
-        default="netlist.json",
+        dest="input_netlist_file",
+        default="AIE_data_flow_netlist.json",
     )
-    p.add_argument(
-        "--dtype_in", 
+    argparser.add_argument(
+        "--dtype", 
         type=str, 
-        dest="dtype_in_str",
-        choices=["i8", "i16"], 
-        default="i16"
-    )
-    p.add_argument(
-        "--dtype_out", 
-        type=str, 
-        dest="dtype_out_str",
+        dest="dtype_str",
         choices=["i8", "i16", "i32"], 
-        default="i16"
+        default="i32"
     )
-    opts = p.parse_args(sys.argv[1:])
+    opts = argparser.parse_args(sys.argv[1:])
     main(opts)

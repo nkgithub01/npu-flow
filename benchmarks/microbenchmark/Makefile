@@ -3,8 +3,7 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 include ${srcdir}/../makefile-common
 
 device_name := npu2
-dtype_in := i8
-dtype_out := i16
+dtype := i32
 
 target_name := microbenchmark
 aie_py_src := ${target_name}.py
@@ -35,8 +34,8 @@ xclbin_target?=build/${target_name}.xclbin
 trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
-aieargs+=--dev ${device_name} --dtype_in=${dtype_in} --dtype_out=${dtype_out}
-runargs+=-nl ${input_netlist} -v ${VERBOSITY} --dtype_in=${dtype_in} --dtype_out=${dtype_out}
+aieargs+=--dev ${device_name} -nl ${input_netlist} --dtype=${dtype}
+runargs+=-nl ${input_netlist} -v ${VERBOSITY} --dtype=${dtype}
 
 .PHONY: all
 all: ${xclbin_target}
