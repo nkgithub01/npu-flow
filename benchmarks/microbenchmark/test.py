@@ -18,24 +18,38 @@ dtype_map = {
 
 
 def parse_netlist(dtype_str, netlist_file):
+    core_tile_ids = []
+    shim_tile_ids = []
+    obj_fifos_data_shape = {}
+    core_tile_producer_consumer_fifo_ids = {}
+    shim_tile_in_out_fifo_ids = dict(input=[], output=[])
+
     with open(netlist_file) as json_file:
         netlist = json.load(json_file)
-        shim_tile_ids = []
-        obj_fifos_data_shape = {}
-        shim_tile_in_out_fifo_ids = dict(input=[], output=[])
-
-        # Track SHIM tile ids
+        
+        # Tile(s) declarations
         for node in netlist['nodes']:
-            if node["type"] == "SHIM":
+            if node["type"] == "COMP":
+                core_tile_ids.append(node["tile_id"])
+                core_tile_producer_consumer_fifo_ids[node["tile_id"]] = dict(producer=[], consumer=[])
+            elif node["type"] == "SHIM":
                 shim_tile_ids.append(node["tile_id"])
 
-        # Track object FIFOs from or to shim tiles
+        # Object FIFO(s) declarations
         for net in netlist['nets']:
             dtype = dtype_map[dtype_str]
             data_size = np.dtype(dtype).itemsize
             data_shape = (net["byte_size_per_depth"] // data_size,)
             obj_fifos_data_shape[net["net_id"]] = data_shape
 
+            # Track producer and consumer object FIFOs for each core tile
+            if net["src_tile_id"] in core_tile_ids:
+                core_tile_producer_consumer_fifo_ids[net["src_tile_id"]]["producer"].append(net["net_id"])
+            for dst_tile_id in net["dst_tile_ids"]:
+                if dst_tile_id in core_tile_ids:
+                    core_tile_producer_consumer_fifo_ids[dst_tile_id]["consumer"].append(net["net_id"])
+
+            # Track object FIFOs from or to shim tiles
             if net["src_tile_id"] in shim_tile_ids:
                 shim_tile_in_out_fifo_ids["input"].append(net["net_id"])
             if any(dst_tile_id in shim_tile_ids for dst_tile_id in net["dst_tile_ids"]):
@@ -48,8 +62,7 @@ def parse_netlist(dtype_str, netlist_file):
         for output_fifo_id in shim_tile_in_out_fifo_ids["output"]:
             out_data_shape += obj_fifos_data_shape[output_fifo_id][0]
 
-    return (in_data_shape,), (out_data_shape,)
-
+    return core_tile_ids, shim_tile_ids, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, (in_data_shape,), (out_data_shape,), obj_fifos_data_shape
 
 def main(opts):
     # -----------------------------------------------------------------------------------
@@ -75,7 +88,7 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Configure the design's buffer size
     # -----------------------------------------------------------------------------------
-    in_data_shape, out_data_shape = parse_netlist(opts.dtype_str, opts.input_netlist_file)
+    core_tile_ids, shim_tile_ids, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, in_data_shape, out_data_shape, obj_fifos_data_shape = parse_netlist(opts.dtype_str, opts.input_netlist_file)
     dtype = dtype_map[opts.dtype_str]
 
     # The test only supports integer.
@@ -94,10 +107,12 @@ def main(opts):
     NPU_input_one = np.zeros(shape_in_one, dtype=dtype)
     NPU_input_two = np.zeros(shape_in_two, dtype=dtype)
     NPU_output_ref = np.zeros(shape_out, dtype=dtype)
-
+    for tile_id in core_tile_ids:
+        NPU_output_ref += np.ones(shape_out, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
-        print(f"NPU input one: {NPU_input_one.shape}\n{NPU_input_one}")
-        print(f"NPU input two: {NPU_input_two.shape}\n{NPU_input_two}")
+        print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")
+        print(f"NPU input two (Shape: {NPU_input_two.shape}):\n{NPU_input_two}")
+        print(f"NPU reference output (Shape: {NPU_input_two.shape}):\n{NPU_input_two}")
         np.savetxt(output_folder+"NPU_input_one.txt", NPU_input_one, fmt="%d")
         np.savetxt(output_folder+"NPU_input_two.txt", NPU_input_two, fmt="%d")
         np.savetxt(output_folder+"NPU_output_reference.txt", NPU_output_ref, fmt="%d")
@@ -146,7 +161,7 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     NPU_output = np.array(data_buffer, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
-        print(f"NPU output: {NPU_output.shape}\n{NPU_output}")
+        print(f"NPU output (Shape: {NPU_output.shape}):\n{NPU_output}")
         np.savetxt(output_folder+"NPU_output_two.txt", NPU_output, fmt="%d")
 
     relative_tolerance = 0
