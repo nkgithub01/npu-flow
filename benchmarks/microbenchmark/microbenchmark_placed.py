@@ -29,25 +29,21 @@ def main(opts):
             opts.trace_size,
         )
 
-        # Verify that the python code has valid operation within the mlir-aie context.
-        res = ctx.module.operation.verify() 
-        if res == True:
-            print(ctx.module) # Print the python-to-mlir conversion to stdout
-        else:
-            print(res)
-
+        # Print the python-to-mlir conversion to stdout
+        print(ctx.module)
 
 def parse_netlist(dtype_str, netlist_file):
+    tiles={}
+    core_tile_ids = []
+    shim_tile_ids = []
+    obj_fifos={}
+    fifo_links={}
+    obj_fifos_data_shape = {}
+    core_tile_producer_consumer_fifo_ids = {}
+    shim_tile_in_out_fifo_ids = dict(input=[], output=[])
+
     with open(netlist_file) as json_file:
         netlist = json.load(json_file)
-        tiles={}
-        core_tile_ids = []
-        shim_tile_ids = []
-        obj_fifos={}
-        fifo_links={}
-        obj_fifos_data_shape = {}
-        core_tile_producer_consumer_fifo_ids = {}
-        shim_tile_in_out_fifo_ids = dict(input=[], output=[])
         
         # Tile(s) declarations
         for node in netlist['nodes']:
@@ -68,7 +64,7 @@ def parse_netlist(dtype_str, netlist_file):
                 f"obj_fifo_{net["net_id"]}",
                 tiles[net["src_tile_id"]],
                 [tiles[idx] for idx in net["dst_tile_ids"]],
-                net["depths"],
+                net["depths"] if len(net["depths"]) > 1 else net["depths"][0],
                 data_ty
             )
             obj_fifos_data_shape[net["net_id"]] = data_shape

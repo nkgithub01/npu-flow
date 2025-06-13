@@ -25,7 +25,7 @@ else
 buffer_aloc_flag=bank-aware
 endif
 
-VERBOSITY := 1
+VERBOSITY := 2
 TRACE_SIZE := 16384
 NUM_ITERATION := 10
 mlir_target?=build/${target_name}.mlir
