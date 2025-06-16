@@ -18,11 +18,19 @@ dtype_map = {
 
 
 def parse_netlist(dtype_str, netlist_file):
-    core_tile_ids = []
-    shim_tile_ids = []
-    obj_fifos_data_shape = {}
-    core_tile_producer_consumer_fifo_ids = {}
-    shim_tile_in_out_fifo_ids = dict(input=[], output=[])
+    netlist_info = dict(
+        tiles={},
+        core_tile_ids=[],
+        mem_tile_ids=[],
+        shim_tile_ids=[],
+        obj_fifos={},
+        fifo_links={},
+        obj_fifos_data_shape={},
+        core_tile_producer_consumer_fifo_ids={},
+        shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
+        in_data_shape=(),
+        out_data_shape=(),
+    )
 
     with open(netlist_file) as json_file:
         netlist = json.load(json_file)
@@ -30,39 +38,49 @@ def parse_netlist(dtype_str, netlist_file):
         # Tile(s) declarations
         for node in netlist['nodes']:
             if node["type"] == "COMP":
-                core_tile_ids.append(node["tile_id"])
-                core_tile_producer_consumer_fifo_ids[node["tile_id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_ids"].append(node["tile_id"])
+                netlist_info["core_tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
+            elif node["type"] == "MEM":
+                netlist_info["mem_tile_ids"].append(node["tile_id"])
             elif node["type"] == "SHIM":
-                shim_tile_ids.append(node["tile_id"])
+                netlist_info["shim_tile_ids"].append(node["tile_id"])
 
         # Object FIFO(s) declarations
         for net in netlist['nets']:
             dtype = dtype_map[dtype_str]
             data_size = np.dtype(dtype).itemsize
             data_shape = (net["byte_size_per_depth"] // data_size,)
-            obj_fifos_data_shape[net["net_id"]] = data_shape
+            netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
             # Track producer and consumer object FIFOs for each core tile
-            if net["src_tile_id"] in core_tile_ids:
-                core_tile_producer_consumer_fifo_ids[net["src_tile_id"]]["producer"].append(net["net_id"])
+            if net["src_tile_id"] in netlist_info["core_tile_ids"]:
+                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
             for dst_tile_id in net["dst_tile_ids"]:
-                if dst_tile_id in core_tile_ids:
-                    core_tile_producer_consumer_fifo_ids[dst_tile_id]["consumer"].append(net["net_id"])
+                if dst_tile_id in netlist_info["core_tile_ids"]:
+                    netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
-            if net["src_tile_id"] in shim_tile_ids:
-                shim_tile_in_out_fifo_ids["input"].append(net["net_id"])
-            if any(dst_tile_id in shim_tile_ids for dst_tile_id in net["dst_tile_ids"]):
-                shim_tile_in_out_fifo_ids["output"].append(net["net_id"])
+            if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
+                netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
+            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
+                netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
+
+            netlist_info["fifo_links"][net["net_id"]] = []
+
+        for net in netlist['nets']:
+            if net["need_linking"]:
+                netlist_info["fifo_links"][net["link_src_net_id"]].append(net["net_id"])
 
         in_data_shape = 0
-        for input_fifo_id in shim_tile_in_out_fifo_ids["input"]:
-            in_data_shape += obj_fifos_data_shape[input_fifo_id][0]
+        for input_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
+            in_data_shape += netlist_info["obj_fifos_data_shape"][input_fifo_id][0]
         out_data_shape = 0
-        for output_fifo_id in shim_tile_in_out_fifo_ids["output"]:
-            out_data_shape += obj_fifos_data_shape[output_fifo_id][0]
+        for output_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
+            out_data_shape += netlist_info["obj_fifos_data_shape"][output_fifo_id][0]
+        netlist_info["in_data_shape"] = (in_data_shape,)
+        netlist_info["out_data_shape"] = (out_data_shape,)
 
-    return core_tile_ids, shim_tile_ids, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, (in_data_shape,), (out_data_shape,), obj_fifos_data_shape
+    return netlist_info
 
 def main(opts):
     # -----------------------------------------------------------------------------------
@@ -88,7 +106,7 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Configure the design's buffer size
     # -----------------------------------------------------------------------------------
-    core_tile_ids, shim_tile_ids, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, in_data_shape, out_data_shape, obj_fifos_data_shape = parse_netlist(opts.dtype_str, opts.input_netlist_file)
+    netlist_info = parse_netlist(opts.dtype_str, opts.input_netlist_file)
     dtype = dtype_map[opts.dtype_str]
 
     # The test only supports integer.
@@ -97,9 +115,9 @@ def main(opts):
     dtype_min = np.iinfo(dtype).min
     dtype_max = np.iinfo(dtype).max
 
-    shape_in_one = in_data_shape
-    shape_in_two = in_data_shape
-    shape_out = out_data_shape
+    shape_in_one = netlist_info["in_data_shape"]
+    shape_in_two = netlist_info["in_data_shape"]
+    shape_out = netlist_info["out_data_shape"]
 
     # -----------------------------------------------------------------------------------
     # Generate the input and the reference output
@@ -107,7 +125,7 @@ def main(opts):
     NPU_input_one = np.zeros(shape_in_one, dtype=dtype)
     NPU_input_two = np.zeros(shape_in_two, dtype=dtype)
     NPU_output_ref = np.zeros(shape_out, dtype=dtype)
-    for tile_id in core_tile_ids:
+    for tile_id in netlist_info["core_tile_ids"]:
         NPU_output_ref += np.ones(shape_out, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")

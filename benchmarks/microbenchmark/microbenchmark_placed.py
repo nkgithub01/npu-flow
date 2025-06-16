@@ -33,26 +33,33 @@ def main(opts):
         print(ctx.module)
 
 def parse_netlist(dtype_str, netlist_file):
-    tiles={}
-    core_tile_ids = []
-    shim_tile_ids = []
-    obj_fifos={}
-    fifo_links={}
-    obj_fifos_data_shape = {}
-    core_tile_producer_consumer_fifo_ids = {}
-    shim_tile_in_out_fifo_ids = dict(input=[], output=[])
+    netlist_info = dict(
+        tiles={},
+        core_tile_ids=[],
+        mem_tile_ids=[],
+        shim_tile_ids=[],
+        obj_fifos={},
+        fifo_links={},
+        obj_fifos_data_shape={},
+        core_tile_producer_consumer_fifo_ids={},
+        shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
+        in_data_shape=(),
+        out_data_shape=(),
+    )
 
     with open(netlist_file) as json_file:
         netlist = json.load(json_file)
         
         # Tile(s) declarations
         for node in netlist['nodes']:
-            tiles[node["tile_id"]] = tile(node["col_x"], node["row_y"])
+            netlist_info["tiles"][node["tile_id"]] = tile(node["col_x"], node["row_y"])
             if node["type"] == "COMP":
-                core_tile_ids.append(node["tile_id"])
-                core_tile_producer_consumer_fifo_ids[node["tile_id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_ids"].append(node["tile_id"])
+                netlist_info["core_tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
+            elif node["type"] == "MEM":
+                netlist_info["mem_tile_ids"].append(node["tile_id"])
             elif node["type"] == "SHIM":
-                shim_tile_ids.append(node["tile_id"])
+                netlist_info["shim_tile_ids"].append(node["tile_id"])
 
         # Object FIFO(s) declarations
         for net in netlist['nets']:
@@ -60,50 +67,52 @@ def parse_netlist(dtype_str, netlist_file):
             data_size = np.dtype(dtype).itemsize
             data_shape = (net["byte_size_per_depth"] // data_size,)
             data_ty = np.ndarray[data_shape, np.dtype[dtype]]
-            obj_fifos[net["net_id"]] = object_fifo(
+            netlist_info["obj_fifos"][net["net_id"]] = object_fifo(
                 f"obj_fifo_{net["net_id"]}",
-                tiles[net["src_tile_id"]],
-                [tiles[idx] for idx in net["dst_tile_ids"]],
+                netlist_info["tiles"][net["src_tile_id"]],
+                [netlist_info["tiles"][idx] for idx in net["dst_tile_ids"]],
                 net["depths"] if len(net["depths"]) > 1 else net["depths"][0],
                 data_ty
             )
-            obj_fifos_data_shape[net["net_id"]] = data_shape
+            netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
             # Track producer and consumer object FIFOs for each core tile
-            if net["src_tile_id"] in core_tile_ids:
-                core_tile_producer_consumer_fifo_ids[net["src_tile_id"]]["producer"].append(net["net_id"])
+            if net["src_tile_id"] in netlist_info["core_tile_ids"]:
+                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
             for dst_tile_id in net["dst_tile_ids"]:
-                if dst_tile_id in core_tile_ids:
-                    core_tile_producer_consumer_fifo_ids[dst_tile_id]["consumer"].append(net["net_id"])
+                if dst_tile_id in netlist_info["core_tile_ids"]:
+                    netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
-            if net["src_tile_id"] in shim_tile_ids:
-                shim_tile_in_out_fifo_ids["input"].append(net["net_id"])
-            if any(dst_tile_id in shim_tile_ids for dst_tile_id in net["dst_tile_ids"]):
-                shim_tile_in_out_fifo_ids["output"].append(net["net_id"])
+            if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
+                netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
+            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
+                netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
-            fifo_links[net["net_id"]] = []
+            netlist_info["fifo_links"][net["net_id"]] = []
 
         for net in netlist['nets']:
             if net["need_linking"]:
-                fifo_links[net["link_src_net_id"]].append(net["net_id"])
+                netlist_info["fifo_links"][net["link_src_net_id"]].append(net["net_id"])
         
         # Link the Object FIFOs
-        for link_src in fifo_links:
-            if len(fifo_links[link_src]) != 0:
+        for link_src in netlist_info["fifo_links"]:
+            if len(netlist_info["fifo_links"][link_src]) != 0:
                 object_fifo_link(
-                    obj_fifos[link_src],
-                    [obj_fifos[dst] for dst in fifo_links[link_src]]
+                    netlist_info["obj_fifos"][link_src],
+                    [netlist_info["obj_fifos"][dst] for dst in netlist_info["fifo_links"][link_src]]
                 )
 
         in_data_shape = 0
-        for input_fifo_id in shim_tile_in_out_fifo_ids["input"]:
-            in_data_shape += obj_fifos_data_shape[input_fifo_id][0]
+        for input_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
+            in_data_shape += netlist_info["obj_fifos_data_shape"][input_fifo_id][0]
         out_data_shape = 0
-        for output_fifo_id in shim_tile_in_out_fifo_ids["output"]:
-            out_data_shape += obj_fifos_data_shape[output_fifo_id][0]
+        for output_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
+            out_data_shape += netlist_info["obj_fifos_data_shape"][output_fifo_id][0]
+        netlist_info["in_data_shape"] = (in_data_shape,)
+        netlist_info["out_data_shape"] = (out_data_shape,)
 
-    return tiles, core_tile_ids, shim_tile_ids, obj_fifos, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, (in_data_shape,), (out_data_shape,), obj_fifos_data_shape
+    return netlist_info
 
 
 def microbenchmark(
@@ -121,40 +130,40 @@ def microbenchmark(
     @device(dev_ty)
     def device_body():
         # parse the netlist file and get the tiles and object_fifos and link the object_fifos
-        tiles, core_tile_ids, shim_tile_ids, obj_fifos, core_tile_producer_consumer_fifo_ids, shim_tile_in_out_fifo_ids, in_data_shape, out_data_shape, obj_fifos_data_shape = parse_netlist(dtype_str, netlist_file)
+        netlist_info = parse_netlist(dtype_str, netlist_file)
 
         # Core function declaration
-        for tile_id in core_tile_ids:
-            @core(tiles[tile_id])
+        for tile_id in netlist_info["core_tile_ids"]:
+            @core(netlist_info["tiles"][tile_id])
             def core_body():
                 for _ in range_(0xFFFFFFFF):
                     in_items = []
                     out_items = []
-                    for consumer_fifo_id in core_tile_producer_consumer_fifo_ids[tile_id]["consumer"]:
-                        in_items.append(obj_fifos[consumer_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-                    for producer_fifo_id in core_tile_producer_consumer_fifo_ids[tile_id]["producer"]:
-                        out_items.append(obj_fifos[producer_fifo_id].acquire(ObjectFifoPort.Produce, 1))
+                    for consumer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["consumer"]:
+                        in_items.append(netlist_info["obj_fifos"][consumer_fifo_id].acquire(ObjectFifoPort.Consume, 1))
+                    for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
+                        out_items.append(netlist_info["obj_fifos"][producer_fifo_id].acquire(ObjectFifoPort.Produce, 1))
                     
                     zero_func(out_items)
                     add_func(in_items, out_items)
 
-                    for producer_fifo_id in core_tile_producer_consumer_fifo_ids[tile_id]["producer"]:
-                        obj_fifos[producer_fifo_id].release(ObjectFifoPort.Produce, 1)
-                    for consumer_fifo_id in core_tile_producer_consumer_fifo_ids[tile_id]["consumer"]:
-                        obj_fifos[consumer_fifo_id].release(ObjectFifoPort.Consume, 1)
+                    for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
+                        netlist_info["obj_fifos"][producer_fifo_id].release(ObjectFifoPort.Produce, 1)
+                    for consumer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["consumer"]:
+                        netlist_info["obj_fifos"][consumer_fifo_id].release(ObjectFifoPort.Consume, 1)
         
         # Set up a packet-switched flow from core/mem to shim for tracing information
         # Max can only trace 31 tiles
-        tile_to_route_trace = tiles[shim_tile_ids[-1]]
-        tiles_to_trace = [tiles[tile_id] for tile_id in shim_tile_ids]
+        tile_to_route_trace = netlist_info["tiles"][netlist_info["shim_tile_ids"][-1]]
+        tiles_to_trace = [netlist_info["tiles"][tile_id] for tile_id in netlist_info["shim_tile_ids"]]
         if trace_size > 0:
             trace_utils.configure_packet_tracing_flow(tiles_to_trace, tile_to_route_trace)
 
         # To/from AIE-array data movement
         @runtime_sequence(
-            np.ndarray[in_data_shape, np.dtype[dtype]],
-            np.ndarray[in_data_shape, np.dtype[dtype]],
-            np.ndarray[out_data_shape, np.dtype[dtype]],
+            np.ndarray[netlist_info["in_data_shape"], np.dtype[dtype]],
+            np.ndarray[netlist_info["in_data_shape"], np.dtype[dtype]],
+            np.ndarray[netlist_info["out_data_shape"], np.dtype[dtype]],
         )
         def sequence(Input_one, Input_two, Output):
             if trace_size > 0:
@@ -179,10 +188,10 @@ def microbenchmark(
             in_tasks = []
             offset = 0
             tensor_size = 0
-            for fifo_id in shim_tile_in_out_fifo_ids["input"]:
-                tensor_size = obj_fifos_data_shape[fifo_id][0]
+            for fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
+                tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
                 in_tasks.append(shim_dma_single_bd_task(
-                    obj_fifos[fifo_id], 
+                    netlist_info["obj_fifos"][fifo_id], 
                     Input_one, 
                     offset=offset, 
                     sizes=[1, 1, 1, tensor_size]
@@ -192,10 +201,10 @@ def microbenchmark(
             out_tasks = []
             offset = 0
             tensor_size = 0
-            for fifo_id in shim_tile_in_out_fifo_ids["output"]:
-                tensor_size = obj_fifos_data_shape[fifo_id][0]
+            for fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
+                tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
                 out_tasks.append(shim_dma_single_bd_task(
-                    obj_fifos[fifo_id],
+                    netlist_info["obj_fifos"][fifo_id],
                     Output,
                     offset=offset,
                     sizes=[1, 1, 1, tensor_size],
