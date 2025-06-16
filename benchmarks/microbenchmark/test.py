@@ -23,13 +23,13 @@ def parse_netlist(dtype_str, netlist_file):
         core_tile_ids=[],
         mem_tile_ids=[],
         shim_tile_ids=[],
-        obj_fifos={},
-        fifo_links={},
+        netlist={},
         obj_fifos_data_shape={},
-        core_tile_producer_consumer_fifo_ids={},
+        tile_producer_consumer_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
         in_data_shape=(),
         out_data_shape=(),
+        topological_order_of_net_ids=[],
     )
 
     with open(netlist_file) as json_file:
@@ -37,9 +37,10 @@ def parse_netlist(dtype_str, netlist_file):
         
         # Tile(s) declarations
         for node in netlist['nodes']:
+            netlist_info["tiles"][node["tile_id"]] = None
+            netlist_info["tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
             if node["type"] == "COMP":
                 netlist_info["core_tile_ids"].append(node["tile_id"])
-                netlist_info["core_tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
             elif node["type"] == "MEM":
                 netlist_info["mem_tile_ids"].append(node["tile_id"])
             elif node["type"] == "SHIM":
@@ -51,13 +52,18 @@ def parse_netlist(dtype_str, netlist_file):
             data_size = np.dtype(dtype).itemsize
             data_shape = (net["byte_size_per_depth"] // data_size,)
             netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
+            netlist_info["netlist"][net["net_id"]] = dict(
+                src_tile_id=net["src_tile_id"],
+                dst_tile_ids=net["dst_tile_ids"],
+                carried_value = None,
+                need_linking=False,
+                carry_value_from_net_id=None,
+            )
 
-            # Track producer and consumer object FIFOs for each core tile
-            if net["src_tile_id"] in netlist_info["core_tile_ids"]:
-                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
+            # Track producer and consumer object FIFOs for each tile
+            netlist_info["tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
             for dst_tile_id in net["dst_tile_ids"]:
-                if dst_tile_id in netlist_info["core_tile_ids"]:
-                    netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
+                netlist_info["tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
             if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
@@ -65,11 +71,31 @@ def parse_netlist(dtype_str, netlist_file):
             if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
-            netlist_info["fifo_links"][net["net_id"]] = []
-
+        # tracking net linking information
         for net in netlist['nets']:
             if net["need_linking"]:
-                netlist_info["fifo_links"][net["link_src_net_id"]].append(net["net_id"])
+                netlist_info["netlist"][net["net_id"]]["need_linking"] = True
+                netlist_info["netlist"][net["net_id"]]["carry_value_from_net_id"] = net["link_src_net_id"]
+
+        # Topological order of net IDs
+        tracking_tile_list = []
+        for net_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
+            if netlist_info["netlist"][net_id]["need_linking"]:
+                # If the net needs linking, we need to track the source tile of the linked net
+                tracking_tile_list.append(netlist_info["netlist"][netlist_info["netlist"][net_id]["carry_value_from_net_id"]]["src_tile_id"])
+                netlist_info["topological_order_of_net_ids"].append(net_id)
+                netlist_info["topological_order_of_net_ids"].append(netlist_info["netlist"][net_id]["carry_value_from_net_id"])
+            else:
+                # If the net does not need linking, we can track the source tile directly
+                tracking_tile_list.append(netlist_info["netlist"][net_id]["src_tile_id"])
+                netlist_info["topological_order_of_net_ids"].append(net_id)
+        while len(tracking_tile_list) > 0:
+            current_tile_id = tracking_tile_list.pop(0)
+            for net_id in netlist_info["tile_producer_consumer_fifo_ids"][current_tile_id]["consumer"]:
+                if net_id not in netlist_info["topological_order_of_net_ids"]:
+                    netlist_info["topological_order_of_net_ids"].append(net_id)
+                    tracking_tile_list.append(netlist_info["netlist"][net_id]["src_tile_id"])
+        netlist_info["topological_order_of_net_ids"].reverse()
 
         in_data_shape = 0
         for input_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
@@ -125,12 +151,32 @@ def main(opts):
     NPU_input_one = np.zeros(shape_in_one, dtype=dtype)
     NPU_input_two = np.zeros(shape_in_two, dtype=dtype)
     NPU_output_ref = np.zeros(shape_out, dtype=dtype)
+
     for tile_id in netlist_info["core_tile_ids"]:
-        NPU_output_ref += np.ones(shape_out, dtype=dtype)
+        netlist_info["tiles"][tile_id] = np.ones(shape_out, dtype=dtype)
+    for tile_id in netlist_info["mem_tile_ids"]:
+        netlist_info["tiles"][tile_id] = np.zeros(shape_out, dtype=dtype)
+    for tile_id in netlist_info["shim_tile_ids"]:
+        netlist_info["tiles"][tile_id] = np.zeros(shape_out, dtype=dtype)
+    
+    for net_id in netlist_info["topological_order_of_net_ids"]:
+        if netlist_info["netlist"][net_id]["need_linking"]:
+            # If the net needs linking, carry the value from the linked net
+            netlist_info["netlist"][net_id]["carried_value"] = netlist_info["netlist"][netlist_info["netlist"][net_id]["carry_value_from_net_id"]]["carried_value"]
+        else:
+            # If the net does not need linking, carry the value from the source tile
+            netlist_info["netlist"][net_id]["carried_value"] = netlist_info["tiles"][netlist_info["netlist"][net_id]["src_tile_id"]]
+        if verbosity >= DEBUG_VERBOSITY_LEVEL:
+            print(f"Reference solution net ID: {net_id}, Carried value: {netlist_info['netlist'][net_id]['carried_value']}")
+        for tile_id in netlist_info["netlist"][net_id]["dst_tile_ids"]:
+            if tile_id in netlist_info["core_tile_ids"]:
+                netlist_info["tiles"][tile_id] += netlist_info["netlist"][net_id]["carried_value"]
+    NPU_output_ref = netlist_info["netlist"][netlist_info["shim_tile_in_out_fifo_ids"]["output"][0]]["carried_value"]
+
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")
         print(f"NPU input two (Shape: {NPU_input_two.shape}):\n{NPU_input_two}")
-        print(f"NPU reference output (Shape: {NPU_input_two.shape}):\n{NPU_input_two}")
+        print(f"NPU reference output (Shape: {NPU_input_two.shape}):\n{NPU_output_ref}")
         np.savetxt(output_folder+"NPU_input_one.txt", NPU_input_one, fmt="%d")
         np.savetxt(output_folder+"NPU_input_two.txt", NPU_input_two, fmt="%d")
         np.savetxt(output_folder+"NPU_output_reference.txt", NPU_output_ref, fmt="%d")
