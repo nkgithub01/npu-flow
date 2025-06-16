@@ -1,4 +1,5 @@
 srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+INPUT_NETLIST_DIR := ${srcdir}/AIE_data_flow_netlists
 
 include ${srcdir}/../makefile-common
 
@@ -14,7 +15,12 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
-input_netlist := ${srcdir}/AIE_data_flow_netlist.json
+# available netlists
+# - 1_col_1_core.json
+# - 1_col_2_core.json
+# - 1_col_3_core.json
+# - 1_col_4_core.json
+input_netlist := ${INPUT_NETLIST_DIR}/1_col_4_core.json
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
