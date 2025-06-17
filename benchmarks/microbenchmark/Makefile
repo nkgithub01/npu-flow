@@ -20,7 +20,13 @@ endif
 # - 1_col_2_core.json
 # - 1_col_3_core.json
 # - 1_col_4_core.json
-input_netlist := ${INPUT_NETLIST_DIR}/1_col_4_core.json
+# - 2_col_1_core_each.json
+# - 2_col_2_core_each.json
+# - 2_col_3_core_each.json
+# - 2_col_4_core_each.json
+# - 4_col_4_core_each.json
+# - 8_col_4_core_each.json
+input_netlist := ${INPUT_NETLIST_DIR}/8_col_4_core_each.json
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
