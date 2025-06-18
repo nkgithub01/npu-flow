@@ -1,0 +1,133 @@
+{
+    "nodes": [
+        {
+            "tile_id": 0,
+            "type": "SHIM",
+            "col_x": 1,
+            "row_y": 0
+        },
+        {
+            "tile_id": 1,
+            "type": "MEM",
+            "col_x": 1,
+            "row_y": 1
+        },
+        {
+            "tile_id": 2,
+            "type": "COMP",
+            "col_x": 1,
+            "row_y": 2
+        },
+        {
+            "tile_id": 3,
+            "type": "COMP",
+            "col_x": 1,
+            "row_y": 3
+        },
+        {
+            "tile_id": 4,
+            "type": "COMP",
+            "col_x": 1,
+            "row_y": 4
+        },
+        {
+            "tile_id": 5,
+            "type": "COMP",
+            "col_x": 1,
+            "row_y": 5
+        }
+    ],
+    "nets": [
+        {
+            "net_id": 0,
+            "need_linking": false,
+            "link_src_net_id": 0,
+            "src_tile_id": 0,
+            "dst_tile_ids": [
+                1
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {   
+            "net_id": 1,
+            "need_linking": true,
+            "link_src_net_id": 0,
+            "src_tile_id": 1,
+            "dst_tile_ids": [
+                2
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {
+            "net_id": 2,
+            "need_linking": false,
+            "link_src_net_id": 0,
+            "src_tile_id": 2,
+            "dst_tile_ids": [
+                3
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {   
+            "net_id": 3,
+            "need_linking": false,
+            "link_src_net_id": 0,
+            "src_tile_id": 3,
+            "dst_tile_ids": [
+                4
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {   
+            "net_id": 4,
+            "need_linking": false,
+            "link_src_net_id": 0,
+            "src_tile_id": 4,
+            "dst_tile_ids": [
+                5
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {   
+            "net_id": 5,
+            "need_linking": false,
+            "link_src_net_id": 0,
+            "src_tile_id": 5,
+            "dst_tile_ids": [
+                1
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        },
+        {   
+            "net_id": 6,
+            "need_linking": true,
+            "link_src_net_id": 5,
+            "src_tile_id": 1,
+            "dst_tile_ids": [
+                0
+            ],
+            "depths": [
+                5
+            ],
+            "byte_size_per_depth": 4
+        }
+    ]
+}
