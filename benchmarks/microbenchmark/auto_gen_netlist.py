@@ -19,7 +19,7 @@ def helper_connect_nodes(netlist, net_id, src_node_id, dst_node_ids, args, need_
     netlist["nets"].append(net)
 
 
-def generate_mesh_netlist(args):
+def generate_mesh_topology_netlist(args):
     netlist = dict(
         nodes = [],
         nets = []
@@ -52,7 +52,7 @@ def generate_mesh_netlist(args):
             node_id = nodes_loc2ID_lookup[(x, y)]
             # The SHIM node is connected to the MEM node in the same column and linked to the net from MEM to the compute core above it
             if y == 1:
-                # Create a net for the MEM node in the same column
+                # Create a net to the MEM node in the same column
                 same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
                 same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
                 same_col_COMP_id = nodes_loc2ID_lookup[(x, 2)]
@@ -62,29 +62,88 @@ def generate_mesh_netlist(args):
 
             # The middle region compute core is connected to its right and top neighbors
             if x < args.num_cols - 1 and 1 < y < args.num_rows - 1:
-                # Create a net for the right neighbor
+                # Create a net to the right neighbor
                 right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [right_neighbor_id], args)
 
-                # Create a net for the top neighbor
+                # Create a net to the top neighbor
                 top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [top_neighbor_id], args)
             
             # The rightmost column nodes are connected to their top neighbor
             if x == args.num_cols - 1 and 1 < y < args.num_rows - 1:
-                # Create a net for the top neighbor
+                # Create a net to the top neighbor
                 top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [top_neighbor_id], args)
             
             # The top row nodes are connected to their right neighbor
             if y == args.num_rows - 1 and x < args.num_cols - 1:
-                # Create a net for the right neighbor
+                # Create a net to the right neighbor
                 right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [right_neighbor_id], args)
             
             # The top row nodes are also connected back to MEM node in the same column
             if y == args.num_rows - 1:
-                # Create a net for the MEM node in the same column
+                # Create a net to the MEM node in the same column
+                same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [same_col_MEM_id], args)
+                # Link this net to the SHIM node in the same column
+                same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), same_col_MEM_id, [same_col_SHIM_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+    
+    return netlist
+
+
+def generate_vertical_line_topology_netlist(args):
+    netlist = dict(
+        nodes = [],
+        nets = []
+    )
+
+    # Define nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(args.num_cols):
+        for y in range(args.num_rows):
+            if y == 0:
+                type_str = "SHIM"
+            elif y == 1:
+                type_str = "MEM"
+            else:
+                type_str = "COMP"
+
+            nodes_loc2ID_lookup[(x, y)] = len(netlist["nodes"])
+            node = {
+                "tile_id": len(netlist["nodes"]),
+                "type": type_str,
+                "col_x": x,
+                "row_y": y,
+            }
+            netlist["nodes"].append(node)
+
+    # Define nets connections
+    # Each node is connected to its top neighbor
+    for x in range(args.num_cols):
+        for y in range(args.num_rows):
+            node_id = nodes_loc2ID_lookup[(x, y)]
+            # The SHIM node is connected to the MEM node in the same column and linked to the net from MEM to the compute core above it
+            if y == 1:
+                # Create a net to the MEM node in the same column
+                same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+                same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+                same_col_COMP_id = nodes_loc2ID_lookup[(x, 2)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), same_col_SHIM_id, [same_col_MEM_id], args)
+                # Link this net to the MEM node in the same column
+                helper_connect_nodes(netlist, len(netlist["nets"]), same_col_MEM_id, [same_col_COMP_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+            # The middle region compute core is connected to its top neighbors
+            elif 1 < y < args.num_rows - 1:
+                # Create a net to the top neighbor
+                top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [top_neighbor_id], args)
+            
+            # The top row nodes are also connected back to MEM node in the same column
+            elif y == args.num_rows - 1:
+                # Create a net to the MEM node in the same column
                 same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [same_col_MEM_id], args)
                 # Link this net to the SHIM node in the same column
@@ -114,7 +173,8 @@ def main(args):
 
 
 TOPOLOGIES_CONVERSION = {
-    "mesh": generate_mesh_netlist,
+    "mesh": generate_mesh_topology_netlist,
+    "vertical_line": generate_vertical_line_topology_netlist,
 }
 
 
@@ -135,7 +195,7 @@ if __name__ == "__main__":
         type=str, 
         dest="netlist_topologies",
         choices=list(TOPOLOGIES_CONVERSION.keys()),
-        default="mesh",
+        default="vertical_line",
     )
     argparser.add_argument(
         "--dtype", 

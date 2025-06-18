@@ -322,19 +322,6 @@
             "link_src_net_id": 0,
             "src_tile_id": 2,
             "dst_tile_ids": [
-                8
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 3,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 2,
-            "dst_tile_ids": [
                 3
             ],
             "depths": [
@@ -343,20 +330,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 4,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 3,
-            "dst_tile_ids": [
-                9
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 5,
+            "net_id": 3,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 3,
@@ -369,20 +343,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 6,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 4,
-            "dst_tile_ids": [
-                10
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 7,
+            "net_id": 4,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 4,
@@ -395,20 +356,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 8,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 5,
-            "dst_tile_ids": [
-                11
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 9,
+            "net_id": 5,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 5,
@@ -421,9 +369,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 10,
+            "net_id": 6,
             "need_linking": true,
-            "link_src_net_id": 9,
+            "link_src_net_id": 5,
             "src_tile_id": 1,
             "dst_tile_ids": [
                 0
@@ -434,7 +382,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 11,
+            "net_id": 7,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 6,
@@ -447,9 +395,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 12,
+            "net_id": 8,
             "need_linking": true,
-            "link_src_net_id": 11,
+            "link_src_net_id": 7,
             "src_tile_id": 7,
             "dst_tile_ids": [
                 8
@@ -460,20 +408,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 13,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 8,
-            "dst_tile_ids": [
-                14
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 14,
+            "net_id": 9,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 8,
@@ -486,20 +421,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 15,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 9,
-            "dst_tile_ids": [
-                15
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 16,
+            "net_id": 10,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 9,
@@ -512,20 +434,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 17,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 10,
-            "dst_tile_ids": [
-                16
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 18,
+            "net_id": 11,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 10,
@@ -538,20 +447,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 19,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 11,
-            "dst_tile_ids": [
-                17
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 20,
+            "net_id": 12,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 11,
@@ -564,9 +460,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 21,
+            "net_id": 13,
             "need_linking": true,
-            "link_src_net_id": 20,
+            "link_src_net_id": 12,
             "src_tile_id": 7,
             "dst_tile_ids": [
                 6
@@ -577,7 +473,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 22,
+            "net_id": 14,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 12,
@@ -590,9 +486,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 23,
+            "net_id": 15,
             "need_linking": true,
-            "link_src_net_id": 22,
+            "link_src_net_id": 14,
             "src_tile_id": 13,
             "dst_tile_ids": [
                 14
@@ -603,20 +499,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 24,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 14,
-            "dst_tile_ids": [
-                20
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 25,
+            "net_id": 16,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 14,
@@ -629,20 +512,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 26,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 15,
-            "dst_tile_ids": [
-                21
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 27,
+            "net_id": 17,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 15,
@@ -655,20 +525,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 28,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 16,
-            "dst_tile_ids": [
-                22
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 29,
+            "net_id": 18,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 16,
@@ -681,20 +538,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 30,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 17,
-            "dst_tile_ids": [
-                23
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 31,
+            "net_id": 19,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 17,
@@ -707,9 +551,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 32,
+            "net_id": 20,
             "need_linking": true,
-            "link_src_net_id": 31,
+            "link_src_net_id": 19,
             "src_tile_id": 13,
             "dst_tile_ids": [
                 12
@@ -720,7 +564,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 33,
+            "net_id": 21,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 18,
@@ -733,9 +577,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 34,
+            "net_id": 22,
             "need_linking": true,
-            "link_src_net_id": 33,
+            "link_src_net_id": 21,
             "src_tile_id": 19,
             "dst_tile_ids": [
                 20
@@ -746,20 +590,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 35,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 20,
-            "dst_tile_ids": [
-                26
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 36,
+            "net_id": 23,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 20,
@@ -772,20 +603,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 37,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 21,
-            "dst_tile_ids": [
-                27
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 38,
+            "net_id": 24,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 21,
@@ -798,20 +616,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 39,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 22,
-            "dst_tile_ids": [
-                28
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 40,
+            "net_id": 25,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 22,
@@ -824,20 +629,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 41,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 23,
-            "dst_tile_ids": [
-                29
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 42,
+            "net_id": 26,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 23,
@@ -850,9 +642,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 43,
+            "net_id": 27,
             "need_linking": true,
-            "link_src_net_id": 42,
+            "link_src_net_id": 26,
             "src_tile_id": 19,
             "dst_tile_ids": [
                 18
@@ -863,7 +655,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 44,
+            "net_id": 28,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 24,
@@ -876,9 +668,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 45,
+            "net_id": 29,
             "need_linking": true,
-            "link_src_net_id": 44,
+            "link_src_net_id": 28,
             "src_tile_id": 25,
             "dst_tile_ids": [
                 26
@@ -889,20 +681,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 46,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 26,
-            "dst_tile_ids": [
-                32
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 47,
+            "net_id": 30,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 26,
@@ -915,20 +694,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 48,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 27,
-            "dst_tile_ids": [
-                33
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 49,
+            "net_id": 31,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 27,
@@ -941,20 +707,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 50,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 28,
-            "dst_tile_ids": [
-                34
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 51,
+            "net_id": 32,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 28,
@@ -967,20 +720,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 52,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 29,
-            "dst_tile_ids": [
-                35
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 53,
+            "net_id": 33,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 29,
@@ -993,9 +733,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 54,
+            "net_id": 34,
             "need_linking": true,
-            "link_src_net_id": 53,
+            "link_src_net_id": 33,
             "src_tile_id": 25,
             "dst_tile_ids": [
                 24
@@ -1006,7 +746,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 55,
+            "net_id": 35,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 30,
@@ -1019,9 +759,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 56,
+            "net_id": 36,
             "need_linking": true,
-            "link_src_net_id": 55,
+            "link_src_net_id": 35,
             "src_tile_id": 31,
             "dst_tile_ids": [
                 32
@@ -1032,20 +772,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 57,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 32,
-            "dst_tile_ids": [
-                38
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 58,
+            "net_id": 37,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 32,
@@ -1058,20 +785,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 59,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 33,
-            "dst_tile_ids": [
-                39
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 60,
+            "net_id": 38,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 33,
@@ -1084,20 +798,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 61,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 34,
-            "dst_tile_ids": [
-                40
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 62,
+            "net_id": 39,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 34,
@@ -1110,20 +811,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 63,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 35,
-            "dst_tile_ids": [
-                41
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 64,
+            "net_id": 40,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 35,
@@ -1136,9 +824,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 65,
+            "net_id": 41,
             "need_linking": true,
-            "link_src_net_id": 64,
+            "link_src_net_id": 40,
             "src_tile_id": 31,
             "dst_tile_ids": [
                 30
@@ -1149,7 +837,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 66,
+            "net_id": 42,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 36,
@@ -1162,9 +850,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 67,
+            "net_id": 43,
             "need_linking": true,
-            "link_src_net_id": 66,
+            "link_src_net_id": 42,
             "src_tile_id": 37,
             "dst_tile_ids": [
                 38
@@ -1175,20 +863,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 68,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 38,
-            "dst_tile_ids": [
-                44
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 69,
+            "net_id": 44,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 38,
@@ -1201,20 +876,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 70,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 39,
-            "dst_tile_ids": [
-                45
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 71,
+            "net_id": 45,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 39,
@@ -1227,20 +889,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 72,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 40,
-            "dst_tile_ids": [
-                46
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 73,
+            "net_id": 46,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 40,
@@ -1253,20 +902,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 74,
-            "need_linking": false,
-            "link_src_net_id": 0,
-            "src_tile_id": 41,
-            "dst_tile_ids": [
-                47
-            ],
-            "depths": [
-                5
-            ],
-            "byte_size_per_depth": 4
-        },
-        {
-            "net_id": 75,
+            "net_id": 47,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 41,
@@ -1279,9 +915,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 76,
+            "net_id": 48,
             "need_linking": true,
-            "link_src_net_id": 75,
+            "link_src_net_id": 47,
             "src_tile_id": 37,
             "dst_tile_ids": [
                 36
@@ -1292,7 +928,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 77,
+            "net_id": 49,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 42,
@@ -1305,9 +941,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 78,
+            "net_id": 50,
             "need_linking": true,
-            "link_src_net_id": 77,
+            "link_src_net_id": 49,
             "src_tile_id": 43,
             "dst_tile_ids": [
                 44
@@ -1318,7 +954,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 79,
+            "net_id": 51,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 44,
@@ -1331,7 +967,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 80,
+            "net_id": 52,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 45,
@@ -1344,7 +980,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 81,
+            "net_id": 53,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 46,
@@ -1357,7 +993,7 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 82,
+            "net_id": 54,
             "need_linking": false,
             "link_src_net_id": 0,
             "src_tile_id": 47,
@@ -1370,9 +1006,9 @@
             "byte_size_per_depth": 4
         },
         {
-            "net_id": 83,
+            "net_id": 55,
             "need_linking": true,
-            "link_src_net_id": 82,
+            "link_src_net_id": 54,
             "src_tile_id": 43,
             "dst_tile_ids": [
                 42
