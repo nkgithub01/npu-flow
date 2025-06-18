@@ -19,7 +19,7 @@ def helper_connect_nodes(netlist, net_id, src_node_id, dst_node_ids, args, need_
     netlist["nets"].append(net)
 
 
-def generate_netlist(args):
+def generate_mesh_netlist(args):
     netlist = dict(
         nodes = [],
         nets = []
@@ -90,8 +90,17 @@ def generate_netlist(args):
                 # Link this net to the SHIM node in the same column
                 same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
                 helper_connect_nodes(netlist, len(netlist["nets"]), same_col_MEM_id, [same_col_SHIM_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+    
+    return netlist
 
 
+def generate_netlist(args):
+    try:
+        generate_func = TOPOLOGIES_CONVERSION[args.netlist_topologies]
+        netlist = generate_func(args)
+    except KeyError:
+        raise ValueError(f"Unsupported netlist topology: {args.netlist_topologies}. Supported topologies: {list(TOPOLOGIES_CONVERSION.keys())}")
+    
     return netlist
 
 
@@ -102,6 +111,11 @@ def main(args):
 
     # Write the output netlist
     write_netlist_to_file(netlist, args.output_netlist)
+
+
+TOPOLOGIES_CONVERSION = {
+    "mesh": generate_mesh_netlist,
+}
 
 
 if __name__ == "__main__":
@@ -115,6 +129,13 @@ if __name__ == "__main__":
         type=str, 
         dest="output_netlist",
         default="AIE_data_flow_netlists/netlist.json",
+    )
+    argparser.add_argument(
+        "--topology", 
+        type=str, 
+        dest="netlist_topologies",
+        choices=list(TOPOLOGIES_CONVERSION.keys()),
+        default="mesh",
     )
     argparser.add_argument(
         "--dtype", 
