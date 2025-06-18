@@ -28,8 +28,8 @@ endif
 # - 8_col_4_core_each.json
 # - 1_col_4_core_1_cross_6_core.json
 
-netlist_name ?= 1_col_4_core_1_cross_6_core
-input_netlist := ${INPUT_NETLIST_DIR}/${netlist_name}.json
+# - mesh.json
+input_netlist := ${INPUT_NETLIST_DIR}/mesh.json
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware

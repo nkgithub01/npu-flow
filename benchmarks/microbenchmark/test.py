@@ -9,6 +9,7 @@ import aie.utils.test as test_utils
 
 RELEASE_VERBOSITY_LEVEL = 1
 DEBUG_VERBOSITY_LEVEL = 2
+DETAILED_DEBUG_VERBOSITY_LEVEL = 3
 
 dtype_map = {
     "i8": np.int8,
@@ -175,7 +176,7 @@ def main(opts):
             # If the net does not need linking, carry the value from the source tile
             netlist_info["netlist"][net_id]["carried_value"] = netlist_info["tiles"][netlist_info["netlist"][net_id]["src_tile_id"]]
         
-        if verbosity >= DEBUG_VERBOSITY_LEVEL:
+        if verbosity >= DETAILED_DEBUG_VERBOSITY_LEVEL:
             print(f"Reference solution net ID: {net_id}, Carried value: {netlist_info['netlist'][net_id]['carried_value']}")
         
         for tile_id in netlist_info["netlist"][net_id]["dst_tile_ids"]:
