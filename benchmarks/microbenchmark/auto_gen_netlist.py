@@ -46,7 +46,7 @@ def generate_mesh_topology_netlist(args):
             netlist["nodes"].append(node)
 
     # Define nets connections
-    # Each node is connected to its right and top neighbor
+    # Each compute node is connected to its right and top neighbor
     for x in range(args.num_cols):
         for y in range(args.num_rows):
             node_id = nodes_loc2ID_lookup[(x, y)]
@@ -121,7 +121,7 @@ def generate_vertical_line_topology_netlist(args):
             netlist["nodes"].append(node)
 
     # Define nets connections
-    # Each node is connected to its top neighbor
+    # Each compute node is connected to its top neighbor
     for x in range(args.num_cols):
         for y in range(args.num_rows):
             node_id = nodes_loc2ID_lookup[(x, y)]
@@ -153,12 +153,76 @@ def generate_vertical_line_topology_netlist(args):
     return netlist
 
 
+def generate_horizontal_line_topology_netlist(args):
+    netlist = dict(
+        nodes = [],
+        nets = []
+    )
+
+    # Define nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(args.num_cols):
+        for y in range(args.num_rows):
+            if y == 0:
+                type_str = "SHIM"
+            elif y == 1:
+                type_str = "MEM"
+            else:
+                type_str = "COMP"
+
+            nodes_loc2ID_lookup[(x, y)] = len(netlist["nodes"])
+            node = {
+                "tile_id": len(netlist["nodes"]),
+                "type": type_str,
+                "col_x": x,
+                "row_y": y,
+            }
+            netlist["nodes"].append(node)
+
+    # Define nets connections
+    # Each compute node is connected to its right neighbor
+    min_dim = min(args.num_cols, args.num_rows)
+    for x in range(args.num_cols):
+        for y in range(2, args.num_rows):
+            node_id = nodes_loc2ID_lookup[(x, y)]
+            # The SHIM node is connected to the MEM node in the same column and linked to the net from MEM to the compute core in the left column
+            if x == 0:
+                # Create a net to the MEM node in the same column
+                COMP_y_map2_SHIM_x = (y - 2) % min_dim
+                COMP_y_map2_MEM_x = COMP_y_map2_SHIM_x
+                SHIM_id = nodes_loc2ID_lookup[(COMP_y_map2_SHIM_x, 0)]
+                MEM_id = nodes_loc2ID_lookup[(COMP_y_map2_MEM_x, 1)]
+                COMP_id = nodes_loc2ID_lookup[(x, y)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), SHIM_id, [MEM_id], args)
+                # Link this net to the MEM node in the same column
+                helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, [COMP_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+            # The middle region compute core is connected to its right neighbors
+            if x < args.num_cols - 1:
+                # Create a net to the right neighbor
+                right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [right_neighbor_id], args)
+            
+            # The rightmost column nodes are also connected back to MEM node
+            elif x == args.num_cols - 1:
+                # Create a net to the MEM node
+                COMP_y_map2_SHIM_x = (args.num_cols - 1) - (y - 2) % min_dim
+                COMP_y_map2_MEM_x = COMP_y_map2_SHIM_x
+                SHIM_id = nodes_loc2ID_lookup[(COMP_y_map2_SHIM_x, 0)]
+                MEM_id = nodes_loc2ID_lookup[(COMP_y_map2_MEM_x, 1)]
+                COMP_id = nodes_loc2ID_lookup[(x, y)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [MEM_id], args)
+                # Link this net to the SHIM node in the same column
+                helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, [SHIM_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+    
+    return netlist
+
+
 def generate_netlist(args):
-    try:
-        generate_func = TOPOLOGIES_CONVERSION[args.netlist_topologies]
-        netlist = generate_func(args)
-    except KeyError:
+    if args.netlist_topologies not in TOPOLOGIES_CONVERSION:
         raise ValueError(f"Unsupported netlist topology: {args.netlist_topologies}. Supported topologies: {list(TOPOLOGIES_CONVERSION.keys())}")
+    generate_func = TOPOLOGIES_CONVERSION[args.netlist_topologies]
+    netlist = generate_func(args)
     
     return netlist
 
@@ -175,6 +239,7 @@ def main(args):
 TOPOLOGIES_CONVERSION = {
     "mesh": generate_mesh_topology_netlist,
     "vertical_line": generate_vertical_line_topology_netlist,
+    "horizontal_line": generate_horizontal_line_topology_netlist,
 }
 
 
@@ -184,18 +249,18 @@ if __name__ == "__main__":
         description="Script to auto-generate simple netlist topologies for AIE data flow",
     )
     argparser.add_argument(
+        "--topology", 
+        type=str, 
+        dest="netlist_topologies",
+        choices=list(TOPOLOGIES_CONVERSION.keys()),
+        default="horizontal_line",
+    )
+    argparser.add_argument(
         "-nl",
         "--netlist", 
         type=str, 
         dest="output_netlist",
         default="AIE_data_flow_netlists/netlist.json",
-    )
-    argparser.add_argument(
-        "--topology", 
-        type=str, 
-        dest="netlist_topologies",
-        choices=list(TOPOLOGIES_CONVERSION.keys()),
-        default="vertical_line",
     )
     argparser.add_argument(
         "--dtype", 
