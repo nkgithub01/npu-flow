@@ -218,6 +218,78 @@ def generate_horizontal_line_topology_netlist(args):
     return netlist
 
 
+def generate_tree_topology_netlist(args):
+    netlist = dict(
+        nodes = [],
+        nets = []
+    )
+
+    # Define nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(args.num_cols):
+        for y in range(args.num_rows):
+            if y == 0:
+                type_str = "SHIM"
+            elif y == 1:
+                type_str = "MEM"
+            else:
+                type_str = "COMP"
+
+            nodes_loc2ID_lookup[(x, y)] = len(netlist["nodes"])
+            node = {
+                "tile_id": len(netlist["nodes"]),
+                "type": type_str,
+                "col_x": x,
+                "row_y": y,
+            }
+            netlist["nodes"].append(node)
+
+    # Define nets connections
+    # Each compute node is connected to 2 other nodes to form a binary tree structure
+    num_node = args.num_cols * (args.num_rows - 2)
+    for idx in range(num_node):
+        x = idx % args.num_cols
+        y = 2 + (idx // args.num_cols) % (args.num_rows - 2)
+        node_id = nodes_loc2ID_lookup[(x, y)]
+        
+        if idx == 0:
+            # The root node get data from the SHIM node in the same column through the MEM node
+            same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), same_col_SHIM_id, [same_col_MEM_id], args)
+            # Link this net to the SHIM node in the same column
+            helper_connect_nodes(netlist, len(netlist["nets"]), same_col_MEM_id, [node_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+        has_no_children = True
+        # Connect to left child
+        left_child_idx = idx * 2 + 1
+        left_child_x = left_child_idx % args.num_cols
+        left_child_y = 2 + (left_child_idx // args.num_cols)
+        if left_child_x < args.num_cols and left_child_y < args.num_rows:
+            left_child_id = nodes_loc2ID_lookup[(left_child_x, left_child_y)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [left_child_id], args)
+            has_no_children = False
+        
+        # Connect to right child
+        right_child_idx = idx * 2 + 2
+        right_child_x = right_child_idx % args.num_cols
+        right_child_y = 2 + (right_child_idx // args.num_cols)
+        if right_child_x < args.num_cols and right_child_y < args.num_rows:
+            right_child_id = nodes_loc2ID_lookup[(right_child_x, right_child_y)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [right_child_id], args)
+            has_no_children = False
+        
+        if has_no_children:
+            # If the node has no children, connect it to the MEM node in the same column
+            same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), node_id, [same_col_MEM_id], args)
+            # Link this net to the SHIM node in the same column
+            same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), same_col_MEM_id, [same_col_SHIM_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+    return netlist
+
+
 def generate_netlist(args):
     if args.netlist_topologies not in TOPOLOGIES_CONVERSION:
         raise ValueError(f"Unsupported netlist topology: {args.netlist_topologies}. Supported topologies: {list(TOPOLOGIES_CONVERSION.keys())}")
@@ -238,6 +310,7 @@ def main(args):
 
 TOPOLOGIES_CONVERSION = {
     "mesh": generate_mesh_topology_netlist,
+    "tree": generate_tree_topology_netlist,
     "vertical_line": generate_vertical_line_topology_netlist,
     "horizontal_line": generate_horizontal_line_topology_netlist,
 }
@@ -253,7 +326,7 @@ if __name__ == "__main__":
         type=str, 
         dest="netlist_topologies",
         choices=list(TOPOLOGIES_CONVERSION.keys()),
-        default="horizontal_line",
+        default="tree",
     )
     argparser.add_argument(
         "-nl",
