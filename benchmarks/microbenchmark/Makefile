@@ -20,8 +20,8 @@ endif
 # available auto gen topologies (default output netlist file: netlist.json)
 # - mesh
 # - tree
-# - vertical lines
-# - horizontal lines
+# - vertical_line
+# - horizontal_line
 use_auto_gen_netlist?=1
 ifeq (${use_auto_gen_netlist}, 1)
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
