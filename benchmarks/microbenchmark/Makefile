@@ -26,6 +26,8 @@ use_auto_gen_netlist?=1
 ifeq (${use_auto_gen_netlist}, 1)
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
 netlist_topology := tree
+num_rows := 6
+num_cols := 8
 else ifeq (${use_auto_gen_netlist}, 0)
 netlist_file := ${NETLIST_FILE_DIR}/1_col_4_core_1_cross_6_core.json
 endif
@@ -51,16 +53,13 @@ insts_target?=build/${target_name}_insts.bin
 aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
 runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype}
 
-.PHONY: all
-all: ${xclbin_target}
-
 .PHONY: gen_netlist
 gen_netlist:
 ifeq (${use_auto_gen_netlist}, 0)
 	@echo "Using custom netlist file: ${netlist_file}"
 else
 	@echo "Generating netlist file: ${netlist_file} with topology: ${netlist_topology}"
-	python3 ${srcdir}/auto_gen_netlist.py --netlist ${netlist_file} --topology ${netlist_topology}
+	python3 ${srcdir}/auto_gen_netlist.py --netlist ${netlist_file} --topology ${netlist_topology} --num_rows ${num_rows} --num_cols ${num_cols}
 endif
 
 build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc

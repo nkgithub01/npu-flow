@@ -239,7 +239,7 @@ def main(opts):
     NPU_output = np.array(data_buffer, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU output (Shape: {NPU_output.shape}):\n{NPU_output}")
-        np.savetxt(output_folder+"NPU_output_two.txt", NPU_output, fmt="%d")
+        np.savetxt(output_folder+"NPU_output.txt", NPU_output, fmt="%d")
 
     relative_tolerance = 0
     absolute_tolerance = 0

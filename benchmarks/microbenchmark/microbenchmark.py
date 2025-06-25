@@ -176,11 +176,12 @@ def microbenchmark(
         rt.start(*workers)
         offset = 0
         tensor_size = 0
+        whole_tensor_size = netlist_info["in_data_shape"][0]
         for fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
             tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
             tap = TensorAccessPattern(
-                tensor_dims=[1, 1, 1, tensor_size], # unused dims are set to 1
-                sizes=[1, 1, 1, tensor_size],
+                tensor_dims=[1, 1, 1, whole_tensor_size], # unused dims are set to 1
+                sizes=[1, 1, 1, whole_tensor_size],
                 offset=offset,
                 strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
@@ -189,11 +190,12 @@ def microbenchmark(
         
         offset = 0
         tensor_size = 0
+        whole_tensor_size = netlist_info["out_data_shape"][0]
         for fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
             tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
             tap = TensorAccessPattern(
-                tensor_dims=[1, 1, 1, tensor_size], # unused dims are set to 1
-                sizes=[1, 1, 1, tensor_size],
+                tensor_dims=[1, 1, 1, whole_tensor_size], # unused dims are set to 1
+                sizes=[1, 1, 1, whole_tensor_size],
                 offset=offset,
                 strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
