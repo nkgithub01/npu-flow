@@ -4,3 +4,6 @@
 [submodule "npu-pnr"]
 	path = npu-pnr
 	url = https://github.com/ueqri/npu-pnr.git
+[submodule "npu-benchmark-model-training"]
+	path = npu-benchmark-model-training
+	url = https://github.com/RonZ13/npu-benchmark-model-training.git
