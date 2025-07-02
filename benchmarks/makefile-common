@@ -9,4 +9,6 @@ PYTHONPATH := $(realpath ../../utils):$(PYTHONPATH)
 export PYTHONPATH
 
 WARNING_FLAGS = -Wno-parentheses -Wno-attributes -Wno-macro-redefined -Wno-empty-body
-PEANOWRAP2P_FLAGS = -O1 -std=c++20 --target=aie2p-none-unknown-elf ${WARNING_FLAGS} -DNDEBUG -I ${AIEOPT_DIR}/include
+PEANOWRAP2P_FLAGS = -O2 -std=c++20 --target=aie2p-none-unknown-elf ${WARNING_FLAGS} -DNDEBUG \
+  -I ${AIEOPT_DIR}/include \
+  -I ${MLIR_AIE_DIR}/include

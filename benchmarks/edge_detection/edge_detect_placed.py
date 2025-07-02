@@ -8,7 +8,6 @@
 import numpy as np
 import sys
 import argparse
-import time
 
 from aie.dialects.aie import *
 from aie.dialects.aiex import *
