@@ -39,7 +39,7 @@ def parse_netlist(dtype_str, netlist_file):
         mem_tile_ids=[],
         shim_tile_ids=[],
         obj_fifos={},
-        fifo_links={},
+        fifo_links=dict(many2one={}, one2many={}),
         obj_fifos_data_shape={},
         core_tile_producer_consumer_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
@@ -89,18 +89,29 @@ def parse_netlist(dtype_str, netlist_file):
             if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
-            netlist_info["fifo_links"][net["net_id"]] = []
+            netlist_info["fifo_links"]["many2one"][net["net_id"]] = []
+            netlist_info["fifo_links"]["one2many"][net["net_id"]] = []
 
         for net in netlist['nets']:
             if net["need_linking"]:
-                netlist_info["fifo_links"][net["link_src_net_id"]].append(net["net_id"])
+                if len(net["link_src_net_ids"]) > 1:
+                    netlist_info["fifo_links"]["many2one"][net["net_id"]].extend(net["link_src_net_ids"])
+                else:
+                    netlist_info["fifo_links"]["one2many"][net["link_src_net_ids"][0]].append(net["net_id"])
         
         # Link the Object FIFOs
-        for link_src in netlist_info["fifo_links"]:
-            if len(netlist_info["fifo_links"][link_src]) != 0:
+        for link_src in netlist_info["fifo_links"]["one2many"]:
+            if len(netlist_info["fifo_links"]["one2many"][link_src]) != 0:
                 object_fifo_link(
                     netlist_info["obj_fifos"][link_src],
-                    [netlist_info["obj_fifos"][dst] for dst in netlist_info["fifo_links"][link_src]]
+                    [netlist_info["obj_fifos"][dst] for dst in netlist_info["fifo_links"]["one2many"][link_src]]
+                )
+        for link_dst in netlist_info["fifo_links"]["many2one"]:
+            if len(netlist_info["fifo_links"]["many2one"][link_dst]) != 0:
+                object_fifo_link(
+                    [netlist_info["obj_fifos"][src] for src in netlist_info["fifo_links"]["many2one"][link_dst]],
+                    netlist_info["obj_fifos"][link_dst],
+                    [0 for _ in netlist_info["fifo_links"]["many2one"][link_dst]],  # all srcs are one-to-one
                 )
 
         in_data_shape = 0

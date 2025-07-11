@@ -6,11 +6,16 @@ def write_netlist_to_file(netlist, output_file):
         json.dump(netlist, netlist_file, indent=4)
 
 
-def helper_connect_nodes(netlist, net_id, src_node_id, dst_node_ids, args, need_linking=False, link_src_net_id=0):
+def helper_connect_nodes(netlist, net_id, src_node_id, dst_node_ids, args, need_linking=False, link_src_net_id=None):
+    if link_src_net_id is None:
+        link_src_net_id = [0]
+    if not isinstance(link_src_net_id, list):
+        link_src_net_id = [link_src_net_id]
+
     net = {
         "net_id": net_id,
         "need_linking": need_linking,
-        "link_src_net_id": link_src_net_id,
+        "link_src_net_ids": link_src_net_id,
         "src_tile_id": src_node_id,
         "dst_tile_ids": dst_node_ids,
         "depths": [args.obj_fifo_depth],
@@ -290,6 +295,181 @@ def generate_tree_topology_netlist(args):
     return netlist
 
 
+def generate_cnn_topology_netlist(args):
+    netlist = dict(
+        nodes = [],
+        nets = []
+    )
+
+    # Define nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(args.num_cols):
+        for y in range(args.num_rows):
+            if y == 0:
+                type_str = "SHIM"
+            elif y == 1:
+                type_str = "MEM"
+            else:
+                type_str = "COMP"
+
+            nodes_loc2ID_lookup[(x, y)] = len(netlist["nodes"])
+            node = {
+                "tile_id": len(netlist["nodes"]),
+                "type": type_str,
+                "col_x": x,
+                "row_y": y,
+            }
+            netlist["nodes"].append(node)
+
+    # Define nets connections
+    # Input X is connected from SHIM node 0, 1, 2, 3 to MEM node 0, 1, 2, 3 to COMP nodes in the first column
+    for idx in range(4):
+        # Connect SHIM node to MEM node in the same column
+        x = idx
+        SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+        MEM_id = nodes_loc2ID_lookup[(x, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), SHIM_id, [MEM_id], args)
+        
+        # Link this net to the Comp node in the first column
+        y = 5 - idx
+        COMP_id = nodes_loc2ID_lookup[(0, y)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, [COMP_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+    # Input W is connected from SHIM node 0 to MEM node 0 to COMP nodes in the first row
+    for idx in range(1):
+        # Connect SHIM node to MEM node in the same column
+        x = idx
+        SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+        MEM_id = nodes_loc2ID_lookup[(x, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), SHIM_id, [MEM_id], args)
+        
+        # Link this net to the Comp node in the first column
+        COMP_ids = [nodes_loc2ID_lookup[(0, y)] for y in range(2, 6)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+    # The first column compute nodes are connected to the second column compute nodes
+    for y in range(2, 6):
+        # Get the node ID for the compute nodes
+        first_col_COMP_id = nodes_loc2ID_lookup[(0, y)]
+        second_col_COMP_id = nodes_loc2ID_lookup[(1, y)]
+        
+        # Create a net to connect the two compute nodes
+        helper_connect_nodes(netlist, len(netlist["nets"]), first_col_COMP_id, [second_col_COMP_id], args)
+
+    # The top 2 rows of compute nodes in the second column are connected to the top node in the thrid column
+    # and the bottom 2 rows of compute nodes in the second column are connected to the bottom thrid from top compute node in the third column
+    for y in range(2, 6):
+        # Get the node ID for the compute nodes in the second column
+        second_col_COMP_id = nodes_loc2ID_lookup[(1, y)]
+        
+        if y < 4:
+            # Connect to the top third node in the third column
+            third_col_COMP_id = nodes_loc2ID_lookup[(2, 3)]
+        else:
+            # Connect to the top node in the third column
+            third_col_COMP_id = nodes_loc2ID_lookup[(2, 5)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), second_col_COMP_id, [third_col_COMP_id], args)
+
+    # The third column compute nodes are connected in a way that row_5 to row_4, row_3 to row_2. row_4 and row_2 are connected to the MEM node in the same column
+    # The connection to the MEM is forwarded to the COMP node in column 3, 4, 5, 6
+    linked_src_net_ids = []
+    for y in range(2, 6):
+        # Get the node ID for the compute nodes in the third column
+        third_col_COMP_id = nodes_loc2ID_lookup[(2, y)]
+        
+        if y == 5 or y == 3:
+            # Connect to the Comp node below in the same column
+            below_COMP_id = nodes_loc2ID_lookup[(2, y-1)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), third_col_COMP_id, [below_COMP_id], args)
+        
+        elif y == 4 or y == 2:
+            # Connect to the MEM node in the same column
+            same_col_MEM_id = nodes_loc2ID_lookup[(2, 1)]
+            linked_src_net_ids.append(len(netlist["nets"]))
+            helper_connect_nodes(netlist, len(netlist["nets"]), third_col_COMP_id, [same_col_MEM_id], args)
+    # Link this net to the net to the COMP nodes in columns 3, 4, 5, 6
+    for idx in range(1):
+        # Get the node ID for the compute nodes in columns 3, 4, 5, 6
+        COMP_ids = [nodes_loc2ID_lookup[(x, y)] for x in range(3, 7) for y in range(2, 6)]
+        # Connect the net from MEM nodes in column 1 to the COMP nodes in columns 3, 4, 5, 6
+        MEM_id = nodes_loc2ID_lookup[(2, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=linked_src_net_ids)
+
+    # The weight for Fully connected layers is sent in from SHIM nodes 2, 3, 4, 5 to MEM nodes 2, 3, 4, 5 to COMP nodes in columns 3, 4, 5, 6
+    for x in range(2, 6):
+        # Connect SHIM node to MEM node in the same column
+        SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+        MEM_id = nodes_loc2ID_lookup[(x, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), SHIM_id, [MEM_id], args)
+        
+        # Link this net to the Comp nodes in columns 3, 4, 5, 6
+        COMP_ids = [nodes_loc2ID_lookup[(x+1, y)] for y in range(2, 6)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+    
+    # The output from the compute nodes in columns 3, 4, 5, 6 are chained sequentially to the MEM node in column 7
+    linked_src_net_ids = []
+    for x in range(3, 7):
+        for y in range(2, 6):
+            # Get the node ID for the compute nodes in columns 3, 4, 5, 6
+            COMP_id = nodes_loc2ID_lookup[(x, y)]
+
+            if y == 2 and x == 6:
+                # Connect to the MEM node
+                MEM_id = nodes_loc2ID_lookup[(x, 1)]
+                linked_src_net_ids.append(len(netlist["nets"]))
+                helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [MEM_id], args)
+            elif y == 2:
+                # Connect to the COMP node to the right in the same row
+                right_COMP_id = nodes_loc2ID_lookup[(x+1, y)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [right_COMP_id], args)
+            else:
+                # Connect to the COMP node below in the same column
+                below_COMP_id = nodes_loc2ID_lookup[(x, y-1)]
+                helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [below_COMP_id], args)
+
+    # Link this net to the net that sends data from the MEM node in column 6 to the COMP node in column 7
+    for idx in range(1):
+        # Get the node ID for the compute nodes in column 7
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        # Connect the net from MEM node in column 6 to the COMP node in column 7
+        MEM_id = nodes_loc2ID_lookup[(6, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=linked_src_net_ids)
+    
+    # The weight for the final Fully connected layer is sent in from SHIM node 6 to MEM node 6 to COMP nodes in column 7
+    for idx in range(1):
+        # Connect SHIM node to MEM node in the same column
+        SHIM_id = nodes_loc2ID_lookup[(6, 0)]
+        MEM_id = nodes_loc2ID_lookup[(6, 1)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), SHIM_id, [MEM_id], args)
+        
+        # Link this net to the Comp nodes in column 7
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+    
+    # The output of the top 3 COMP nodes in column 7 are sent to the COMP node at row 2. The output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
+    for y in range(2, 5):
+        # the output of the top 3 COMP nodes in column 7 are sent to the COMP node at row 2
+        if y > 2:
+            # Get the node ID for the compute nodes in column 7
+            COMP_id1 = nodes_loc2ID_lookup[(7, y)]
+            # Connect to the COMP node at row 2 in the same column
+            COMP_id2 = nodes_loc2ID_lookup[(7, 2)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [COMP_id2], args)
+        
+        # the output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
+        elif y == 2:
+            # Get the node ID for the compute nodes in column 7
+            COMP_id = nodes_loc2ID_lookup[(7, y)]
+            # Connect to the MEM node in the same column
+            MEM_id = nodes_loc2ID_lookup[(7, 1)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [MEM_id], args)
+            # Link this net to the SHIM node in the same column
+            SHIM_id = nodes_loc2ID_lookup[(7, 0)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, [SHIM_id], args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
+
+    return netlist
+
+
 def generate_netlist(args):
     if args.netlist_topologies not in TOPOLOGIES_CONVERSION:
         raise ValueError(f"Unsupported netlist topology: {args.netlist_topologies}. Supported topologies: {list(TOPOLOGIES_CONVERSION.keys())}")
@@ -313,6 +493,7 @@ TOPOLOGIES_CONVERSION = {
     "tree": generate_tree_topology_netlist,
     "vertical_line": generate_vertical_line_topology_netlist,
     "horizontal_line": generate_horizontal_line_topology_netlist,
+    "cnn": generate_cnn_topology_netlist,
 }
 
 

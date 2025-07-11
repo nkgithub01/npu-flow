@@ -89,7 +89,7 @@ def parse_netlist(dtype_str, netlist_file):
         for net in netlist['nets']:
             if net["need_linking"]:
                 netlist_info["netlist"][net["net_id"]]["need_linking"] = True
-                netlist_info["netlist"][net["net_id"]]["carry_value_from_net_id"] = net["link_src_net_id"]
+                netlist_info["netlist"][net["net_id"]]["carry_value_from_net_id"] = net["link_src_net_ids"][-1]
 
         # tracking downstream neighbor net IDs
         for net in netlist['nets']:
