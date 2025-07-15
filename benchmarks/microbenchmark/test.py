@@ -184,7 +184,7 @@ def main(opts):
                 netlist_info["tiles"][tile_id] += netlist_info["netlist"][net_id]["carried_value"]
     
     for idx, net_id in enumerate(netlist_info["shim_tile_in_out_fifo_ids"]["output"]):
-        NPU_output_ref[idx] = netlist_info["netlist"][netlist_info["shim_tile_in_out_fifo_ids"]["output"][idx]]["carried_value"]
+        NPU_output_ref[idx] = netlist_info["netlist"][netlist_info["shim_tile_in_out_fifo_ids"]["output"][idx]]["carried_value"][0]
 
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")

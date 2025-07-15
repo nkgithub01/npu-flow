@@ -446,15 +446,15 @@ def generate_cnn_topology_netlist(args):
         COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
         helper_connect_nodes(netlist, len(netlist["nets"]), MEM_id, COMP_ids, args, need_linking=True, link_src_net_id=len(netlist["nets"]) - 1)
     
-    # The output of the top 3 COMP nodes in column 7 are sent to the COMP node at row 2. The output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
+    # The output of the COMP nodes in column 7 are sent to the COMP node below it. The output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
     for y in range(2, 5):
-        # the output of the top 3 COMP nodes in column 7 are sent to the COMP node at row 2
+        # the output of the top 3 COMP nodes in column 7 are sent to the COMP node below it
         if y > 2:
             # Get the node ID for the compute nodes in column 7
             COMP_id1 = nodes_loc2ID_lookup[(7, y)]
             # Connect to the COMP node at row 2 in the same column
-            COMP_id2 = nodes_loc2ID_lookup[(7, 2)]
-            helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id, [COMP_id2], args)
+            COMP_id2 = nodes_loc2ID_lookup[(7, y-1)]
+            helper_connect_nodes(netlist, len(netlist["nets"]), COMP_id1, [COMP_id2], args)
         
         # the output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
         elif y == 2:

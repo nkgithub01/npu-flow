@@ -26,7 +26,7 @@ endif
 use_auto_gen_netlist?=1
 ifeq (${use_auto_gen_netlist}, 1)
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-netlist_topology := cnn
+netlist_topology := tree
 num_rows := 6
 num_cols := 8
 else ifeq (${use_auto_gen_netlist}, 0)

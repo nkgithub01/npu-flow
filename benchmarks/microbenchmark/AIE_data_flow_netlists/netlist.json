@@ -293,7 +293,9 @@
         {
             "net_id": 0,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 0,
             "dst_tile_ids": [
                 1
@@ -306,7 +308,9 @@
         {
             "net_id": 1,
             "need_linking": true,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 1,
             "dst_tile_ids": [
                 2
@@ -319,7 +323,9 @@
         {
             "net_id": 2,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 2,
             "dst_tile_ids": [
                 8
@@ -332,7 +338,9 @@
         {
             "net_id": 3,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 2,
             "dst_tile_ids": [
                 14
@@ -345,7 +353,9 @@
         {
             "net_id": 4,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 8,
             "dst_tile_ids": [
                 20
@@ -358,7 +368,9 @@
         {
             "net_id": 5,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 8,
             "dst_tile_ids": [
                 26
@@ -371,7 +383,9 @@
         {
             "net_id": 6,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 14,
             "dst_tile_ids": [
                 32
@@ -384,7 +398,9 @@
         {
             "net_id": 7,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 14,
             "dst_tile_ids": [
                 38
@@ -397,7 +413,9 @@
         {
             "net_id": 8,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 20,
             "dst_tile_ids": [
                 44
@@ -410,7 +428,9 @@
         {
             "net_id": 9,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 20,
             "dst_tile_ids": [
                 3
@@ -423,7 +443,9 @@
         {
             "net_id": 10,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 26,
             "dst_tile_ids": [
                 9
@@ -436,7 +458,9 @@
         {
             "net_id": 11,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 26,
             "dst_tile_ids": [
                 15
@@ -449,7 +473,9 @@
         {
             "net_id": 12,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 32,
             "dst_tile_ids": [
                 21
@@ -462,7 +488,9 @@
         {
             "net_id": 13,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 32,
             "dst_tile_ids": [
                 27
@@ -475,7 +503,9 @@
         {
             "net_id": 14,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 38,
             "dst_tile_ids": [
                 33
@@ -488,7 +518,9 @@
         {
             "net_id": 15,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 38,
             "dst_tile_ids": [
                 39
@@ -501,7 +533,9 @@
         {
             "net_id": 16,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 44,
             "dst_tile_ids": [
                 45
@@ -514,7 +548,9 @@
         {
             "net_id": 17,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 44,
             "dst_tile_ids": [
                 4
@@ -527,7 +563,9 @@
         {
             "net_id": 18,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 3,
             "dst_tile_ids": [
                 10
@@ -540,7 +578,9 @@
         {
             "net_id": 19,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 3,
             "dst_tile_ids": [
                 16
@@ -553,7 +593,9 @@
         {
             "net_id": 20,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 9,
             "dst_tile_ids": [
                 22
@@ -566,7 +608,9 @@
         {
             "net_id": 21,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 9,
             "dst_tile_ids": [
                 28
@@ -579,7 +623,9 @@
         {
             "net_id": 22,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 15,
             "dst_tile_ids": [
                 34
@@ -592,7 +638,9 @@
         {
             "net_id": 23,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 15,
             "dst_tile_ids": [
                 40
@@ -605,7 +653,9 @@
         {
             "net_id": 24,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 21,
             "dst_tile_ids": [
                 46
@@ -618,7 +668,9 @@
         {
             "net_id": 25,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 21,
             "dst_tile_ids": [
                 5
@@ -631,7 +683,9 @@
         {
             "net_id": 26,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 27,
             "dst_tile_ids": [
                 11
@@ -644,7 +698,9 @@
         {
             "net_id": 27,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 27,
             "dst_tile_ids": [
                 17
@@ -657,7 +713,9 @@
         {
             "net_id": 28,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 33,
             "dst_tile_ids": [
                 23
@@ -670,7 +728,9 @@
         {
             "net_id": 29,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 33,
             "dst_tile_ids": [
                 29
@@ -683,7 +743,9 @@
         {
             "net_id": 30,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 39,
             "dst_tile_ids": [
                 35
@@ -696,7 +758,9 @@
         {
             "net_id": 31,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 39,
             "dst_tile_ids": [
                 41
@@ -709,7 +773,9 @@
         {
             "net_id": 32,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 45,
             "dst_tile_ids": [
                 47
@@ -722,7 +788,9 @@
         {
             "net_id": 33,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 4,
             "dst_tile_ids": [
                 1
@@ -735,7 +803,9 @@
         {
             "net_id": 34,
             "need_linking": true,
-            "link_src_net_id": 33,
+            "link_src_net_ids": [
+                33
+            ],
             "src_tile_id": 1,
             "dst_tile_ids": [
                 0
@@ -748,7 +818,9 @@
         {
             "net_id": 35,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 10,
             "dst_tile_ids": [
                 7
@@ -761,7 +833,9 @@
         {
             "net_id": 36,
             "need_linking": true,
-            "link_src_net_id": 35,
+            "link_src_net_ids": [
+                35
+            ],
             "src_tile_id": 7,
             "dst_tile_ids": [
                 6
@@ -774,7 +848,9 @@
         {
             "net_id": 37,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 16,
             "dst_tile_ids": [
                 13
@@ -787,7 +863,9 @@
         {
             "net_id": 38,
             "need_linking": true,
-            "link_src_net_id": 37,
+            "link_src_net_ids": [
+                37
+            ],
             "src_tile_id": 13,
             "dst_tile_ids": [
                 12
@@ -800,7 +878,9 @@
         {
             "net_id": 39,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 22,
             "dst_tile_ids": [
                 19
@@ -813,7 +893,9 @@
         {
             "net_id": 40,
             "need_linking": true,
-            "link_src_net_id": 39,
+            "link_src_net_ids": [
+                39
+            ],
             "src_tile_id": 19,
             "dst_tile_ids": [
                 18
@@ -826,7 +908,9 @@
         {
             "net_id": 41,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 28,
             "dst_tile_ids": [
                 25
@@ -839,7 +923,9 @@
         {
             "net_id": 42,
             "need_linking": true,
-            "link_src_net_id": 41,
+            "link_src_net_ids": [
+                41
+            ],
             "src_tile_id": 25,
             "dst_tile_ids": [
                 24
@@ -852,7 +938,9 @@
         {
             "net_id": 43,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 34,
             "dst_tile_ids": [
                 31
@@ -865,7 +953,9 @@
         {
             "net_id": 44,
             "need_linking": true,
-            "link_src_net_id": 43,
+            "link_src_net_ids": [
+                43
+            ],
             "src_tile_id": 31,
             "dst_tile_ids": [
                 30
@@ -878,7 +968,9 @@
         {
             "net_id": 45,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 40,
             "dst_tile_ids": [
                 37
@@ -891,7 +983,9 @@
         {
             "net_id": 46,
             "need_linking": true,
-            "link_src_net_id": 45,
+            "link_src_net_ids": [
+                45
+            ],
             "src_tile_id": 37,
             "dst_tile_ids": [
                 36
@@ -904,7 +998,9 @@
         {
             "net_id": 47,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 46,
             "dst_tile_ids": [
                 43
@@ -917,7 +1013,9 @@
         {
             "net_id": 48,
             "need_linking": true,
-            "link_src_net_id": 47,
+            "link_src_net_ids": [
+                47
+            ],
             "src_tile_id": 43,
             "dst_tile_ids": [
                 42
@@ -930,7 +1028,9 @@
         {
             "net_id": 49,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 5,
             "dst_tile_ids": [
                 1
@@ -943,7 +1043,9 @@
         {
             "net_id": 50,
             "need_linking": true,
-            "link_src_net_id": 49,
+            "link_src_net_ids": [
+                49
+            ],
             "src_tile_id": 1,
             "dst_tile_ids": [
                 0
@@ -956,7 +1058,9 @@
         {
             "net_id": 51,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 11,
             "dst_tile_ids": [
                 7
@@ -969,7 +1073,9 @@
         {
             "net_id": 52,
             "need_linking": true,
-            "link_src_net_id": 51,
+            "link_src_net_ids": [
+                51
+            ],
             "src_tile_id": 7,
             "dst_tile_ids": [
                 6
@@ -982,7 +1088,9 @@
         {
             "net_id": 53,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 17,
             "dst_tile_ids": [
                 13
@@ -995,7 +1103,9 @@
         {
             "net_id": 54,
             "need_linking": true,
-            "link_src_net_id": 53,
+            "link_src_net_ids": [
+                53
+            ],
             "src_tile_id": 13,
             "dst_tile_ids": [
                 12
@@ -1008,7 +1118,9 @@
         {
             "net_id": 55,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 23,
             "dst_tile_ids": [
                 19
@@ -1021,7 +1133,9 @@
         {
             "net_id": 56,
             "need_linking": true,
-            "link_src_net_id": 55,
+            "link_src_net_ids": [
+                55
+            ],
             "src_tile_id": 19,
             "dst_tile_ids": [
                 18
@@ -1034,7 +1148,9 @@
         {
             "net_id": 57,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 29,
             "dst_tile_ids": [
                 25
@@ -1047,7 +1163,9 @@
         {
             "net_id": 58,
             "need_linking": true,
-            "link_src_net_id": 57,
+            "link_src_net_ids": [
+                57
+            ],
             "src_tile_id": 25,
             "dst_tile_ids": [
                 24
@@ -1060,7 +1178,9 @@
         {
             "net_id": 59,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 35,
             "dst_tile_ids": [
                 31
@@ -1073,7 +1193,9 @@
         {
             "net_id": 60,
             "need_linking": true,
-            "link_src_net_id": 59,
+            "link_src_net_ids": [
+                59
+            ],
             "src_tile_id": 31,
             "dst_tile_ids": [
                 30
@@ -1086,7 +1208,9 @@
         {
             "net_id": 61,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 41,
             "dst_tile_ids": [
                 37
@@ -1099,7 +1223,9 @@
         {
             "net_id": 62,
             "need_linking": true,
-            "link_src_net_id": 61,
+            "link_src_net_ids": [
+                61
+            ],
             "src_tile_id": 37,
             "dst_tile_ids": [
                 36
@@ -1112,7 +1238,9 @@
         {
             "net_id": 63,
             "need_linking": false,
-            "link_src_net_id": 0,
+            "link_src_net_ids": [
+                0
+            ],
             "src_tile_id": 47,
             "dst_tile_ids": [
                 43
@@ -1125,7 +1253,9 @@
         {
             "net_id": 64,
             "need_linking": true,
-            "link_src_net_id": 63,
+            "link_src_net_ids": [
+                63
+            ],
             "src_tile_id": 43,
             "dst_tile_ids": [
                 42
