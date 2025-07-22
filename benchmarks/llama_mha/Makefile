@@ -5,20 +5,18 @@ include ${srcdir}/../makefile-common
 embed_dim := 288
 head_dim := 48
 tile_dim := 96
-seq_len := 256
-pos := 16
+seq_len := 16
 
 ARGS := --embed-dim $(embed_dim) \
         --head-dim $(head_dim) \
         --tile-dim $(tile_dim) \
         --seq-len $(seq_len) \
-        --pos $(pos)
 
 build/%.cc.o: %.cc 
 	mkdir -p ${@D}
 	${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o $@
 
-build/mha.mlir: ${srcdir}/mha.py build/mha.cc.o build/attn.cc.o
+build/mha.mlir: ${srcdir}/mha.py build/mha.cc.o 
 	mkdir -p ${@D}
 	python3 $< $(ARGS) > $@
 
