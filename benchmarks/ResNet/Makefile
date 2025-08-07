@@ -83,7 +83,7 @@ endif
 
 ${xclbin_target}: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o
 	mkdir -p ${@D}
-	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
+	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
 				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
@@ -97,4 +97,4 @@ clean_trace:
 
 .PHONY: clean
 clean: clean_trace
-	rm -rf build output
+	rm -rf build output log

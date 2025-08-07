@@ -378,6 +378,9 @@ def main(opts):
     model.block_2_conv3.weight.data.copy_(block_2_int_weight_3)
 
     golden_output = model(int_inp)
+    golden_output.squeeze().data.numpy().astype(dtype_out).tofile(
+        log_folder + "/golden_output.txt", sep=",", format="%d"
+    )
 
     # ------------------------------------------------------
     # Reorder input data-layout
