@@ -52,14 +52,14 @@ def parse_netlist(dtype_str, netlist_file):
         
         # Tile(s) declarations
         for node in netlist['nodes']:
-            netlist_info["tiles"][node["tile_id"]] = tile(node["col_x"], node["row_y"])
+            netlist_info["tiles"][node["id"]] = tile(node["col_x"], node["row_y"])
             if node["type"] == "COMP":
-                netlist_info["core_tile_ids"].append(node["tile_id"])
-                netlist_info["core_tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_ids"].append(node["id"])
+                netlist_info["core_tile_producer_consumer_fifo_ids"][node["id"]] = dict(producer=[], consumer=[])
             elif node["type"] == "MEM":
-                netlist_info["mem_tile_ids"].append(node["tile_id"])
+                netlist_info["mem_tile_ids"].append(node["id"])
             elif node["type"] == "SHIM":
-                netlist_info["shim_tile_ids"].append(node["tile_id"])
+                netlist_info["shim_tile_ids"].append(node["id"])
 
         # Object FIFO(s) declarations
         for net in netlist['nets']:
@@ -69,36 +69,37 @@ def parse_netlist(dtype_str, netlist_file):
             data_ty = np.ndarray[data_shape, np.dtype[dtype]]
             netlist_info["obj_fifos"][net["net_id"]] = object_fifo(
                 f"obj_fifo_{net["net_id"]}",
-                netlist_info["tiles"][net["src_tile_id"]],
-                [netlist_info["tiles"][idx] for idx in net["dst_tile_ids"]],
+                netlist_info["tiles"][net["src_id"]],
+                [netlist_info["tiles"][idx] for idx in net["dst_id"]],
                 net["depths"] if len(net["depths"]) > 1 else net["depths"][0],
                 data_ty
             )
             netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
             # Track producer and consumer object FIFOs for each core tile
-            if net["src_tile_id"] in netlist_info["core_tile_ids"]:
-                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
-            for dst_tile_id in net["dst_tile_ids"]:
+            if net["src_id"] in netlist_info["core_tile_ids"]:
+                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_id"]]["producer"].append(net["net_id"])
+            for dst_tile_id in net["dst_id"]:
                 if dst_tile_id in netlist_info["core_tile_ids"]:
                     netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
-            if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
+            if net["src_id"] in netlist_info["shim_tile_ids"]:
                 netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
-            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
+            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_id"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
+        # Init FIFO links data structure
+        for net in netlist['nets']:
             netlist_info["fifo_links"]["many2one"][net["net_id"]] = []
             netlist_info["fifo_links"]["one2many"][net["net_id"]] = []
 
-        for net in netlist['nets']:
-            if net["need_linking"]:
-                if len(net["link_src_net_ids"]) > 1:
-                    netlist_info["fifo_links"]["many2one"][net["net_id"]].extend(net["link_src_net_ids"])
-                else:
-                    netlist_info["fifo_links"]["one2many"][net["link_src_net_ids"][0]].append(net["net_id"])
-        
+        for link in netlist['links']:
+            if len(link["src_net_ids"]) > 1:
+                netlist_info["fifo_links"]["many2one"][link["dst_net_ids"][0]].extend(link["src_net_ids"])
+            else:
+                netlist_info["fifo_links"]["one2many"][link["src_net_ids"][0]].extend(link["dst_net_ids"])
+
         # Link the Object FIFOs
         for link_src in netlist_info["fifo_links"]["one2many"]:
             if len(netlist_info["fifo_links"]["one2many"][link_src]) != 0:

@@ -15,14 +15,11 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
-# available custom netlist topologies
-# - 1_col_4_core_1_cross_6_core.json
 # available auto gen topologies (default output netlist file: netlist.json)
 # - cnn
 # - mesh
 # - tree
-# - vertical_line
-# - horizontal_line
+# - line
 use_auto_gen_netlist?=1
 ifeq (${use_auto_gen_netlist}, 1)
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json

@@ -1,289 +1,289 @@
 {
     "nodes": [
         {
-            "tile_id": 0,
+            "id": 0,
             "type": "SHIM",
             "col_x": 0,
             "row_y": 0
         },
         {
-            "tile_id": 1,
+            "id": 1,
             "type": "MEM",
             "col_x": 0,
             "row_y": 1
         },
         {
-            "tile_id": 2,
+            "id": 2,
             "type": "COMP",
             "col_x": 0,
             "row_y": 2
         },
         {
-            "tile_id": 3,
+            "id": 3,
             "type": "COMP",
             "col_x": 0,
             "row_y": 3
         },
         {
-            "tile_id": 4,
+            "id": 4,
             "type": "COMP",
             "col_x": 0,
             "row_y": 4
         },
         {
-            "tile_id": 5,
+            "id": 5,
             "type": "COMP",
             "col_x": 0,
             "row_y": 5
         },
         {
-            "tile_id": 6,
+            "id": 6,
             "type": "SHIM",
             "col_x": 1,
             "row_y": 0
         },
         {
-            "tile_id": 7,
+            "id": 7,
             "type": "MEM",
             "col_x": 1,
             "row_y": 1
         },
         {
-            "tile_id": 8,
+            "id": 8,
             "type": "COMP",
             "col_x": 1,
             "row_y": 2
         },
         {
-            "tile_id": 9,
+            "id": 9,
             "type": "COMP",
             "col_x": 1,
             "row_y": 3
         },
         {
-            "tile_id": 10,
+            "id": 10,
             "type": "COMP",
             "col_x": 1,
             "row_y": 4
         },
         {
-            "tile_id": 11,
+            "id": 11,
             "type": "COMP",
             "col_x": 1,
             "row_y": 5
         },
         {
-            "tile_id": 12,
+            "id": 12,
             "type": "SHIM",
             "col_x": 2,
             "row_y": 0
         },
         {
-            "tile_id": 13,
+            "id": 13,
             "type": "MEM",
             "col_x": 2,
             "row_y": 1
         },
         {
-            "tile_id": 14,
+            "id": 14,
             "type": "COMP",
             "col_x": 2,
             "row_y": 2
         },
         {
-            "tile_id": 15,
+            "id": 15,
             "type": "COMP",
             "col_x": 2,
             "row_y": 3
         },
         {
-            "tile_id": 16,
+            "id": 16,
             "type": "COMP",
             "col_x": 2,
             "row_y": 4
         },
         {
-            "tile_id": 17,
+            "id": 17,
             "type": "COMP",
             "col_x": 2,
             "row_y": 5
         },
         {
-            "tile_id": 18,
+            "id": 18,
             "type": "SHIM",
             "col_x": 3,
             "row_y": 0
         },
         {
-            "tile_id": 19,
+            "id": 19,
             "type": "MEM",
             "col_x": 3,
             "row_y": 1
         },
         {
-            "tile_id": 20,
+            "id": 20,
             "type": "COMP",
             "col_x": 3,
             "row_y": 2
         },
         {
-            "tile_id": 21,
+            "id": 21,
             "type": "COMP",
             "col_x": 3,
             "row_y": 3
         },
         {
-            "tile_id": 22,
+            "id": 22,
             "type": "COMP",
             "col_x": 3,
             "row_y": 4
         },
         {
-            "tile_id": 23,
+            "id": 23,
             "type": "COMP",
             "col_x": 3,
             "row_y": 5
         },
         {
-            "tile_id": 24,
+            "id": 24,
             "type": "SHIM",
             "col_x": 4,
             "row_y": 0
         },
         {
-            "tile_id": 25,
+            "id": 25,
             "type": "MEM",
             "col_x": 4,
             "row_y": 1
         },
         {
-            "tile_id": 26,
+            "id": 26,
             "type": "COMP",
             "col_x": 4,
             "row_y": 2
         },
         {
-            "tile_id": 27,
+            "id": 27,
             "type": "COMP",
             "col_x": 4,
             "row_y": 3
         },
         {
-            "tile_id": 28,
+            "id": 28,
             "type": "COMP",
             "col_x": 4,
             "row_y": 4
         },
         {
-            "tile_id": 29,
+            "id": 29,
             "type": "COMP",
             "col_x": 4,
             "row_y": 5
         },
         {
-            "tile_id": 30,
+            "id": 30,
             "type": "SHIM",
             "col_x": 5,
             "row_y": 0
         },
         {
-            "tile_id": 31,
+            "id": 31,
             "type": "MEM",
             "col_x": 5,
             "row_y": 1
         },
         {
-            "tile_id": 32,
+            "id": 32,
             "type": "COMP",
             "col_x": 5,
             "row_y": 2
         },
         {
-            "tile_id": 33,
+            "id": 33,
             "type": "COMP",
             "col_x": 5,
             "row_y": 3
         },
         {
-            "tile_id": 34,
+            "id": 34,
             "type": "COMP",
             "col_x": 5,
             "row_y": 4
         },
         {
-            "tile_id": 35,
+            "id": 35,
             "type": "COMP",
             "col_x": 5,
             "row_y": 5
         },
         {
-            "tile_id": 36,
+            "id": 36,
             "type": "SHIM",
             "col_x": 6,
             "row_y": 0
         },
         {
-            "tile_id": 37,
+            "id": 37,
             "type": "MEM",
             "col_x": 6,
             "row_y": 1
         },
         {
-            "tile_id": 38,
+            "id": 38,
             "type": "COMP",
             "col_x": 6,
             "row_y": 2
         },
         {
-            "tile_id": 39,
+            "id": 39,
             "type": "COMP",
             "col_x": 6,
             "row_y": 3
         },
         {
-            "tile_id": 40,
+            "id": 40,
             "type": "COMP",
             "col_x": 6,
             "row_y": 4
         },
         {
-            "tile_id": 41,
+            "id": 41,
             "type": "COMP",
             "col_x": 6,
             "row_y": 5
         },
         {
-            "tile_id": 42,
+            "id": 42,
             "type": "SHIM",
             "col_x": 7,
             "row_y": 0
         },
         {
-            "tile_id": 43,
+            "id": 43,
             "type": "MEM",
             "col_x": 7,
             "row_y": 1
         },
         {
-            "tile_id": 44,
+            "id": 44,
             "type": "COMP",
             "col_x": 7,
             "row_y": 2
         },
         {
-            "tile_id": 45,
+            "id": 45,
             "type": "COMP",
             "col_x": 7,
             "row_y": 3
         },
         {
-            "tile_id": 46,
+            "id": 46,
             "type": "COMP",
             "col_x": 7,
             "row_y": 4
         },
         {
-            "tile_id": 47,
+            "id": 47,
             "type": "COMP",
             "col_x": 7,
             "row_y": 5
@@ -292,12 +292,8 @@
     "nets": [
         {
             "net_id": 0,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 0,
-            "dst_tile_ids": [
+            "src_id": 0,
+            "dst_id": [
                 1
             ],
             "depths": [
@@ -307,12 +303,8 @@
         },
         {
             "net_id": 1,
-            "need_linking": true,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 1,
-            "dst_tile_ids": [
+            "src_id": 1,
+            "dst_id": [
                 2
             ],
             "depths": [
@@ -322,12 +314,8 @@
         },
         {
             "net_id": 2,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 2,
-            "dst_tile_ids": [
+            "src_id": 2,
+            "dst_id": [
                 8
             ],
             "depths": [
@@ -337,12 +325,8 @@
         },
         {
             "net_id": 3,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 2,
-            "dst_tile_ids": [
+            "src_id": 2,
+            "dst_id": [
                 14
             ],
             "depths": [
@@ -352,12 +336,8 @@
         },
         {
             "net_id": 4,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 8,
-            "dst_tile_ids": [
+            "src_id": 8,
+            "dst_id": [
                 20
             ],
             "depths": [
@@ -367,12 +347,8 @@
         },
         {
             "net_id": 5,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 8,
-            "dst_tile_ids": [
+            "src_id": 8,
+            "dst_id": [
                 26
             ],
             "depths": [
@@ -382,12 +358,8 @@
         },
         {
             "net_id": 6,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 14,
-            "dst_tile_ids": [
+            "src_id": 14,
+            "dst_id": [
                 32
             ],
             "depths": [
@@ -397,12 +369,8 @@
         },
         {
             "net_id": 7,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 14,
-            "dst_tile_ids": [
+            "src_id": 14,
+            "dst_id": [
                 38
             ],
             "depths": [
@@ -412,12 +380,8 @@
         },
         {
             "net_id": 8,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 20,
-            "dst_tile_ids": [
+            "src_id": 20,
+            "dst_id": [
                 44
             ],
             "depths": [
@@ -427,12 +391,8 @@
         },
         {
             "net_id": 9,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 20,
-            "dst_tile_ids": [
+            "src_id": 20,
+            "dst_id": [
                 3
             ],
             "depths": [
@@ -442,12 +402,8 @@
         },
         {
             "net_id": 10,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 26,
-            "dst_tile_ids": [
+            "src_id": 26,
+            "dst_id": [
                 9
             ],
             "depths": [
@@ -457,12 +413,8 @@
         },
         {
             "net_id": 11,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 26,
-            "dst_tile_ids": [
+            "src_id": 26,
+            "dst_id": [
                 15
             ],
             "depths": [
@@ -472,12 +424,8 @@
         },
         {
             "net_id": 12,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 32,
-            "dst_tile_ids": [
+            "src_id": 32,
+            "dst_id": [
                 21
             ],
             "depths": [
@@ -487,12 +435,8 @@
         },
         {
             "net_id": 13,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 32,
-            "dst_tile_ids": [
+            "src_id": 32,
+            "dst_id": [
                 27
             ],
             "depths": [
@@ -502,12 +446,8 @@
         },
         {
             "net_id": 14,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 38,
-            "dst_tile_ids": [
+            "src_id": 38,
+            "dst_id": [
                 33
             ],
             "depths": [
@@ -517,12 +457,8 @@
         },
         {
             "net_id": 15,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 38,
-            "dst_tile_ids": [
+            "src_id": 38,
+            "dst_id": [
                 39
             ],
             "depths": [
@@ -532,12 +468,8 @@
         },
         {
             "net_id": 16,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 44,
-            "dst_tile_ids": [
+            "src_id": 44,
+            "dst_id": [
                 45
             ],
             "depths": [
@@ -547,12 +479,8 @@
         },
         {
             "net_id": 17,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 44,
-            "dst_tile_ids": [
+            "src_id": 44,
+            "dst_id": [
                 4
             ],
             "depths": [
@@ -562,12 +490,8 @@
         },
         {
             "net_id": 18,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 3,
-            "dst_tile_ids": [
+            "src_id": 3,
+            "dst_id": [
                 10
             ],
             "depths": [
@@ -577,12 +501,8 @@
         },
         {
             "net_id": 19,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 3,
-            "dst_tile_ids": [
+            "src_id": 3,
+            "dst_id": [
                 16
             ],
             "depths": [
@@ -592,12 +512,8 @@
         },
         {
             "net_id": 20,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 9,
-            "dst_tile_ids": [
+            "src_id": 9,
+            "dst_id": [
                 22
             ],
             "depths": [
@@ -607,12 +523,8 @@
         },
         {
             "net_id": 21,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 9,
-            "dst_tile_ids": [
+            "src_id": 9,
+            "dst_id": [
                 28
             ],
             "depths": [
@@ -622,12 +534,8 @@
         },
         {
             "net_id": 22,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 15,
-            "dst_tile_ids": [
+            "src_id": 15,
+            "dst_id": [
                 34
             ],
             "depths": [
@@ -637,12 +545,8 @@
         },
         {
             "net_id": 23,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 15,
-            "dst_tile_ids": [
+            "src_id": 15,
+            "dst_id": [
                 40
             ],
             "depths": [
@@ -652,12 +556,8 @@
         },
         {
             "net_id": 24,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 21,
-            "dst_tile_ids": [
+            "src_id": 21,
+            "dst_id": [
                 46
             ],
             "depths": [
@@ -667,12 +567,8 @@
         },
         {
             "net_id": 25,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 21,
-            "dst_tile_ids": [
+            "src_id": 21,
+            "dst_id": [
                 5
             ],
             "depths": [
@@ -682,12 +578,8 @@
         },
         {
             "net_id": 26,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 27,
-            "dst_tile_ids": [
+            "src_id": 27,
+            "dst_id": [
                 11
             ],
             "depths": [
@@ -697,12 +589,8 @@
         },
         {
             "net_id": 27,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 27,
-            "dst_tile_ids": [
+            "src_id": 27,
+            "dst_id": [
                 17
             ],
             "depths": [
@@ -712,12 +600,8 @@
         },
         {
             "net_id": 28,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 33,
-            "dst_tile_ids": [
+            "src_id": 33,
+            "dst_id": [
                 23
             ],
             "depths": [
@@ -727,12 +611,8 @@
         },
         {
             "net_id": 29,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 33,
-            "dst_tile_ids": [
+            "src_id": 33,
+            "dst_id": [
                 29
             ],
             "depths": [
@@ -742,12 +622,8 @@
         },
         {
             "net_id": 30,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 39,
-            "dst_tile_ids": [
+            "src_id": 39,
+            "dst_id": [
                 35
             ],
             "depths": [
@@ -757,12 +633,8 @@
         },
         {
             "net_id": 31,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 39,
-            "dst_tile_ids": [
+            "src_id": 39,
+            "dst_id": [
                 41
             ],
             "depths": [
@@ -772,12 +644,8 @@
         },
         {
             "net_id": 32,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 45,
-            "dst_tile_ids": [
+            "src_id": 45,
+            "dst_id": [
                 47
             ],
             "depths": [
@@ -787,12 +655,8 @@
         },
         {
             "net_id": 33,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 4,
-            "dst_tile_ids": [
+            "src_id": 4,
+            "dst_id": [
                 1
             ],
             "depths": [
@@ -802,12 +666,8 @@
         },
         {
             "net_id": 34,
-            "need_linking": true,
-            "link_src_net_ids": [
-                33
-            ],
-            "src_tile_id": 1,
-            "dst_tile_ids": [
+            "src_id": 1,
+            "dst_id": [
                 0
             ],
             "depths": [
@@ -817,12 +677,8 @@
         },
         {
             "net_id": 35,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 10,
-            "dst_tile_ids": [
+            "src_id": 10,
+            "dst_id": [
                 7
             ],
             "depths": [
@@ -832,12 +688,8 @@
         },
         {
             "net_id": 36,
-            "need_linking": true,
-            "link_src_net_ids": [
-                35
-            ],
-            "src_tile_id": 7,
-            "dst_tile_ids": [
+            "src_id": 7,
+            "dst_id": [
                 6
             ],
             "depths": [
@@ -847,12 +699,8 @@
         },
         {
             "net_id": 37,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 16,
-            "dst_tile_ids": [
+            "src_id": 16,
+            "dst_id": [
                 13
             ],
             "depths": [
@@ -862,12 +710,8 @@
         },
         {
             "net_id": 38,
-            "need_linking": true,
-            "link_src_net_ids": [
-                37
-            ],
-            "src_tile_id": 13,
-            "dst_tile_ids": [
+            "src_id": 13,
+            "dst_id": [
                 12
             ],
             "depths": [
@@ -877,12 +721,8 @@
         },
         {
             "net_id": 39,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 22,
-            "dst_tile_ids": [
+            "src_id": 22,
+            "dst_id": [
                 19
             ],
             "depths": [
@@ -892,12 +732,8 @@
         },
         {
             "net_id": 40,
-            "need_linking": true,
-            "link_src_net_ids": [
-                39
-            ],
-            "src_tile_id": 19,
-            "dst_tile_ids": [
+            "src_id": 19,
+            "dst_id": [
                 18
             ],
             "depths": [
@@ -907,12 +743,8 @@
         },
         {
             "net_id": 41,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 28,
-            "dst_tile_ids": [
+            "src_id": 28,
+            "dst_id": [
                 25
             ],
             "depths": [
@@ -922,12 +754,8 @@
         },
         {
             "net_id": 42,
-            "need_linking": true,
-            "link_src_net_ids": [
-                41
-            ],
-            "src_tile_id": 25,
-            "dst_tile_ids": [
+            "src_id": 25,
+            "dst_id": [
                 24
             ],
             "depths": [
@@ -937,12 +765,8 @@
         },
         {
             "net_id": 43,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 34,
-            "dst_tile_ids": [
+            "src_id": 34,
+            "dst_id": [
                 31
             ],
             "depths": [
@@ -952,12 +776,8 @@
         },
         {
             "net_id": 44,
-            "need_linking": true,
-            "link_src_net_ids": [
-                43
-            ],
-            "src_tile_id": 31,
-            "dst_tile_ids": [
+            "src_id": 31,
+            "dst_id": [
                 30
             ],
             "depths": [
@@ -967,12 +787,8 @@
         },
         {
             "net_id": 45,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 40,
-            "dst_tile_ids": [
+            "src_id": 40,
+            "dst_id": [
                 37
             ],
             "depths": [
@@ -982,12 +798,8 @@
         },
         {
             "net_id": 46,
-            "need_linking": true,
-            "link_src_net_ids": [
-                45
-            ],
-            "src_tile_id": 37,
-            "dst_tile_ids": [
+            "src_id": 37,
+            "dst_id": [
                 36
             ],
             "depths": [
@@ -997,12 +809,8 @@
         },
         {
             "net_id": 47,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 46,
-            "dst_tile_ids": [
+            "src_id": 46,
+            "dst_id": [
                 43
             ],
             "depths": [
@@ -1012,12 +820,8 @@
         },
         {
             "net_id": 48,
-            "need_linking": true,
-            "link_src_net_ids": [
-                47
-            ],
-            "src_tile_id": 43,
-            "dst_tile_ids": [
+            "src_id": 43,
+            "dst_id": [
                 42
             ],
             "depths": [
@@ -1027,12 +831,8 @@
         },
         {
             "net_id": 49,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 5,
-            "dst_tile_ids": [
+            "src_id": 5,
+            "dst_id": [
                 1
             ],
             "depths": [
@@ -1042,12 +842,8 @@
         },
         {
             "net_id": 50,
-            "need_linking": true,
-            "link_src_net_ids": [
-                49
-            ],
-            "src_tile_id": 1,
-            "dst_tile_ids": [
+            "src_id": 1,
+            "dst_id": [
                 0
             ],
             "depths": [
@@ -1057,12 +853,8 @@
         },
         {
             "net_id": 51,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 11,
-            "dst_tile_ids": [
+            "src_id": 11,
+            "dst_id": [
                 7
             ],
             "depths": [
@@ -1072,12 +864,8 @@
         },
         {
             "net_id": 52,
-            "need_linking": true,
-            "link_src_net_ids": [
-                51
-            ],
-            "src_tile_id": 7,
-            "dst_tile_ids": [
+            "src_id": 7,
+            "dst_id": [
                 6
             ],
             "depths": [
@@ -1087,12 +875,8 @@
         },
         {
             "net_id": 53,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 17,
-            "dst_tile_ids": [
+            "src_id": 17,
+            "dst_id": [
                 13
             ],
             "depths": [
@@ -1102,12 +886,8 @@
         },
         {
             "net_id": 54,
-            "need_linking": true,
-            "link_src_net_ids": [
-                53
-            ],
-            "src_tile_id": 13,
-            "dst_tile_ids": [
+            "src_id": 13,
+            "dst_id": [
                 12
             ],
             "depths": [
@@ -1117,12 +897,8 @@
         },
         {
             "net_id": 55,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 23,
-            "dst_tile_ids": [
+            "src_id": 23,
+            "dst_id": [
                 19
             ],
             "depths": [
@@ -1132,12 +908,8 @@
         },
         {
             "net_id": 56,
-            "need_linking": true,
-            "link_src_net_ids": [
-                55
-            ],
-            "src_tile_id": 19,
-            "dst_tile_ids": [
+            "src_id": 19,
+            "dst_id": [
                 18
             ],
             "depths": [
@@ -1147,12 +919,8 @@
         },
         {
             "net_id": 57,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 29,
-            "dst_tile_ids": [
+            "src_id": 29,
+            "dst_id": [
                 25
             ],
             "depths": [
@@ -1162,12 +930,8 @@
         },
         {
             "net_id": 58,
-            "need_linking": true,
-            "link_src_net_ids": [
-                57
-            ],
-            "src_tile_id": 25,
-            "dst_tile_ids": [
+            "src_id": 25,
+            "dst_id": [
                 24
             ],
             "depths": [
@@ -1177,12 +941,8 @@
         },
         {
             "net_id": 59,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 35,
-            "dst_tile_ids": [
+            "src_id": 35,
+            "dst_id": [
                 31
             ],
             "depths": [
@@ -1192,12 +952,8 @@
         },
         {
             "net_id": 60,
-            "need_linking": true,
-            "link_src_net_ids": [
-                59
-            ],
-            "src_tile_id": 31,
-            "dst_tile_ids": [
+            "src_id": 31,
+            "dst_id": [
                 30
             ],
             "depths": [
@@ -1207,12 +963,8 @@
         },
         {
             "net_id": 61,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 41,
-            "dst_tile_ids": [
+            "src_id": 41,
+            "dst_id": [
                 37
             ],
             "depths": [
@@ -1222,12 +974,8 @@
         },
         {
             "net_id": 62,
-            "need_linking": true,
-            "link_src_net_ids": [
-                61
-            ],
-            "src_tile_id": 37,
-            "dst_tile_ids": [
+            "src_id": 37,
+            "dst_id": [
                 36
             ],
             "depths": [
@@ -1237,12 +985,8 @@
         },
         {
             "net_id": 63,
-            "need_linking": false,
-            "link_src_net_ids": [
-                0
-            ],
-            "src_tile_id": 47,
-            "dst_tile_ids": [
+            "src_id": 47,
+            "dst_id": [
                 43
             ],
             "depths": [
@@ -1252,18 +996,152 @@
         },
         {
             "net_id": 64,
-            "need_linking": true,
-            "link_src_net_ids": [
-                63
-            ],
-            "src_tile_id": 43,
-            "dst_tile_ids": [
+            "src_id": 43,
+            "dst_id": [
                 42
             ],
             "depths": [
                 5
             ],
             "byte_size_per_depth": 4
+        }
+    ],
+    "links": [
+        {
+            "src_net_ids": [
+                0
+            ],
+            "dst_net_ids": [
+                1
+            ]
+        },
+        {
+            "src_net_ids": [
+                33
+            ],
+            "dst_net_ids": [
+                34
+            ]
+        },
+        {
+            "src_net_ids": [
+                35
+            ],
+            "dst_net_ids": [
+                36
+            ]
+        },
+        {
+            "src_net_ids": [
+                37
+            ],
+            "dst_net_ids": [
+                38
+            ]
+        },
+        {
+            "src_net_ids": [
+                39
+            ],
+            "dst_net_ids": [
+                40
+            ]
+        },
+        {
+            "src_net_ids": [
+                41
+            ],
+            "dst_net_ids": [
+                42
+            ]
+        },
+        {
+            "src_net_ids": [
+                43
+            ],
+            "dst_net_ids": [
+                44
+            ]
+        },
+        {
+            "src_net_ids": [
+                45
+            ],
+            "dst_net_ids": [
+                46
+            ]
+        },
+        {
+            "src_net_ids": [
+                47
+            ],
+            "dst_net_ids": [
+                48
+            ]
+        },
+        {
+            "src_net_ids": [
+                49
+            ],
+            "dst_net_ids": [
+                50
+            ]
+        },
+        {
+            "src_net_ids": [
+                51
+            ],
+            "dst_net_ids": [
+                52
+            ]
+        },
+        {
+            "src_net_ids": [
+                53
+            ],
+            "dst_net_ids": [
+                54
+            ]
+        },
+        {
+            "src_net_ids": [
+                55
+            ],
+            "dst_net_ids": [
+                56
+            ]
+        },
+        {
+            "src_net_ids": [
+                57
+            ],
+            "dst_net_ids": [
+                58
+            ]
+        },
+        {
+            "src_net_ids": [
+                59
+            ],
+            "dst_net_ids": [
+                60
+            ]
+        },
+        {
+            "src_net_ids": [
+                61
+            ],
+            "dst_net_ids": [
+                62
+            ]
+        },
+        {
+            "src_net_ids": [
+                63
+            ],
+            "dst_net_ids": [
+                64
+            ]
         }
     ]
 }

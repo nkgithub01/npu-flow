@@ -47,12 +47,12 @@ def parse_netlist(dtype_str, netlist_file):
         # Tile(s) declarations
         for node in netlist['nodes']:
             if node["type"] == "COMP":
-                netlist_info["core_tile_ids"].append(node["tile_id"])
-                netlist_info["core_tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_ids"].append(node["id"])
+                netlist_info["core_tile_producer_consumer_fifo_ids"][node["id"]] = dict(producer=[], consumer=[])
             elif node["type"] == "MEM":
-                netlist_info["mem_tile_ids"].append(node["tile_id"])
+                netlist_info["mem_tile_ids"].append(node["id"])
             elif node["type"] == "SHIM":
-                netlist_info["shim_tile_ids"].append(node["tile_id"])
+                netlist_info["shim_tile_ids"].append(node["id"])
 
         # Object FIFO(s) declarations
         for net in netlist['nets']:
@@ -68,16 +68,16 @@ def parse_netlist(dtype_str, netlist_file):
             netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
             # Track producer and consumer object FIFOs for each core tile
-            if net["src_tile_id"] in netlist_info["core_tile_ids"]:
-                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
-            for dst_tile_id in net["dst_tile_ids"]:
+            if net["src_id"] in netlist_info["core_tile_ids"]:
+                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_id"]]["producer"].append(net["net_id"])
+            for dst_tile_id in net["dst_id"]:
                 if dst_tile_id in netlist_info["core_tile_ids"]:
                     netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
-            if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
+            if net["src_id"] in netlist_info["shim_tile_ids"]:
                 netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
-            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
+            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_id"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
             netlist_info["fifo_links"][net["net_id"]] = []
