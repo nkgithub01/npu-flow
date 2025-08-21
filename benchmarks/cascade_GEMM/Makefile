@@ -3,10 +3,10 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 include ${srcdir}/../makefile-common
 
 device_name := npu2
-dtype_in := i8
+dtype_in := i16
 dtype_out := i16
 
-target_name := matrix_multiplication
+target_name := cascade_GEMM
 aie_py_src := ${target_name}.py
 
 use_placed := 1
@@ -15,9 +15,6 @@ aie_py_src=${target_name}.py
 else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
-
-# AIE kernels directory for Matrix Multiplication is in different location
-AIE_KERNELS_DIR := ${MLIR_AIE_DIR}/aie_kernels/aie2p
 
 # M, K, N: final GEMM dimensions
 M:=512
@@ -29,12 +26,10 @@ m:=32
 k:=32
 n:=32
 
-n_aie_cols?=8
-b_col_maj?=0
+n_aie_cols?=4
 
 kernels:=mm_${m}x${k}x${n}
-aieargs:=-m $m -k $k -n $n --n_aie_cols ${n_aie_cols} --b_col_maj ${b_col_maj}
-runargs:=--b_col_maj ${b_col_maj}
+aieargs:=-m $m -k $k -n $n --n_aie_cols ${n_aie_cols}
 target_suffix:=${M}x${K}x${N}_${m}x${k}x${n}_${n_aie_cols}c
 
 # set this flag to 1 for linear buffer allocation
@@ -62,10 +57,6 @@ aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_o
 .PHONY: all
 all: ${xclbin_target}
 
-build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc
-	mkdir -p ${@D}
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
-
 ${mlir_target}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
 	python3 $< ${aieargs} > $@
@@ -74,23 +65,9 @@ ${trace_mlir_target}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
 	python3 $< ${aieargs} --trace_size ${TRACE_SIZE} > $@
 
-build/mm_b_row_maj_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/mm.cc
+build/mm_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/cascade_mm.cc
 	mkdir -p ${@D}
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-
-build/mm_b_col_maj_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/mm_b_col_maj.cc
-	mkdir -p ${@D}
-	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -D${dtype_in}_${dtype_out}_ONLY -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
-
-ifneq (${b_col_maj}, 1)
-build/mm_${m}x${k}x${n}.o: build/mm_b_row_maj_${m}x${k}x${n}.o 
-	mkdir -p ${@D}
-	ar rvs $@ $^
-else
-build/mm_${m}x${k}x${n}.o: build/mm_b_col_maj_${m}x${k}x${n}.o
-	mkdir -p ${@D}
-	ar rvs $@ $^
-endif
+	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -fno-unroll-loops -DBIT_WIDTH=8 -DDIM_M=${m} -DDIM_K=${k} -DDIM_N=${n} -c $< -o ${@F}
 
 ${xclbin_target}: ${mlir_target} ${kernels:%=build/%.o}
 	mkdir -p ${@D}
