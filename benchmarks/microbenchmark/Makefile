@@ -2,6 +2,7 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 NETLIST_FILE_DIR := ${srcdir}/AIE_data_flow_netlists
 
 include ${srcdir}/../makefile-common
+AIE_KERNELS_DIR := ${srcdir}/kernels
 
 device_name := npu2
 dtype := i32
@@ -27,7 +28,7 @@ netlist_topology := tree
 num_rows := 6
 num_cols := 8
 else ifeq (${use_auto_gen_netlist}, 0)
-netlist_file := ${NETLIST_FILE_DIR}/1_col_4_core_1_cross_6_core.json
+netlist_file := ${NETLIST_FILE_DIR}/netlist.json
 endif
 
 # set this flag to 1 for linear buffer allocation
@@ -50,6 +51,8 @@ insts_target?=build/${target_name}_insts.bin
 
 aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
 runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype}
+kernals := accumulate
+
 
 .PHONY: gen_netlist
 gen_netlist:
@@ -60,7 +63,7 @@ else
 	python3 ${srcdir}/auto_gen_netlist.py --netlist ${netlist_file} --topology ${netlist_topology} --num_rows ${num_rows} --num_cols ${num_cols}
 endif
 
-build/%.cc.o: ${AIE_KERNELS_DIR}/%.cc
+build/%.o: ${AIE_KERNELS_DIR}/%.cc
 	mkdir -p ${@D}
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
 
@@ -72,13 +75,13 @@ ${trace_mlir_target}: ${srcdir}/${aie_py_src} gen_netlist
 	mkdir -p ${@D}
 	python3 $< ${aieargs} --trace_size ${TRACE_SIZE} > $@
 
-${xclbin_target}: ${mlir_target}
+${xclbin_target}: ${mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
 				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
-${trace_xclbin_target}: ${trace_mlir_target}
+${trace_xclbin_target}: ${trace_mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
 				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \

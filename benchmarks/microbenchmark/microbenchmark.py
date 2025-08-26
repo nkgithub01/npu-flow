@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer
+from aie.iron.placers import SequentialPlacer, NullPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
@@ -33,7 +33,7 @@ def parse_netlist(dtype_str, netlist_file):
         mem_tile_ids=[],
         shim_tile_ids=[],
         obj_fifos={},
-        fifo_links={},
+        fifo_links=dict(many2one={}, one2many={}),
         obj_fifos_data_shape={},
         core_tile_producer_consumer_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
@@ -60,12 +60,12 @@ def parse_netlist(dtype_str, netlist_file):
             data_size = np.dtype(dtype).itemsize
             data_shape = (net["byte_size_per_depth"] // data_size,)
             data_ty = np.ndarray[data_shape, np.dtype[dtype]]
+            netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
             netlist_info["obj_fifos"][net["net_id"]] = ObjectFifo(
                 name=f"obj_fifo_{net["net_id"]}",
                 default_depth=net["depths"] if len(net["depths"]) > 1 else net["depths"][0],
                 obj_type=data_ty
             )
-            netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
             # Track producer and consumer object FIFOs for each core tile
             if net["src_id"] in netlist_info["core_tile_ids"]:
@@ -79,17 +79,40 @@ def parse_netlist(dtype_str, netlist_file):
                 netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
             if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_id"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
-
-            netlist_info["fifo_links"][net["net_id"]] = []
-
-        for net in netlist['nets']:
-            if net["need_linking"]:
-                netlist_info["fifo_links"][net["link_src_net_id"]].append(net["net_id"])
         
+        # Init FIFO links data structure
+        for net in netlist['nets']:
+            netlist_info["fifo_links"]["many2one"][net["net_id"]] = []
+            netlist_info["fifo_links"]["one2many"][net["net_id"]] = []
+
+        for link in netlist['links']:
+            if len(link["src_net_ids"]) > 1 and len(link["dst_net_ids"]) == 1:
+                netlist_info["fifo_links"]["many2one"][link["dst_net_ids"][0]].extend(link["src_net_ids"])
+            elif len(link["src_net_ids"]) == 1 and len(link["dst_net_ids"]) >= 1:
+                netlist_info["fifo_links"]["one2many"][link["src_net_ids"][0]].extend(link["dst_net_ids"])
+            else:
+                exit("Error: Unsupported link configuration (many-to-many)")
+
         # Link the Object FIFOs
-        for link_src in netlist_info["fifo_links"]:
-            for link_dst in netlist_info["fifo_links"][link_src]:
-                netlist_info["obj_fifos"][link_dst] = netlist_info["obj_fifos"][link_src].cons().forward(name=f"obj_fifo_{link_dst}")
+        for link in netlist['links']:
+            if len(link['src_net_ids']) == 1 and len(link['dst_net_ids']) == 1:
+                netlist_info["obj_fifos"][link["dst_net_ids"][0]] = netlist_info["obj_fifos"][link['src_net_ids'][0]].cons().forward(name=f"obj_fifo_{link['dst_net_ids'][0]}")
+            elif len(link['src_net_ids']) == 1 and len(link['dst_net_ids']) > 1:
+                obj_fifos = netlist_info["obj_fifos"][link['src_net_ids'][0]].cons().split(
+                    offsets=[0]*len(link['dst_net_ids']),
+                    names=[f"obj_fifo_{dst_id}" for dst_id in link['dst_net_ids']]
+                )
+                for idx, net_id in enumerate(link['dst_net_ids']):
+                    netlist_info["obj_fifos"][net_id] = obj_fifos[idx]
+            elif len(link['src_net_ids']) > 1 and len(link['dst_net_ids']) == 1:
+                obj_fifos = netlist_info["obj_fifos"][link['dst_net_ids'][0]].prod().join(
+                    offsets=[0]*len(link['src_net_ids']),
+                    names=[f"obj_fifo_{src_id}" for src_id in link['src_net_ids']]
+                )
+                for idx, net_id in enumerate(link['src_net_ids']):
+                    netlist_info["obj_fifos"][net_id] = obj_fifos[idx]
+            else:
+                exit("Error: Unsupported link configuration (many-to-many)")
 
         in_data_shape = 0
         for input_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
@@ -116,41 +139,55 @@ def microbenchmark(
     
     # parse the netlist file and get the tiles and object_fifos and link the object_fifos
     netlist_info = parse_netlist(dtype_str, netlist_file)
-    
-    # zeroing the values of the items
-    def zero_func(items):
-        for data in items:
-            for i in range_(data.shape[0]):
-                data[i] = 0
+    datatype = np.ndarray[(1,), np.dtype[dtype]]
 
-
-    # Accumulate the input and adding a constant for each element one by one (simple function to prevent optimization)
-    def add_func(in_items, out_items, increment=1):
-        for data_out in out_items:
-            for i in range_(data_out.shape[0]):
-                data_out[i] = increment
-                for data_in in in_items:
-                    data_out[i] += data_in[i]
+    zero_i32 = Kernel(
+        "zero_int32_t_1", "accumulate.o", [datatype]
+    )
+    accumulate_i32 = Kernel(
+        "accumulate_int32_t_int32_t_1", "accumulate.o", [datatype, np.int32, datatype]
+    )
 
     # Wrap the zeroing and adding functions in a way that they can be used in the Worker
-    def core_func(in_items, out_items):
-        in_elements = []
-        for item in in_items:
-            in_elements.append(item.acquire(1))
-        out_elements = []
-        for item in out_items:
-            out_elements.append(item.acquire(1))
+    def core_func(in_item1 = None, in_item2 = None, in_item3 = None, out_item1 = None, out_item2 = None, out_item3 = None, zeroFunc=None, accumulateFunc=None):
+        in_items = []
+        out_items = []
+        if in_item1 is not None:
+            in_items.append(in_item1.acquire(1))
+        if in_item2 is not None:
+            in_items.append(in_item2.acquire(1))
+        if in_item3 is not None:
+            in_items.append(in_item3.acquire(1))
+        if out_item1 is not None:
+            out_items.append(out_item1.acquire(1))
+        if out_item2 is not None:
+            out_items.append(out_item2.acquire(1))
+        if out_item3 is not None:
+            out_items.append(out_item3.acquire(1))
 
-        zero_func(out_elements)
-        add_func(in_elements, out_elements)
+        for out_item in out_items:
+            zeroFunc(out_item)
+            for idx, in_item in enumerate(in_items):
+                accumulateFunc(in_item, 1 if idx == 0 else 0, out_item)
 
-        for item in in_items:
-            item.release(1)
-        for item in out_items:
-            item.release(1)
+        if in_item1 is not None:
+            in_item1.release(1)
+        if in_item2 is not None:
+            in_item2.release(1)
+        if in_item3 is not None:
+            in_item3.release(1)
+        if out_item1 is not None:
+            out_item1.release(1)
+        if out_item2 is not None:
+            out_item2.release(1)
+        if out_item3 is not None:
+            out_item3.release(1)
 
+        
     # Core function declaration
     workers = []
+    num_input_port = 3
+    num_output_port = 3
     for tile_id in netlist_info["core_tile_ids"]:
         in_items = []
         out_items = []
@@ -158,14 +195,22 @@ def microbenchmark(
             in_items.append(netlist_info["obj_fifos"][consumer_fifo_id].cons())
         for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
             out_items.append(netlist_info["obj_fifos"][producer_fifo_id].prod())
-        
+
+        if len(in_items) < num_input_port:
+            in_items.extend([None] * (num_input_port - len(in_items)))
+        elif len(in_items) > num_input_port:
+            in_items = in_items[:num_input_port]
+        if len(out_items) < num_output_port:
+            out_items.extend([None] * (num_output_port - len(out_items)))
+        elif len(out_items) > num_output_port:
+            out_items = out_items[:num_output_port]
         workers.append(
             Worker(
                 core_func,
-                [in_items, out_items],
+                [*in_items, *out_items, zero_i32, accumulate_i32],
             )
         )
-      
+
     # Runtime operations to move data to/from the AIE-array
     rt = Runtime()
     with rt.sequence(
@@ -181,7 +226,7 @@ def microbenchmark(
             tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
             tap = TensorAccessPattern(
                 tensor_dims=[1, 1, 1, whole_tensor_size], # unused dims are set to 1
-                sizes=[1, 1, 1, whole_tensor_size],
+                sizes=[1, 1, 1, tensor_size],
                 offset=offset,
                 strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
@@ -195,7 +240,7 @@ def microbenchmark(
             tensor_size = netlist_info["obj_fifos_data_shape"][fifo_id][0]
             tap = TensorAccessPattern(
                 tensor_dims=[1, 1, 1, whole_tensor_size], # unused dims are set to 1
-                sizes=[1, 1, 1, whole_tensor_size],
+                sizes=[1, 1, 1, tensor_size],
                 offset=offset,
                 strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
