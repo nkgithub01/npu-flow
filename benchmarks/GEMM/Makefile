@@ -6,7 +6,7 @@ device_name := npu2
 dtype_in := i8
 dtype_out := i16
 
-target_name := matrix_multiplication
+target_name := GEMM
 aie_py_src := ${target_name}.py
 
 use_placed := 1
