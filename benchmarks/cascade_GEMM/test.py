@@ -31,7 +31,6 @@ def main(opts):
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
 
-    b_col_maj = opts.b_col_maj
     M = opts.M
     K = opts.K
     N = opts.N
@@ -65,11 +64,13 @@ def main(opts):
     # Generate the input matrices A and B and the reference output matrix C
     # -----------------------------------------------------------------------------------
     Mat_A = np.random.randint(dtype_in_min/2, dtype_in_max/2, shape_in_A, dtype=dtype_in)
+    # Mat_A = np.eye(shape_in_A[0], shape_in_A[1], dtype=dtype_in)
+    # Mat_A = np.array([i for i in range(M*K)], dtype=dtype_in).reshape(shape_in_A)
     Mat_B = np.random.randint(dtype_in_min/2, dtype_in_max/2, shape_in_B, dtype=dtype_in)
-    if b_col_maj:
-        Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out).T.reshape(K, N)
-    else:
-        Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
+    # Mat_B = np.eye(shape_in_B[0], shape_in_B[1], dtype=dtype_in)
+    # Mat_B = np.array([i for i in range(K*N)], dtype=dtype_in).reshape(shape_in_B)
+    
+    Mat_C_ref = Mat_A.astype(dtype_out) @ Mat_B.astype(dtype_out)
     
     if verbosity > 1:
         print(f"Input matrix A: {Mat_A.shape}\n{Mat_A}")
@@ -138,14 +139,6 @@ def main(opts):
 
 if __name__ == "__main__":
     p = test_utils.create_default_argparser()
-    p.add_argument(
-        "--b_col_maj",
-        type=int,
-        choices=[0, 1],
-        dest="b_col_maj",
-        default=0,
-        help="Flag to indicate if the input matrix B is passed into the AIE array in column-major order",
-    )
     p.add_argument(
         "-M",
         type=int,

@@ -26,7 +26,7 @@ m:=32
 k:=32
 n:=32
 
-n_aie_cols?=4
+n_aie_cols?=8
 
 kernels:=mm_${m}x${k}x${n}
 aieargs:=-m $m -k $k -n $n --n_aie_cols ${n_aie_cols}

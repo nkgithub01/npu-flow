@@ -32,12 +32,12 @@ def main():
     argparser.add_argument("-m", type=int, default=64)
     argparser.add_argument("-k", type=int, default=64)
     argparser.add_argument("-n", type=int, default=64)
-    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=8)
+    argparser.add_argument("--n_aie_cols", type=int, choices=[4, 8], default=8)
     argparser.add_argument(
-        "--dtype_in", type=str, choices=["i8", "i16"], default="i16"
+        "--dtype_in", type=str, choices=["i16"], default="i16"
     )
     argparser.add_argument(
-        "--dtype_out", type=str, choices=["i8", "i16", "f32", "i32"], default="i32"
+        "--dtype_out", type=str, choices=["i16", "i32"], default="i32"
     )
     argparser.add_argument("--trace_size", type=int, default=0)
     argparser.add_argument(
@@ -86,7 +86,6 @@ def matrix_multiply(
     trace_size,
     generate_taps=False,
 ):
-
     n_aie_rows = 4
     n_aie_cores = n_aie_rows * n_aie_cols
 
@@ -98,14 +97,10 @@ def matrix_multiply(
     ), f"Output dtype ({dtype_out}) must be equal or larger to input dtype ({dtype_in})"
 
     # r, s, t are the dimensions required by the intrinsic microkernel MAC instructions.
-    if dtype_in_str == "i8":
-        r = 8
-        s = 8
-        t = 8
-    elif dtype_in_str == "i16":
-        r = 4
-        s = 4
-        t = 8
+    if dtype_in_str == "i16":
+        r = 1
+        s = 1
+        t = 1
 
     # npu2 is a 4 row x 8 col AIE array
     if n_aie_cols > 8:
@@ -158,7 +153,7 @@ def matrix_multiply(
         n_shim_mem_A = n_aie_cols
 
     # Integer division when n_aie_cols < 4, otherwise set to 1
-    n_A_tiles_per_shim = n_aie_rows // n_aie_cols if n_aie_cols < 4 else 1
+    n_A_tiles_per_shim = n_aie_rows // n_aie_cols if n_aie_cols < n_aie_rows else 1
 
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
@@ -206,7 +201,7 @@ def matrix_multiply(
         core_tiles = tiles[2:]
 
         # AIE-array data movement with object fifos
-        A_l3l2_fifos = [None] * n_aie_cols
+        A_l3l2_fifos = [None] * n_shim_mem_A
         A_l2l1_fifos = [None] * n_aie_rows
 
         B_l3l2_fifos = [None] * n_aie_cols
@@ -217,6 +212,14 @@ def matrix_multiply(
         C_l2l3_fifos = [None] * n_aie_cols
 
         # Input A
+        for idx in range(n_shim_mem_A):
+            A_l3l2_fifos[idx] = object_fifo(
+                f"A_L3L2_{idx}",
+                shim_tiles[idx],
+                mem_tiles[idx],
+                fifo_depth,
+                A_l2_ty,
+            )
         for row in range(n_aie_rows):
             A_l2l1_fifos[row] = object_fifo(
                 f"A_L2L1_{row}",
@@ -231,25 +234,19 @@ def matrix_multiply(
                     (s, 1),
                 ],
             )
-        for col in range(n_aie_cols):
-            A_l3l2_fifos[col] = object_fifo(
-                f"A_L3L2_{col}",
-                shim_tiles[col],
-                mem_tiles[col],
-                fifo_depth,
-                A_l2_ty,
-            )
+
+        for idx in range(n_shim_mem_A):
             # If n_cols == n_rows, n_A_tiles_per_shim is 1 and
             # this simply links a_l3l2_fifos[col] to a_l2l1_fifos[row] directly,
             # where col == row.
             # If n_cols < n_rows, each column receives multiple rows of
             # tiles; distribute it along rows of AIE cores.
-            start_row = col * n_A_tiles_per_shim
+            start_row = idx * n_A_tiles_per_shim
             stop_row = start_row + n_A_tiles_per_shim
             # Calculate the offsets into the input/output data for the join/distribute
-            of_offsets = [m * k * i for i in range(n_aie_cols)]
+            of_offsets = [m * k * i for i in range(stop_row - start_row)]
             object_fifo_link(
-                A_l3l2_fifos[col],
+                A_l3l2_fifos[idx],
                 [A_l2l1_fifos[row] for row in range(start_row, stop_row)],
                 [],
                 of_offsets,
@@ -278,7 +275,7 @@ def matrix_multiply(
                         (t, 1),
                     ],
                 )
-            of_offsets = [n * k * i for i in range(n_aie_cols)]
+            of_offsets = [n * k * i for i in range(n_aie_rows)]
             object_fifo_link(
                 B_l3l2_fifos[col],
                 [B_l2l1_fifos[row][col] for row in range(n_aie_rows)],
@@ -380,9 +377,9 @@ def matrix_multiply(
         )
         def sequence(A, B, C):
             # We are limited in the number of BDs. After synchronizing, we can reuse BDs.
-            # We only transfer 5 rows of tiles at once before starting a new transfer block.
+            # We only transfer 4 rows of tiles at once before starting a new transfer block.
             tb_max_n_rows = (
-                5  # tb = transfer block; block of transfers before sync call
+                4  # tb = transfer block; block of transfers before sync call
             )
 
             out_tasks = []
@@ -410,29 +407,7 @@ def matrix_multiply(
                     C_taps.append(C_tap)
 
                     for tile_row in range(tb_n_rows):
-                        A_block_offset = ((tb * tb_max_n_rows) + tile_row) * m * K
-                        A_row_offset = col * n_A_tiles_per_shim * k
-                        A_offset = A_block_offset + A_row_offset
-                        A_sizes = [
-                            N // n // n_aie_cols,
-                            K // k // n_aie_rows,
-                            m * n_A_tiles_per_shim,
-                            k,
-                        ]
-                        A_strides = [0, k * n_aie_rows, K, 1]
-                        A_tap = TensorAccessPattern(
-                            (M, K), A_offset, sizes=A_sizes, strides=A_strides
-                        )
                         B_col_offset = col * n
-                        a_task = shim_dma_single_bd_task(
-                            A_l3l2_fifos[col],
-                            A,
-                            tap=A_tap,
-                        )
-                        dma_start_task(a_task)
-                        in_tasks.append(a_task)
-                        A_taps.append(A_tap)
-
                         B_sizes = [
                             N // n // n_aie_cols,
                             K // k // n_aie_rows,
@@ -449,6 +424,31 @@ def matrix_multiply(
                         dma_start_task(b_task)
                         in_tasks.append(b_task)
                         B_taps.append(B_tap)
+
+                for col in range(n_shim_mem_A):
+                    for tile_row in range(tb_n_rows):
+                        A_block_offset = ((tb * tb_max_n_rows) + tile_row) * m * K
+                        A_row_offset = col * n_A_tiles_per_shim * k
+                        A_offset = A_block_offset + A_row_offset
+                        A_sizes = [
+                            N // n // n_aie_cols,
+                            K // k // n_aie_rows,
+                            m * n_A_tiles_per_shim,
+                            k,
+                        ]
+                        A_strides = [0, k * n_aie_rows, K, 1]
+                        A_tap = TensorAccessPattern(
+                            (M, K), A_offset, sizes=A_sizes, strides=A_strides
+                        )
+                        a_task = shim_dma_single_bd_task(
+                            A_l3l2_fifos[col],
+                            A,
+                            tap=A_tap,
+                        )
+                        dma_start_task(a_task)
+                        in_tasks.append(a_task)
+                        A_taps.append(A_tap)
+
                 dma_await_task(*out_tasks)
                 out_tasks = []
                 dma_free_task(*in_tasks)
