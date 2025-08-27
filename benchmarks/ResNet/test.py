@@ -25,7 +25,7 @@ def main(opts):
     xclbin_path = opts.xclbin
     insts_path = opts.instr
 
-    log_folder = "log/"
+    log_folder = "output/"
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
 
@@ -35,7 +35,7 @@ def main(opts):
     npu_time_max = 0
     trace_size = 16384
     enable_trace = False
-    trace_file = "log/trace_" + design + ".txt"
+    trace_file = "output/trace_" + design + ".txt"
     # ------------------------------------------------------
     # Configure this to match your design's buffer size
     # ------------------------------------------------------
