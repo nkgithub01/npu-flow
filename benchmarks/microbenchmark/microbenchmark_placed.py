@@ -41,7 +41,7 @@ def parse_netlist(dtype_str, netlist_file):
         obj_fifos={},
         fifo_links=dict(many2one={}, one2many={}),
         obj_fifos_data_shape={},
-        core_tile_producer_consumer_fifo_ids={},
+        core_tile_input_output_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
         in_data_shape=(),
         out_data_shape=(),
@@ -55,7 +55,7 @@ def parse_netlist(dtype_str, netlist_file):
             netlist_info["tiles"][node["id"]] = tile(node["col_x"], node["row_y"])
             if node["type"] == "COMP":
                 netlist_info["core_tile_ids"].append(node["id"])
-                netlist_info["core_tile_producer_consumer_fifo_ids"][node["id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_input_output_fifo_ids"][node["id"]] = dict(input=[], output=[])
             elif node["type"] == "MEM":
                 netlist_info["mem_tile_ids"].append(node["id"])
             elif node["type"] == "SHIM":
@@ -76,12 +76,12 @@ def parse_netlist(dtype_str, netlist_file):
             )
             netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
 
-            # Track producer and consumer object FIFOs for each core tile
+            # Track input and output object FIFOs for each core tile
             if net["src_id"] in netlist_info["core_tile_ids"]:
-                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_id"]]["producer"].append(net["net_id"])
+                netlist_info["core_tile_input_output_fifo_ids"][net["src_id"]]["output"].append(net["net_id"])
             for dst_tile_id in net["dst_id"]:
                 if dst_tile_id in netlist_info["core_tile_ids"]:
-                    netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
+                    netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["input"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
             if net["src_id"] in netlist_info["shim_tile_ids"]:
@@ -151,18 +151,18 @@ def microbenchmark(
                 for _ in range_(0xFFFFFFFF):
                     in_items = []
                     out_items = []
-                    for consumer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["consumer"]:
-                        in_items.append(netlist_info["obj_fifos"][consumer_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-                    for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
-                        out_items.append(netlist_info["obj_fifos"][producer_fifo_id].acquire(ObjectFifoPort.Produce, 1))
+                    for input_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["input"]:
+                        in_items.append(netlist_info["obj_fifos"][input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
+                    for output_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["output"]:
+                        out_items.append(netlist_info["obj_fifos"][output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
                     
                     zero_func(out_items)
                     add_func(in_items, out_items)
 
-                    for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
-                        netlist_info["obj_fifos"][producer_fifo_id].release(ObjectFifoPort.Produce, 1)
-                    for consumer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["consumer"]:
-                        netlist_info["obj_fifos"][consumer_fifo_id].release(ObjectFifoPort.Consume, 1)
+                    for output_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["output"]:
+                        netlist_info["obj_fifos"][output_fifo_id].release(ObjectFifoPort.Produce, 1)
+                    for input_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["input"]:
+                        netlist_info["obj_fifos"][input_fifo_id].release(ObjectFifoPort.Consume, 1)
         
         # Set up a packet-switched flow from core/mem to shim for tracing information
         # Max can only trace 31 tiles

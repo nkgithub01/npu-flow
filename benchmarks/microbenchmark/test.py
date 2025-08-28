@@ -37,7 +37,7 @@ def parse_netlist(dtype_str, netlist_file):
         shim_tile_ids=[],
         netlist={},
         obj_fifos_data_shape={},
-        tile_producer_consumer_fifo_ids={},
+        core_tile_input_output_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
         in_data_shape=(),
         out_data_shape=(),
@@ -50,7 +50,7 @@ def parse_netlist(dtype_str, netlist_file):
         # Tile(s) declarations
         for node in netlist['nodes']:
             netlist_info["tiles"][node["id"]] = None
-            netlist_info["tile_producer_consumer_fifo_ids"][node["id"]] = dict(producer=[], consumer=[])
+            netlist_info["core_tile_input_output_fifo_ids"][node["id"]] = dict(input=[], output=[])
             if node["type"] == "COMP":
                 netlist_info["core_tile_ids"].append(node["id"])
             elif node["type"] == "MEM":
@@ -74,10 +74,10 @@ def parse_netlist(dtype_str, netlist_file):
                 downstream_neighbor_net_ids=[],
             )
 
-            # Track producer and consumer object FIFOs for each tile
-            netlist_info["tile_producer_consumer_fifo_ids"][net["src_id"]]["producer"].append(net["net_id"])
+            # Track input and output object FIFOs for each tile
+            netlist_info["core_tile_input_output_fifo_ids"][net["src_id"]]["output"].append(net["net_id"])
             for dst_tile_id in net["dst_id"]:
-                netlist_info["tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
+                netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["input"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
             if net["src_id"] in netlist_info["shim_tile_ids"]:
@@ -95,7 +95,7 @@ def parse_netlist(dtype_str, netlist_file):
         for net in netlist['nets']:
             for dst_tile_id in net["dst_id"]:
                 netlist_info["netlist"][net["net_id"]]["downstream_neighbor_net_ids"].extend(
-                    netlist_info["tile_producer_consumer_fifo_ids"][dst_tile_id]["producer"]
+                    netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["output"]
                 )
 
         # Topological order of net IDs

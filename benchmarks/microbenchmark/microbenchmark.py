@@ -35,7 +35,7 @@ def parse_netlist(dtype_str, netlist_file):
         obj_fifos={},
         fifo_links=dict(many2one={}, one2many={}),
         obj_fifos_data_shape={},
-        core_tile_producer_consumer_fifo_ids={},
+        core_tile_input_output_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
         in_data_shape=(),
         out_data_shape=(),
@@ -48,7 +48,7 @@ def parse_netlist(dtype_str, netlist_file):
         for node in netlist['nodes']:
             if node["type"] == "COMP":
                 netlist_info["core_tile_ids"].append(node["id"])
-                netlist_info["core_tile_producer_consumer_fifo_ids"][node["id"]] = dict(producer=[], consumer=[])
+                netlist_info["core_tile_input_output_fifo_ids"][node["id"]] = dict(input=[], output=[])
             elif node["type"] == "MEM":
                 netlist_info["mem_tile_ids"].append(node["id"])
             elif node["type"] == "SHIM":
@@ -67,12 +67,12 @@ def parse_netlist(dtype_str, netlist_file):
                 obj_type=data_ty
             )
 
-            # Track producer and consumer object FIFOs for each core tile
+            # Track input and output object FIFOs for each core tile
             if net["src_id"] in netlist_info["core_tile_ids"]:
-                netlist_info["core_tile_producer_consumer_fifo_ids"][net["src_id"]]["producer"].append(net["net_id"])
+                netlist_info["core_tile_input_output_fifo_ids"][net["src_id"]]["output"].append(net["net_id"])
             for dst_tile_id in net["dst_id"]:
                 if dst_tile_id in netlist_info["core_tile_ids"]:
-                    netlist_info["core_tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
+                    netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["input"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
             if net["src_id"] in netlist_info["shim_tile_ids"]:
@@ -149,65 +149,38 @@ def microbenchmark(
     )
 
     # Wrap the zeroing and adding functions in a way that they can be used in the Worker
-    def core_func(in_item1 = None, in_item2 = None, in_item3 = None, out_item1 = None, out_item2 = None, out_item3 = None, zeroFunc=None, accumulateFunc=None):
+    def core_func(zeroFunc=None, accumulateFunc=None, num_inFIFO=2, num_outFIFO=2, *obj_FIFOs):
         in_items = []
         out_items = []
-        if in_item1 is not None:
-            in_items.append(in_item1.acquire(1))
-        if in_item2 is not None:
-            in_items.append(in_item2.acquire(1))
-        if in_item3 is not None:
-            in_items.append(in_item3.acquire(1))
-        if out_item1 is not None:
-            out_items.append(out_item1.acquire(1))
-        if out_item2 is not None:
-            out_items.append(out_item2.acquire(1))
-        if out_item3 is not None:
-            out_items.append(out_item3.acquire(1))
+        for inFIFO in obj_FIFOs[:num_inFIFO]:
+            in_items.append(inFIFO.acquire(1))
+        for outFIFO in obj_FIFOs[num_inFIFO:num_inFIFO+num_outFIFO]:
+            out_items.append(outFIFO.acquire(1))
 
         for out_item in out_items:
             zeroFunc(out_item)
             for idx, in_item in enumerate(in_items):
                 accumulateFunc(in_item, 1 if idx == 0 else 0, out_item)
 
-        if in_item1 is not None:
-            in_item1.release(1)
-        if in_item2 is not None:
-            in_item2.release(1)
-        if in_item3 is not None:
-            in_item3.release(1)
-        if out_item1 is not None:
-            out_item1.release(1)
-        if out_item2 is not None:
-            out_item2.release(1)
-        if out_item3 is not None:
-            out_item3.release(1)
+        for inFIFO in obj_FIFOs[:num_inFIFO]:
+            inFIFO.release(1)
+        for outFIFO in obj_FIFOs[num_inFIFO:num_inFIFO+num_outFIFO]:
+            outFIFO.release(1)
 
-        
     # Core function declaration
     workers = []
-    num_input_port = 3
-    num_output_port = 3
     for tile_id in netlist_info["core_tile_ids"]:
         in_items = []
         out_items = []
-        for consumer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["consumer"]:
-            in_items.append(netlist_info["obj_fifos"][consumer_fifo_id].cons())
-        for producer_fifo_id in netlist_info["core_tile_producer_consumer_fifo_ids"][tile_id]["producer"]:
-            out_items.append(netlist_info["obj_fifos"][producer_fifo_id].prod())
+        for input_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["input"]:
+            in_items.append(netlist_info["obj_fifos"][input_fifo_id].cons())
+        for output_fifo_id in netlist_info["core_tile_input_output_fifo_ids"][tile_id]["output"]:
+            out_items.append(netlist_info["obj_fifos"][output_fifo_id].prod())
 
-        if len(in_items) < num_input_port:
-            in_items.extend([None] * (num_input_port - len(in_items)))
-        elif len(in_items) > num_input_port:
-            in_items = in_items[:num_input_port]
-        if len(out_items) < num_output_port:
-            out_items.extend([None] * (num_output_port - len(out_items)))
-        elif len(out_items) > num_output_port:
-            out_items = out_items[:num_output_port]
         workers.append(
             Worker(
                 core_func,
-                [*in_items, *out_items, zero_i32, accumulate_i32],
+                [zero_i32, accumulate_i32, len(in_items), len(out_items), *in_items, *out_items],
             )
         )
 
