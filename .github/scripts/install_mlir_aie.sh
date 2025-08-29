@@ -1,5 +1,5 @@
-apt update
-apt install build-essential clang clang-14 lld lld-14 cmake ninja-build python3-venv python3-pip -y
+sudo apt update
+sudo apt install -y build-essential clang clang-14 lld lld-14 cmake ninja-build python3-venv python3-pip
 
 cd mlir-aie
 python3 -m venv ironenv

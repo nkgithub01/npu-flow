@@ -24,7 +24,7 @@ git submodule update --init --recursive
 
 echo "Installing XRT dependencies..."
 cd "$XDNA_SRC_DIR"
-./tools/amdxdna_deps.sh
+sudo ./tools/amdxdna_deps.sh
 
 echo "Building XRT..."
 cd "$XDNA_SRC_DIR/xrt/build"
@@ -37,5 +37,5 @@ echo "Ubuntu version detected: $UBUNTU_VERSION"
 echo "Installing new XRT packages..."
 cd "$XDNA_SRC_DIR/xrt/build/Release"
 # Only Ubuntu 24.04 is supported for now
-apt install ./xrt_202520.2.20.0_24.04-amd64-base.deb
-apt install ./xrt_202520.2.20.0_24.04-amd64-base-dev.deb
+sudo apt install ./xrt_202520.2.20.0_24.04-amd64-base.deb
+sudo apt install ./xrt_202520.2.20.0_24.04-amd64-base-dev.deb
