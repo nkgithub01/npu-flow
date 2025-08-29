@@ -1,0 +1,9 @@
+name: ResNet
+clean: make clean
+build: make
+run: make run
+tasks:
+  - name: default
+    params:
+      TODO: TODO
+    output: build/resnet.mlir

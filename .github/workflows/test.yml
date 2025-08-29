@@ -1,0 +1,66 @@
+name: NPU Flow Automated Tests
+run-name: ${{ github.actor }} is testing out NPU flow
+on: [push]
+jobs:
+  Test:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "The name of the branch is ${{ github.ref }}."
+
+      - name: Check out repository code
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Update apt list
+        run: apt update
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+
+      - name: Install XRT
+        run: ./.github/scripts/install_ci_xrt.sh
+
+      - name: Install MLIR-AIE
+        run: |
+          source ./.github/scripts/install_mlir_aie.sh ${{ github.workspace }}
+          echo MLIR_AIE_INSTALL_DIR=$MLIR_AIE_INSTALL_DIR >> $GITHUB_ENV
+          echo PEANO_INSTALL_DIR=$PEANO_INSTALL_DIR >> $GITHUB_ENV
+          echo PATH=$PATH >> $GITHUB_ENV
+          echo PYTHONPATH=$PYTHONPATH >> $GITHUB_ENV
+          echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+          echo PEANO_CLANG=$PEANO_CLANG >> $GITHUB_ENV
+          echo NPU2=1 >> $GITHUB_ENV
+
+      - name: Install OR-Tools
+        run: |
+          source ./.github/scripts/install_or_tools.sh
+          echo OR_TOOLS_DIR=$OR_TOOLS_DIR >> $GITHUB_ENV
+          echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+          echo CPATH=$CPATH >> $GITHUB_ENV
+          echo PATH=$PATH >> $GITHUB_ENV
+
+      - name: Build PnR Tool
+        run: |
+          apt install -y catch2
+          cd npu-pnr
+          mkdir build && cd build
+          cmake .. -DCMAKE_PREFIX_PATH=$OR_TOOLS_DIR -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+          echo NPU_PNR_BIN_DIR=$(realpath ./apps) >> $GITHUB_ENV
+          make test
+
+      - name: Build, Place, and Route Benchmarks
+        run: |
+          source ./mlir-aie/ironenv/bin/activate
+          python3 utils/build_benchmarks.py benchmarks/tasklist.yml --benchmark-root=benchmarks \
+            --pnr --pnr-args="--verbose=verbose -n 400" \
+            --output-dir=build
+
+      - name: Store Build Artifact
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks.tar.gz
+          path: build/
+          if-no-files-found: 'error'

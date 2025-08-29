@@ -1,0 +1,9 @@
+name: Matrix Multiplication
+clean: make clean
+build: make
+run: make run
+tasks:
+  - name: default
+    params:
+      TODO: TODO
+    output: build/aie_512x512x512_32x32x32_8c.mlir

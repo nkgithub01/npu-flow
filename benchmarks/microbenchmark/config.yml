@@ -1,0 +1,59 @@
+name: Microbenchmark Suite
+clean: make clean
+build: make
+run: make run
+tasks:
+  - name: 1_col_1_core
+    params:
+      netlist_name: 1_col_1_core
+    output: build/microbenchmark.mlir
+
+  - name: 1_col_2_core
+    params:
+      netlist_name: 1_col_2_core
+    output: build/microbenchmark.mlir
+
+  - name: 1_col_3_core
+    params:
+      netlist_name: 1_col_3_core
+    output: build/microbenchmark.mlir
+
+  - name: 1_col_4_core
+    params:
+      netlist_name: 1_col_4_core
+    output: build/microbenchmark.mlir
+
+  - name: 2_col_1_core_each
+    params:
+      netlist_name: 2_col_1_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 2_col_2_core_each
+    params:
+      netlist_name: 2_col_2_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 2_col_3_core_each
+    params:
+      netlist_name: 2_col_3_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 2_col_4_core_each
+    params:
+      netlist_name: 2_col_4_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 4_col_4_core_each
+    params:
+      netlist_name: 4_col_4_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 8_col_4_core_each
+    params:
+      netlist_name: 8_col_4_core_each
+    output: build/microbenchmark.mlir
+
+  - name: 1_col_4_core_1_cross_6_core
+    params:
+      netlist_name: 1_col_4_core_1_cross_6_core
+    output: build/microbenchmark.mlir

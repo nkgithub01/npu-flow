@@ -12,7 +12,7 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${targetname}_placed.py
 endif
 
-NUM_COMPUTE_COLUMNS = 4
+NUM_COMPUTE_COLUMNS ?= 4
 EDGEDETECT_WIDTH = 1920
 EDGEDETECT_HEIGHT = 1080
 TRACE_SIZE = 134217728

@@ -92,7 +92,7 @@ def edge_detect(image_width, image_height, num_compute_flow_column, trace_size):
                 f"col_{col_idx}_inOF_L2L1",
                 mem_tiles[col_idx],
                 compute_tiles_row_5[col_idx],
-                7,
+                [7, 2],
                 line_bytes_ty,
             ))
             object_fifo_link(inOF_L3L2s[-1], inOF_L2L1s[-1])

@@ -1,0 +1,34 @@
+# Edge Detection
+- edge_detection/col_1
+- edge_detection/col_2
+- edge_detection/col_3
+- edge_detection/col_4
+- edge_detection/col_5
+- edge_detection/col_6
+- edge_detection/col_7
+- edge_detection/col_8
+
+# LLaMA MHA
+- llama_mha/default
+
+# Matrix Multiplication
+- matrix_multiplication/default
+
+# Microbenchmark
+- microbenchmark/1_col_1_core
+- microbenchmark/1_col_2_core
+- microbenchmark/1_col_3_core
+- microbenchmark/1_col_4_core
+- microbenchmark/2_col_1_core_each
+- microbenchmark/2_col_2_core_each
+- microbenchmark/2_col_3_core_each
+- microbenchmark/2_col_4_core_each
+- microbenchmark/4_col_4_core_each
+- microbenchmark/8_col_4_core_each
+- microbenchmark/1_col_4_core_1_cross_6_core
+
+# ResNet
+- ResNet/default
+
+# Vector Scalar Multiplication
+- vector_scalar_mul/default

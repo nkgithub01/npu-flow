@@ -1,0 +1,37 @@
+name: Edge Detection
+clean: make clean
+build: make -j
+run: make run
+tasks:
+  - name: col_1
+    params:
+      NUM_COMPUTE_COLUMNS: 1
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_2
+    params:
+      NUM_COMPUTE_COLUMNS: 2
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_3
+    params:
+      NUM_COMPUTE_COLUMNS: 3
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_4
+    params:
+      NUM_COMPUTE_COLUMNS: 4
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_5
+    params:
+      NUM_COMPUTE_COLUMNS: 5
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_6
+    params:
+      NUM_COMPUTE_COLUMNS: 6
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_7
+    params:
+      NUM_COMPUTE_COLUMNS: 7
+    output: build/aie2_lineBased_8b_1920.mlir
+  - name: col_8
+    params:
+      NUM_COMPUTE_COLUMNS: 8
+    output: build/aie2_lineBased_8b_1920.mlir
