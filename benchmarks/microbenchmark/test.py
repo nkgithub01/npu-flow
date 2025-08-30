@@ -9,6 +9,7 @@ import aie.utils.test as test_utils
 
 RELEASE_VERBOSITY_LEVEL = 1
 DEBUG_VERBOSITY_LEVEL = 2
+DETAILED_DEBUG_VERBOSITY_LEVEL = 3
 
 dtype_map = {
     "i8": np.int8,
@@ -36,7 +37,7 @@ def parse_netlist(dtype_str, netlist_file):
         shim_tile_ids=[],
         netlist={},
         obj_fifos_data_shape={},
-        tile_producer_consumer_fifo_ids={},
+        core_tile_input_output_fifo_ids={},
         shim_tile_in_out_fifo_ids=dict(input=[], output=[]),
         in_data_shape=(),
         out_data_shape=(),
@@ -48,14 +49,14 @@ def parse_netlist(dtype_str, netlist_file):
         
         # Tile(s) declarations
         for node in netlist['nodes']:
-            netlist_info["tiles"][node["tile_id"]] = None
-            netlist_info["tile_producer_consumer_fifo_ids"][node["tile_id"]] = dict(producer=[], consumer=[])
+            netlist_info["tiles"][node["id"]] = None
+            netlist_info["core_tile_input_output_fifo_ids"][node["id"]] = dict(input=[], output=[])
             if node["type"] == "COMP":
-                netlist_info["core_tile_ids"].append(node["tile_id"])
+                netlist_info["core_tile_ids"].append(node["id"])
             elif node["type"] == "MEM":
-                netlist_info["mem_tile_ids"].append(node["tile_id"])
+                netlist_info["mem_tile_ids"].append(node["id"])
             elif node["type"] == "SHIM":
-                netlist_info["shim_tile_ids"].append(node["tile_id"])
+                netlist_info["shim_tile_ids"].append(node["id"])
 
         # Object FIFO(s) declarations
         for net in netlist['nets']:
@@ -64,8 +65,8 @@ def parse_netlist(dtype_str, netlist_file):
             data_shape = (net["byte_size_per_depth"] // data_size,)
             netlist_info["obj_fifos_data_shape"][net["net_id"]] = data_shape
             netlist_info["netlist"][net["net_id"]] = dict(
-                src_tile_id=net["src_tile_id"],
-                dst_tile_ids=net["dst_tile_ids"],
+                src_tile_id=net["src_id"],
+                dst_tile_ids=net["dst_id"],
                 carried_value = None,
                 need_linking=False,
                 carry_value_from_net_id=None,
@@ -73,28 +74,28 @@ def parse_netlist(dtype_str, netlist_file):
                 downstream_neighbor_net_ids=[],
             )
 
-            # Track producer and consumer object FIFOs for each tile
-            netlist_info["tile_producer_consumer_fifo_ids"][net["src_tile_id"]]["producer"].append(net["net_id"])
-            for dst_tile_id in net["dst_tile_ids"]:
-                netlist_info["tile_producer_consumer_fifo_ids"][dst_tile_id]["consumer"].append(net["net_id"])
+            # Track input and output object FIFOs for each tile
+            netlist_info["core_tile_input_output_fifo_ids"][net["src_id"]]["output"].append(net["net_id"])
+            for dst_tile_id in net["dst_id"]:
+                netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["input"].append(net["net_id"])
 
             # Track object FIFOs from or to shim tiles
-            if net["src_tile_id"] in netlist_info["shim_tile_ids"]:
+            if net["src_id"] in netlist_info["shim_tile_ids"]:
                 netlist_info["shim_tile_in_out_fifo_ids"]["input"].append(net["net_id"])
-            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_tile_ids"]):
+            if any(dst_tile_id in netlist_info["shim_tile_ids"] for dst_tile_id in net["dst_id"]):
                 netlist_info["shim_tile_in_out_fifo_ids"]["output"].append(net["net_id"])
 
         # tracking net linking information
-        for net in netlist['nets']:
-            if net["need_linking"]:
-                netlist_info["netlist"][net["net_id"]]["need_linking"] = True
-                netlist_info["netlist"][net["net_id"]]["carry_value_from_net_id"] = net["link_src_net_id"]
+        for link in netlist['links']:
+            for dst_net_id in link["dst_net_ids"]:
+                netlist_info["netlist"][dst_net_id]["need_linking"] = True
+                netlist_info["netlist"][dst_net_id]["carry_value_from_net_id"] = link["src_net_ids"][-1]
 
         # tracking downstream neighbor net IDs
         for net in netlist['nets']:
-            for dst_tile_id in net["dst_tile_ids"]:
+            for dst_tile_id in net["dst_id"]:
                 netlist_info["netlist"][net["net_id"]]["downstream_neighbor_net_ids"].extend(
-                    netlist_info["tile_producer_consumer_fifo_ids"][dst_tile_id]["producer"]
+                    netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["output"]
                 )
 
         # Topological order of net IDs
@@ -175,7 +176,7 @@ def main(opts):
             # If the net does not need linking, carry the value from the source tile
             netlist_info["netlist"][net_id]["carried_value"] = netlist_info["tiles"][netlist_info["netlist"][net_id]["src_tile_id"]]
         
-        if verbosity >= DEBUG_VERBOSITY_LEVEL:
+        if verbosity >= DETAILED_DEBUG_VERBOSITY_LEVEL:
             print(f"Reference solution net ID: {net_id}, Carried value: {netlist_info['netlist'][net_id]['carried_value']}")
         
         for tile_id in netlist_info["netlist"][net_id]["dst_tile_ids"]:
@@ -183,7 +184,7 @@ def main(opts):
                 netlist_info["tiles"][tile_id] += netlist_info["netlist"][net_id]["carried_value"]
     
     for idx, net_id in enumerate(netlist_info["shim_tile_in_out_fifo_ids"]["output"]):
-        NPU_output_ref[idx] = netlist_info["netlist"][netlist_info["shim_tile_in_out_fifo_ids"]["output"][idx]]["carried_value"]
+        NPU_output_ref[idx] = netlist_info["netlist"][netlist_info["shim_tile_in_out_fifo_ids"]["output"][idx]]["carried_value"][0]
 
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")
@@ -238,7 +239,7 @@ def main(opts):
     NPU_output = np.array(data_buffer, dtype=dtype)
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU output (Shape: {NPU_output.shape}):\n{NPU_output}")
-        np.savetxt(output_folder+"NPU_output_two.txt", NPU_output, fmt="%d")
+        np.savetxt(output_folder+"NPU_output.txt", NPU_output, fmt="%d")
 
     relative_tolerance = 0
     absolute_tolerance = 0

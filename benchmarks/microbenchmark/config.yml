@@ -3,57 +3,681 @@ clean: make clean
 build: make
 run: make run
 tasks:
-  - name: 1_col_1_core
+  - name: mesh_R3_C1
     params:
-      netlist_name: 1_col_1_core
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 1
     output: build/microbenchmark.mlir
 
-  - name: 1_col_2_core
+  - name: mesh_R3_C2
     params:
-      netlist_name: 1_col_2_core
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 2
     output: build/microbenchmark.mlir
 
-  - name: 1_col_3_core
+  - name: mesh_R3_C3
     params:
-      netlist_name: 1_col_3_core
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 3
     output: build/microbenchmark.mlir
 
-  - name: 1_col_4_core
+  - name: mesh_R3_C4
     params:
-      netlist_name: 1_col_4_core
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 4
     output: build/microbenchmark.mlir
 
-  - name: 2_col_1_core_each
+  - name: mesh_R3_C5
     params:
-      netlist_name: 2_col_1_core_each
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 5
     output: build/microbenchmark.mlir
 
-  - name: 2_col_2_core_each
+  - name: mesh_R3_C6
     params:
-      netlist_name: 2_col_2_core_each
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 6
     output: build/microbenchmark.mlir
 
-  - name: 2_col_3_core_each
+  - name: mesh_R3_C7
     params:
-      netlist_name: 2_col_3_core_each
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 7
     output: build/microbenchmark.mlir
 
-  - name: 2_col_4_core_each
+  - name: mesh_R3_C8
     params:
-      netlist_name: 2_col_4_core_each
+      netlist_topology: mesh
+      num_rows: 3
+      num_cols: 8
     output: build/microbenchmark.mlir
 
-  - name: 4_col_4_core_each
+  - name: mesh_R4_C1
     params:
-      netlist_name: 4_col_4_core_each
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 1
     output: build/microbenchmark.mlir
 
-  - name: 8_col_4_core_each
+  - name: mesh_R4_C2
     params:
-      netlist_name: 8_col_4_core_each
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 2
     output: build/microbenchmark.mlir
 
-  - name: 1_col_4_core_1_cross_6_core
+  - name: mesh_R4_C3
     params:
-      netlist_name: 1_col_4_core_1_cross_6_core
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R4_C4
+    params:
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R4_C5
+    params:
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R4_C6
+    params:
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R4_C7
+    params:
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R4_C8
+    params:
+      netlist_topology: mesh
+      num_rows: 4
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C1
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C2
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C3
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C4
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C5
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C6
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C7
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R5_C8
+    params:
+      netlist_topology: mesh
+      num_rows: 5
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C1
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C2
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C3
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C4
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C5
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C6
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C7
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: mesh_R6_C8
+    params:
+      netlist_topology: mesh
+      num_rows: 6
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C1
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C2
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C3
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C4
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C5
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C6
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C7
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: tree_R3_C8
+    params:
+      netlist_topology: tree
+      num_rows: 3
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C1
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C2
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C3
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C4
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C5
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C6
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C7
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: tree_R4_C8
+    params:
+      netlist_topology: tree
+      num_rows: 4
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C1
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C2
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C3
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C4
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C5
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C6
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C7
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: tree_R5_C8
+    params:
+      netlist_topology: tree
+      num_rows: 5
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C1
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C2
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C3
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C4
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C5
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C6
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C7
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: tree_R6_C8
+    params:
+      netlist_topology: tree
+      num_rows: 6
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C1
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C2
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C3
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C4
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C5
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C6
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C7
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: line_R3_C8
+    params:
+      netlist_topology: line
+      num_rows: 3
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C1
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C2
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C3
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C4
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C5
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C6
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C7
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: line_R4_C8
+    params:
+      netlist_topology: line
+      num_rows: 4
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C1
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C2
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C3
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C4
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C5
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C6
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C7
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: line_R5_C8
+    params:
+      netlist_topology: line
+      num_rows: 5
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C1
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 1
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C2
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 2
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C3
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 3
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C4
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 4
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C5
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 5
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C6
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 6
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C7
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 7
+    output: build/microbenchmark.mlir
+
+  - name: line_R6_C8
+    params:
+      netlist_topology: line
+      num_rows: 6
+      num_cols: 8
+    output: build/microbenchmark.mlir
+
+  - name: Custom_CNN
+    params:
+      netlist_topology: CNN
+      num_rows: 6
+      num_cols: 8
     output: build/microbenchmark.mlir
