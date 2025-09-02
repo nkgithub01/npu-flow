@@ -30,6 +30,7 @@ for test_name in test_names:
             })
             tasklist.append(f"- microbenchmark/{test_name}_R{row}_C{col}")
 
+# Custom CNN only has 1 configuration
 data['tasks'].append({
     'name': "Custom_CNN",
     'params': {
@@ -40,6 +41,18 @@ data['tasks'].append({
     'output': "build/microbenchmark.mlir"
 })
 tasklist.append(f"- microbenchmark/Custom_CNN")
+
+# toy example (single_multicast) only has 1 configuration
+data['tasks'].append({
+    'name': "single_multicast",
+    'params': {
+        'netlist_topology': "single_multicast",
+        'num_rows': 6,
+        'num_cols': 8
+    },
+    'output': "build/microbenchmark.mlir"
+})
+tasklist.append(f"- microbenchmark/single_multicast")
 
 with open('config.yml', 'w') as file:
     yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, indent=2)

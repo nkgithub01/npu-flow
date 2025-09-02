@@ -112,6 +112,7 @@
 - microbenchmark/line_R6_C7
 - microbenchmark/line_R6_C8
 - microbenchmark/Custom_CNN
+- microbenchmark/single_multicast
 
 
 # ResNet

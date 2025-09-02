@@ -681,3 +681,10 @@ tasks:
       num_rows: 6
       num_cols: 8
     output: build/microbenchmark.mlir
+
+  - name: single_multicast
+    params:
+      netlist_topology: single_multicast
+      num_rows: 6
+      num_cols: 8
+    output: build/microbenchmark.mlir
