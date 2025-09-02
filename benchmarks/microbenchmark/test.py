@@ -189,7 +189,7 @@ def main(opts):
     if verbosity >= DEBUG_VERBOSITY_LEVEL:
         print(f"NPU input one (Shape: {NPU_input_one.shape}):\n{NPU_input_one}")
         print(f"NPU input two (Shape: {NPU_input_two.shape}):\n{NPU_input_two}")
-        print(f"NPU reference output (Shape: {NPU_input_two.shape}):\n{NPU_output_ref}")
+        print(f"NPU reference output (Shape: {NPU_output_ref.shape}):\n{NPU_output_ref}")
         np.savetxt(output_folder+"NPU_input_one.txt", NPU_input_one, fmt="%d")
         np.savetxt(output_folder+"NPU_input_two.txt", NPU_input_two, fmt="%d")
         np.savetxt(output_folder+"NPU_output_reference.txt", NPU_output_ref, fmt="%d")

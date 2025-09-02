@@ -47,6 +47,44 @@ def helper_link_nets(netlist, link_src_net_ids, link_dst_net_ids):
     })
 
 
+def generate_single_multicast_netlist(args, netlist):
+    # Define nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(1):
+        for y in range(5):
+            node_id = helper_create_node(netlist, x, y)
+            nodes_loc2ID_lookup[(x, y)] = node_id
+
+    # Define nets connections
+    # The SHIM node is connected to the MEM node in the same column and linked to the net from MEM to the compute core 1
+    # Create a net to the MEM node in the same column
+    SHIM_id = nodes_loc2ID_lookup[(0, 0)]
+    MEM_id = nodes_loc2ID_lookup[(0, 1)]
+    COMP0_id = nodes_loc2ID_lookup[(0, 2)]
+    COMP1_id = nodes_loc2ID_lookup[(0, 3)]
+    COMP2_id = nodes_loc2ID_lookup[(0, 4)]
+    link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+    # Link this net to the MEM node in the same column
+    link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, [COMP1_id])
+    helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+
+    # The compute core 1 broadcasts to all other compute cores
+    helper_connect_nodes(args, netlist, COMP1_id, [COMP0_id, COMP2_id])
+
+    # The output of the compute core 0 and 2 are send back to the MEM then forward to SHIM
+    link_src_net_id = helper_connect_nodes(args, netlist, COMP0_id, [MEM_id])
+    # Link this net to the MEM node in the same column
+    link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, [SHIM_id])
+    helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+    link_src_net_id = helper_connect_nodes(args, netlist, COMP2_id, [MEM_id])
+    # Link this net to the MEM node in the same column
+    link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, [SHIM_id])
+    helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+
+    return netlist
+
+
+
 def generate_mesh_topology_netlist(args, netlist):
     # Define nodes
     nodes_loc2ID_lookup = dict()
@@ -393,9 +431,10 @@ def main(args):
 
 
 TOPOLOGIES_CONVERSION = {
+    "single_multicast": generate_single_multicast_netlist,
     "mesh": generate_mesh_topology_netlist,
-    "tree": generate_tree_topology_netlist,
     "line": generate_line_topology_netlist,
+    "tree": generate_tree_topology_netlist,
     "cnn": generate_cnn_topology_netlist,
 }
 

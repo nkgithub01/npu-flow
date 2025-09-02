@@ -17,19 +17,15 @@ aie_py_src=${target_name}_placed.py
 endif
 
 # available auto gen topologies (default output netlist file: netlist.json)
-# - cnn
+# - single_multicast
 # - mesh
-# - tree
 # - line
-use_auto_gen_netlist?=1
-ifeq (${use_auto_gen_netlist}, 1)
+# - tree
+# - cnn
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-netlist_topology ?= tree
+netlist_topology ?= single_multicast
 num_rows ?= 6
 num_cols ?= 8
-else ifeq (${use_auto_gen_netlist}, 0)
-netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-endif
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
