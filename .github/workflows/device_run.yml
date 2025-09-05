@@ -1,5 +1,5 @@
-name: NPU Flow Automated Tests
-run-name: ${{ github.actor }} is testing out NPU flow
+name: NPU Flow Automated Tests on NPU2 Device
+run-name: ${{ github.actor }} is testing out NPU flow on NPU2 device
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
       - '**.md'
 jobs:
   Test:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "The name of the branch is ${{ github.ref }}."
@@ -29,9 +29,6 @@ jobs:
         with:
           key: ${{ github.workflow }}
 
-      - name: Install XRT
-        run: ./.github/scripts/install_ci_xrt.sh
-
       - name: Install MLIR-AIE
         run: |
           source ./.github/scripts/install_mlir_aie.sh ${{ github.workspace }}
@@ -45,7 +42,7 @@ jobs:
 
       - name: Install OR-Tools
         run: |
-          source ./.github/scripts/install_or_tools.sh 24.04
+          source ./.github/scripts/install_or_tools.sh 24.10
           echo OR_TOOLS_DIR=$OR_TOOLS_DIR >> $GITHUB_ENV
           echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
           echo CPATH=$CPATH >> $GITHUB_ENV
