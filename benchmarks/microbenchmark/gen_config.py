@@ -9,7 +9,7 @@ data = {
 }
 
 test_names = [
-    'mesh',
+    '2d_mesh',
     'tree',
     'line'
 ]
@@ -34,7 +34,7 @@ for test_name in test_names:
 data['tasks'].append({
     'name': "Custom_CNN",
     'params': {
-        'netlist_topology': "CNN",
+        'netlist_topology': "cnn",
         'num_rows': 6,
         'num_cols': 8
     },
@@ -53,6 +53,18 @@ data['tasks'].append({
     'output': "build/microbenchmark.mlir"
 })
 tasklist.append(f"- microbenchmark/single_multicast")
+
+# 3d mesh only has 1 configuration
+data['tasks'].append({
+    'name': "3d_mesh",
+    'params': {
+        'netlist_topology': "3d_mesh",
+        'num_rows': 6,
+        'num_cols': 8
+    },
+    'output': "build/microbenchmark.mlir"
+})
+tasklist.append(f"- microbenchmark/3d_mesh")
 
 with open('config.yml', 'w') as file:
     yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, indent=2)

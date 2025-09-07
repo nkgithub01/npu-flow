@@ -18,12 +18,13 @@ endif
 
 # available auto gen topologies (default output netlist file: netlist.json)
 # - single_multicast
-# - mesh
+# - 2d_mesh
+# - 3d_mesh
 # - line
 # - tree
 # - cnn
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-netlist_topology ?= single_multicast
+netlist_topology ?= 3d_mesh
 num_rows ?= 6
 num_cols ?= 8
 
