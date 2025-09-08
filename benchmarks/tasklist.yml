@@ -12,7 +12,7 @@
 - llama_mha/default
 
 # Matrix Multiplication
-- matrix_multiplication/default
+# - matrix_multiplication/default
 
 # Microbenchmark
 - microbenchmark/2d_mesh_R3_C1
