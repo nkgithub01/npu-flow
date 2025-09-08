@@ -2,8 +2,10 @@ import yaml
 import os
 import shutil
 import argparse
+from multiprocessing import Pool
 from subprocess import Popen, PIPE, TimeoutExpired
 from dataclasses import dataclass
+import traceback
 
 
 @dataclass
@@ -195,7 +197,11 @@ def main_routine(
     run_after_build,
     hook_script,
     output_dir,
+    verbose,
 ):
+    def log(msg):
+        print(f"[{benchmark_name}/{task_name}] {msg}", flush=True)
+
     output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -204,11 +210,11 @@ def main_routine(
 
     benchmark = Benchmark(config_path)
 
-    print("Cleaning ...")
+    log("Cleaning ...")
     benchmark.clean_task_build()
 
     if build:
-        print("Building ...")
+        log("Building ...")
         mlir, netlist, std_route, build_log = benchmark.build_task(task_name)
 
         write_text_file(
@@ -232,7 +238,7 @@ def main_routine(
         )
 
     if pnr_after_build:
-        print("Placing and routing ...")
+        log("Placing and routing ...")
         pnr_mlir, pnr_netlist, pnr_log = benchmark.place_and_route_task(
             task_name, pnr_args
         )
@@ -253,10 +259,11 @@ def main_routine(
         )
 
     if run_after_build:
-        print("Running ...")
+        log("Running ...")
         run_stdout, run_stderr, run_log = benchmark.run_task(task_name)
-        print(f"Run stdout: {run_stdout}")
-        print(f"Run stderr: {run_stderr}")
+        if verbose:
+            log(f"Run stdout: {run_stdout}")
+            log(f"Run stderr: {run_stderr}")
 
         write_text_file(
             os.path.join(output_dir, f"{task_name}.stdout.run.log"),
@@ -274,7 +281,7 @@ def main_routine(
         )
 
     if hook_script.strip():
-        print(f"Executing hook `{hook_script}` ...")
+        log(f"Executing hook `{hook_script}` ...")
 
         hook_script = hook_script.split(" ")
         if os.path.exists(hook_script[0]):
@@ -354,6 +361,20 @@ if __name__ == "__main__":
         script (python/bash/etc.) to be executed for each task""",
         required=False,
     )
+    parser.add_argument(
+        "-j",
+        type=int,
+        default=1,
+        help="Number of parallel tasks to process (default: 1)",
+        required=False,
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Enable verbose logging",
+        required=False,
+    )
 
     args = parser.parse_args()
 
@@ -362,23 +383,32 @@ if __name__ == "__main__":
 
         def handle_task(task_entry):
             benchmark_name, task_name = task_entry.strip().split("/")
-            print(f"Benchmark: {benchmark_name}, Task: {task_name}")
-            main_routine(
-                benchmark_root=args.benchmark_root,
-                benchmark_name=benchmark_name,
-                task_name=task_name,
-                build=args.build,
-                pnr_after_build=args.pnr,
-                pnr_args=args.pnr_args,
-                run_after_build=args.run,
-                hook_script=args.hook,
-                output_dir=args.output_dir,
-            )
+            try:
+                main_routine(
+                    benchmark_root=args.benchmark_root,
+                    benchmark_name=benchmark_name,
+                    task_name=task_name,
+                    build=args.build,
+                    pnr_after_build=args.pnr,
+                    pnr_args=args.pnr_args,
+                    run_after_build=args.run,
+                    hook_script=args.hook,
+                    output_dir=args.output_dir,
+                    verbose=args.verbose,
+                )
+            except Exception as e:
+                print(f"[{benchmark_name}/{task_name}] Error: {e}", flush=True)
+                if args.verbose:
+                    traceback.print_exc()
 
+        parallel_tasks = []
         for arg_item in args.tasklists:
             if os.path.isfile(arg_item):
                 with open(arg_item, "r") as f:
                     for task in yaml.safe_load(f):
-                        handle_task(task)
+                        parallel_tasks.append(task)
             else:
-                handle_task(arg_item)
+                parallel_tasks.append(arg_item)
+
+        with Pool(args.j) as pool:
+            pool.map(handle_task, parallel_tasks)
