@@ -128,6 +128,8 @@ class Benchmark:
         return (
             read_text_file(output_mlir),
             read_text_file(self.__get_local_file("netlist.json")),
+            # TODO: merge pnr format file and route summary file
+            read_text_file(self.__get_local_file("./build/route_summary.json")),
             f"{build}\n{extract_fifo}",  # for debugging
         )
 
@@ -166,8 +168,8 @@ class Benchmark:
             f"Task {task_name} has not been built yet. "
             f"Current built task: {self.last_built_task}"
         )
-
-        result = subprocess_run_cmd(self.run_cmd, self.root_dir)
+        param_envs, _ = self.__get_task(task_name)
+        result = subprocess_run_cmd(cmd=self.run_cmd, cwd=self.root_dir, env=param_envs)
         result.check()
         return result.stdout, result.stderr, str(result)
 
@@ -207,7 +209,7 @@ def main_routine(
 
     if build:
         print("Building ...")
-        mlir, netlist, build_log = benchmark.build_task(task_name)
+        mlir, netlist, std_route, build_log = benchmark.build_task(task_name)
 
         write_text_file(
             os.path.join(output_dir, f"{task_name}.build.mlir"),
@@ -217,6 +219,11 @@ def main_routine(
         write_text_file(
             os.path.join(output_dir, f"{task_name}.build.json"),
             netlist,
+        )
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.route_summary.build.json"),
+            std_route,
         )
 
         write_text_file(
@@ -250,6 +257,17 @@ def main_routine(
         run_stdout, run_stderr, run_log = benchmark.run_task(task_name)
         print(f"Run stdout: {run_stdout}")
         print(f"Run stderr: {run_stderr}")
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.stdout.run.log"),
+            run_stdout,
+        )
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.stderr.run.log"),
+            run_stderr,
+        )
+
         write_text_file(
             os.path.join(output_dir, f"{task_name}.run.log"),
             run_log,
