@@ -72,13 +72,13 @@ build/mm_${m}x${k}x${n}.o: ${AIE_KERNELS_DIR}/cascade_mm.cc
 ${xclbin_target}: ${mlir_target} ${kernels:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 ${trace_xclbin_target}: ${trace_mlir_target} ${kernels:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 .PHONY: run

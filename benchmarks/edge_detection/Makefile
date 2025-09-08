@@ -43,13 +43,13 @@ build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
 build/final_${EDGEDETECT_WIDTH}.xclbin: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge \
+				--no-xchesscc --no-xbridge --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
 build/final_trace_${EDGEDETECT_WIDTH}.xclbin: build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge \
+				--no-xchesscc --no-xbridge --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
 run: build/final_${EDGEDETECT_WIDTH}.xclbin
