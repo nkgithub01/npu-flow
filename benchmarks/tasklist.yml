@@ -12,7 +12,10 @@
 - llama_mha/default
 
 # Matrix Multiplication
-# - matrix_multiplication/default
+- GEMM/GEMM_R6_C8
+- GEMM/GEMM_R6_C4
+- GEMM/GEMM_R6_C2
+- GEMM/GEMM_R6_C1
 
 # Microbenchmark
 - microbenchmark/2d_mesh_R3_C1
