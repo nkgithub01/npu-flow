@@ -10,12 +10,12 @@ tasks:
   - name: GEMM_R6_C4
     params:
       n_aie_cols: 4
-    output: build/aie_512x512x512_32x32x32_8c.mlir
+    output: build/aie_512x512x512_32x32x32_4c.mlir
   - name: GEMM_R6_C2
     params:
       n_aie_cols: 2
-    output: build/aie_512x512x512_32x32x32_8c.mlir
+    output: build/aie_512x512x512_32x32x32_2c.mlir
   - name: GEMM_R6_C1
     params:
       n_aie_cols: 1
-    output: build/aie_512x512x512_32x32x32_8c.mlir
+    output: build/aie_512x512x512_32x32x32_1c.mlir
