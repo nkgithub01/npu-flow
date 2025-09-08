@@ -18,12 +18,13 @@ endif
 
 # available auto gen topologies (default output netlist file: netlist.json)
 # - single_multicast
-# - mesh
+# - 2d_mesh
+# - 3d_mesh
 # - line
 # - tree
 # - cnn
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-netlist_topology ?= single_multicast
+netlist_topology ?= 3d_mesh
 num_rows ?= 6
 num_cols ?= 8
 
@@ -74,13 +75,13 @@ ${trace_mlir_target}: ${srcdir}/${aie_py_src} gen_netlist
 ${xclbin_target}: ${mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 ${trace_xclbin_target}: ${trace_mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 .PHONY: run

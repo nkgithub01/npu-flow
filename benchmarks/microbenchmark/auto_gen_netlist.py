@@ -84,8 +84,7 @@ def generate_single_multicast_netlist(args, netlist):
     return netlist
 
 
-
-def generate_mesh_topology_netlist(args, netlist):
+def generate_2d_mesh_topology_netlist(args, netlist):
     # Define nodes
     nodes_loc2ID_lookup = dict()
     for x in range(args.num_cols):
@@ -140,6 +139,141 @@ def generate_mesh_topology_netlist(args, netlist):
                 same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
                 link_dst_net_id = helper_connect_nodes(args, netlist, same_col_MEM_id, [same_col_SHIM_id])
                 helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+
+    return netlist
+
+
+def generate_3d_mesh_topology_netlist(args, netlist):
+    # Define nodes
+    # Create a 3D mesh with 3x3x3 compute nodes
+    nodes_loc2ID_lookup = dict()
+    for x in range(8):
+        for y in range(6):
+            # Skip unused nodes in 3D mesh shape
+            if y == 5 and x <= 4:
+                continue
+            node_id = helper_create_node(netlist, x, y)
+            nodes_loc2ID_lookup[(x, y)] = node_id
+
+    # Define nets connections
+    # In each level, each compute node is connected to its right, top, and next level neighbors
+    # Level 1
+    for x in range(0,3):
+        for y in range(2,5):
+            node_id = nodes_loc2ID_lookup[(x, y)]
+            # Create a net to the right neighbor
+            if x < 2:
+                right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
+                helper_connect_nodes(args, netlist, node_id, [right_neighbor_id])
+            
+            # Create a net to the top neighbor
+            if y < 4:
+                top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
+                helper_connect_nodes(args, netlist, node_id, [top_neighbor_id])
+            
+            # Create a net to the next level neighbor
+            next_level_neighbor_id = nodes_loc2ID_lookup[(x + 3, y)]
+            helper_connect_nodes(args, netlist, node_id, [next_level_neighbor_id])
+        
+        # The input one is from SHIM node 0 to MEM node 0 to COMP nodes in level 1 
+        if x == 0:
+            SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            COMP_ids = [nodes_loc2ID_lookup[(x, y)] for y in range(2, 5)]
+            link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+            link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+            helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+        
+        # The input two is from SHIM node in the same column to MEM node in the same column to COMP nodes in level 1
+        SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+        MEM_id = nodes_loc2ID_lookup[(x, 1)]
+        COMP_id = nodes_loc2ID_lookup[(x, 2)]
+        link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+        link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, [COMP_id])
+        helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+
+    # Level 2
+    for x in range(3,6):
+        for y in range(2,5):
+            node_id = nodes_loc2ID_lookup[(x, y)]
+            # Create a net to the right neighbor
+            if x < 5:
+                right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
+                helper_connect_nodes(args, netlist, node_id, [right_neighbor_id])
+            
+            # Create a net to the top neighbor
+            if y < 4:
+                top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
+                helper_connect_nodes(args, netlist, node_id, [top_neighbor_id])
+            
+            # Create a net to the next level neighbor
+            if x < 5:
+                next_level_neighbor_id = nodes_loc2ID_lookup[(x + 3, y)]
+            else:
+                next_level_neighbor_id = nodes_loc2ID_lookup[(9-y, 5)]
+            helper_connect_nodes(args, netlist, node_id, [next_level_neighbor_id])
+
+        # The input one is from SHIM node 3 to MEM node 3 to COMP nodes in level 2
+        if x == 3:
+            SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            COMP_ids = [nodes_loc2ID_lookup[(x, y)] for y in range(2, 5)]
+            link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+            link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+            helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+    
+    # Level 3
+    for x in range(6,8):
+        for y in range(2,5):
+            node_id = nodes_loc2ID_lookup[(x, y)]
+            # Create a net to the right neighbor
+            if x < 7:
+                right_neighbor_id = nodes_loc2ID_lookup[(x + 1, y)]
+                helper_connect_nodes(args, netlist, node_id, [right_neighbor_id])
+            elif x == 7:
+                # The rightmost node in level 3 is arranged to the top of the array
+                right_neighbor_id = nodes_loc2ID_lookup[(9-y, 5)]
+                helper_connect_nodes(args, netlist, node_id, [right_neighbor_id])
+            
+            # Create a net to the top neighbor
+            if y < 4:
+                top_neighbor_id = nodes_loc2ID_lookup[(x, y + 1)]
+                helper_connect_nodes(args, netlist, node_id, [top_neighbor_id])
+            
+        # The top nodes in the last level are connected back to MEM node in the same column
+        node_id = nodes_loc2ID_lookup[(x, 4)]
+        same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+        link_src_net_id = helper_connect_nodes(args, netlist, node_id, [same_col_MEM_id])
+        # Link this net to the SHIM node in the same column
+        same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+        link_dst_net_id = helper_connect_nodes(args, netlist, same_col_MEM_id, [same_col_SHIM_id])
+        helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+
+        # The input one is from SHIM node 6 to MEM node 6 to COMP nodes in level 3
+        if x == 6:
+            SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            COMP_ids = [nodes_loc2ID_lookup[(x, y)] for y in range(2, 5)]
+            link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+            link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+            helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+    
+    for x in range(5,8):
+        y = 5
+        node_id = nodes_loc2ID_lookup[(x, y)]
+
+        # The top nodes in the last level are connected back to MEM node in the same column
+        if x == 5:
+            same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
+            link_src_net_id = helper_connect_nodes(args, netlist, node_id, [same_col_MEM_id])
+            # Link this net to the SHIM node in the same column
+            same_col_SHIM_id = nodes_loc2ID_lookup[(x, 0)]
+            link_dst_net_id = helper_connect_nodes(args, netlist, same_col_MEM_id, [same_col_SHIM_id])
+            helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
+        else:
+            # Create a net to the top neighbor
+            top_neighbor_id = nodes_loc2ID_lookup[(x-1, y)]
+            helper_connect_nodes(args, netlist, node_id, [top_neighbor_id])
 
     return netlist
 
@@ -432,7 +566,8 @@ def main(args):
 
 TOPOLOGIES_CONVERSION = {
     "single_multicast": generate_single_multicast_netlist,
-    "mesh": generate_mesh_topology_netlist,
+    "2d_mesh": generate_2d_mesh_topology_netlist,
+    "3d_mesh": generate_3d_mesh_topology_netlist,
     "line": generate_line_topology_netlist,
     "tree": generate_tree_topology_netlist,
     "cnn": generate_cnn_topology_netlist,

@@ -23,7 +23,7 @@ build/mha.mlir: ${srcdir}/mha.py build/mha.cc.o
 build/mha.xclbin: build/mha.mlir 
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge -v \
+				--no-xchesscc --no-xbridge -v --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
 run: build/mha.xclbin

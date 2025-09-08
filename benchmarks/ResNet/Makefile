@@ -84,7 +84,7 @@ endif
 ${xclbin_target}: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 .PHONY: run
