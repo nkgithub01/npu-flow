@@ -50,6 +50,8 @@ aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
 runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype}
 kernals := accumulate
 
+.PHONY: all
+all: ${xclbin_target}
 
 .PHONY: gen_netlist
 gen_netlist:

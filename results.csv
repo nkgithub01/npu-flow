@@ -1,0 +1,15 @@
+benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link, avg_runtime [us], num_neighbour_sharing_objectFIFO, num_circuit_switch_objectFIFO, total_num_circuit_switch_tracks, largest_circuit_switch_net, smallest_circuit_switch_net, avg_track_per_circuit_switch_net, longest_circuit_switch_path, shortest_circuit_switch_path, total_num_dma_ports, total_num_dma_in_ports, total_num_dma_out_ports, total_buffer_size [bytes], total_buffer_size_on_mem [bytes], avg_buffer_size_on_mem [bytes], total_buffer_size_on_compute [bytes], avg_buffer_size_on_compute [bytes]
+ResNet, default, 28, 19, 9, 6, 4366.00, 6, 22, 61, 5, 1, 2.77, 5, 1, 53, 31, 22, 807680, 286720, 95573.33, 520960, 43413.33
+GEMM, GEMM_R6_C8, 64, 52, 12, 20, 833.00, 0, 64, 198, 21, 1, 3.09, 8, 1, 180, 116, 64, 417792, 155648, 19456.00, 262144, 8192.00
+microbenchmark, 2d_mesh_R3_C1, 4, 4, 0, 2, 278.00, 0, 4, 4, 1, 1, 1.00, 1, 1, 8, 4, 4, 56, 40, 40.00, 16, 16.00
+microbenchmark, 2d_mesh_R3_C2, 9, 9, 0, 4, 485.00, 1, 8, 8, 1, 1, 1.00, 1, 1, 16, 8, 8, 132, 80, 40.00, 52, 26.00
+microbenchmark, 2d_mesh_R3_C3, 14, 14, 0, 6, 359.00, 2, 12, 12, 1, 1, 1.00, 1, 1, 24, 12, 12, 208, 120, 40.00, 88, 29.33
+microbenchmark, 2d_mesh_R3_C4, 19, 19, 0, 8, 301.00, 3, 16, 16, 1, 1, 1.00, 1, 1, 32, 16, 16, 284, 160, 40.00, 124, 31.00
+microbenchmark, 3d_mesh, 72, 69, 3, 9, 591.00, 34, 38, 93, 5, 1, 2.45, 5, 1, 82, 44, 38, 1300, 180, 25.71, 1120, 41.48
+microbenchmark, Custom_CNN, 54, 46, 8, 13, 545.00, 25, 29, 106, 20, 1, 3.66, 8, 1, 94, 65, 29, 1208, 260, 32.50, 948, 29.62
+microbenchmark, line_R6_C8, 56, 56, 0, 16, 598.00, 24, 32, 56, 4, 1, 1.75, 4, 1, 64, 32, 32, 928, 320, 40.00, 608, 19.00
+microbenchmark, single_multicast, 7, 6, 1, 3, 290.00, 0, 7, 11, 3, 1, 1.57, 3, 1, 15, 8, 7, 108, 60, 60.00, 48, 16.00
+vector_scalar_mul, default, 3, 3, 0, 0, 69.00, 0, 3, 6, 2, 2, 2.00, 2, 2, 6, 3, 3, 8200, 0, 0.00, 8200, 8200.00
+edge_detection, col_1, 8, 7, 1, 2, 4635.00, 3, 4, 11, 4, 1, 2.75, 4, 1, 9, 5, 4, 138240, 69120, 69120.00, 69120, 17280.00
+edge_detection, col_2, 16, 14, 2, 4, 4150.00, 6, 8, 22, 4, 1, 2.75, 4, 1, 18, 10, 8, 276480, 138240, 69120.00, 138240, 17280.00
+llama_mha, default, 13, 13, 0, 3, 0.00, 1, 6, 7, 2, 1, 1.17, 2, 1, 12, 6, 6, 577744, 508128, 508128.00, 69616, 34808.00

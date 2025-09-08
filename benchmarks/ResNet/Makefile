@@ -35,7 +35,7 @@ insts_target?=build/${target_name}_insts.bin
 aieargs := ${device_name}
 runargs :=
 
-all: build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o build/final.xclbin
+all: ${xclbin_target}
 
 ${mlir_target}: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}

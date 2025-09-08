@@ -12,6 +12,8 @@ ARGS := --embed-dim $(embed_dim) \
         --tile-dim $(tile_dim) \
         --seq-len $(seq_len) \
 
+all: build/mha.xclbin
+
 build/%.cc.o: %.cc 
 	mkdir -p ${@D}
 	${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o $@

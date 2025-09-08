@@ -11,13 +11,13 @@ prt_branch = '│   '
 prt_tee =    '├── '
 prt_last =   '└── '
 
-def parse_mlir_file(filename):
+def parse_mlir_file(mlir_file_path, result_file, verbose=False):
     fifo_count = 0
     unicast_fifo_count = 0
     multicast_fifo_count = 0
     link_count = 0
 
-    with open(filename, 'r') as f:
+    with open(mlir_file_path, 'r') as f:
         for line in f:
             # Count objectFIFO ops "aie.objectfifo"
             if re.search(r'\saie\.objectfifo\s', line): 
@@ -34,17 +34,32 @@ def parse_mlir_file(filename):
             if re.search(r'\saie\.objectfifo\.link\s', line):
                 link_count += 1
 
-    print(f"Number of objectFIFO: {fifo_count}")
-    print(f"{prt_tee}Number of unicast objectFIFO: {unicast_fifo_count}")
-    print(f"{prt_last}Number of multicast objectFIFO: {multicast_fifo_count}")
-    print(f"Number of objectFIFO link: {link_count}")
+    if verbose:
+        print(f"Number of objectFIFO: {fifo_count}")
+        print(f"{prt_tee}Number of unicast objectFIFO: {unicast_fifo_count}")
+        print(f"{prt_last}Number of multicast objectFIFO: {multicast_fifo_count}")
+        print(f"Number of objectFIFO link: {link_count}")
 
-    with open('results.csv', 'w') as out_file:
-        out_file.write(f"3D Mesh, {fifo_count}, {unicast_fifo_count}, {multicast_fifo_count}, {link_count}")
+    result_file.write(f", {fifo_count}, {unicast_fifo_count}, {multicast_fifo_count}, {link_count}")
 
 
-def parse_routing_summary_json_file(filename):
-    with open(filename, 'r') as f:
+def parse_output_log_file(output_log_file_path, result_file, verbose=False):
+    avg_runtime = 0
+    with open(output_log_file_path, 'r') as f:
+        for line in f:
+            avg_runtime_match = re.search(r'Avg NPU time:\s*([\d.]+)\s*us', line)
+            if avg_runtime_match:
+                avg_runtime = float(avg_runtime_match.group(1))
+                break
+
+    if verbose:
+        print(f"Avg NPU runtime: {avg_runtime:.2f} us")
+
+    result_file.write(f", {avg_runtime:.2f}")
+
+
+def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
+    with open(json_file_path, 'r') as f:
         data = json.load(f)
     
     # Calculate total buffer size
@@ -127,61 +142,62 @@ def parse_routing_summary_json_file(filename):
     if num_tracks_per_net:
         avg_num_tracks_per_net = sum(num_tracks_per_net) / len(num_tracks_per_net)
 
-    print(f"Number of neighbour connections: {nbr_routes_count}")
-    print(f"Number of circuit switch connections: {cct_routes_count}")
-    print(f"Total circuit switch tracks: {total_circuit_switch_tracks}")
-    print(f"{prt_tee}Largest circuit switch net: {largest_net}")
-    print(f"{prt_tee}Smallest circuit switch net: {smallest_net}")
-    print(f"{prt_tee}Average number of track per net: {avg_num_tracks_per_net:.2f}")
-    print(f"{prt_tee}Longest circuit switch path: {longest_path}")
-    print(f"{prt_last}Shortest circuit switch path: {shortest_path}")
-    print(f"Total DMA ports: {total_dma_ports}")
-    print(f"{prt_tee}Total DMA in port used: {total_dma_in_ports}")
-    print(f"{prt_last}Total DMA out port used: {total_dma_out_ports}")
-    print(f"Total buffer size: {total_buffer_size} bytes")
-    print(f"{prt_tee}Total buffer size on memory: {total_buffer_on_mem} bytes")
-    print(f"{prt_tee}Average buffer size on memory: {avg_buffer_size_on_mem:.2f} bytes")
-    print(f"{prt_tee}Total buffer size on compute: {total_buffer_on_compute} bytes")
-    print(f"{prt_last}Average buffer size on compute: {avg_buffer_size_on_compute:.2f} bytes")
+    if verbose:
+        print(f"Number of neighbour connections: {nbr_routes_count}")
+        print(f"Number of circuit switch connections: {cct_routes_count}")
+        print(f"Total circuit switch tracks: {total_circuit_switch_tracks}")
+        print(f"{prt_tee}Largest circuit switch net: {largest_net}")
+        print(f"{prt_tee}Smallest circuit switch net: {smallest_net}")
+        print(f"{prt_tee}Average number of track per net: {avg_num_tracks_per_net:.2f}")
+        print(f"{prt_tee}Longest circuit switch path: {longest_path}")
+        print(f"{prt_last}Shortest circuit switch path: {shortest_path}")
+        print(f"Total DMA ports: {total_dma_ports}")
+        print(f"{prt_tee}Total DMA in port used: {total_dma_in_ports}")
+        print(f"{prt_last}Total DMA out port used: {total_dma_out_ports}")
+        print(f"Total buffer size: {total_buffer_size} bytes")
+        print(f"{prt_tee}Total buffer size on memory: {total_buffer_on_mem} bytes")
+        print(f"{prt_tee}Average buffer size on memory: {avg_buffer_size_on_mem:.2f} bytes")
+        print(f"{prt_tee}Total buffer size on compute: {total_buffer_on_compute} bytes")
+        print(f"{prt_last}Average buffer size on compute: {avg_buffer_size_on_compute:.2f} bytes")
 
     # Append to results.csv
-    with open('results.csv', 'a') as out_file:
-        out_file.write(f", {nbr_routes_count}, {cct_routes_count}")
-        out_file.write(f", {total_circuit_switch_tracks}, {largest_net}, {smallest_net}, {avg_num_tracks_per_net:.2f}, {longest_path}, {shortest_path}")
-        out_file.write(f", {total_dma_ports}, {total_dma_in_ports}, {total_dma_out_ports}")
-        out_file.write(f", {total_buffer_size}, {total_buffer_on_mem}, {avg_buffer_size_on_mem:.2f}, {total_buffer_on_compute}, {avg_buffer_size_on_compute:.2f}\n")
+    result_file.write(f", {nbr_routes_count}, {cct_routes_count}")
+    result_file.write(f", {total_circuit_switch_tracks}, {largest_net}, {smallest_net}, {avg_num_tracks_per_net:.2f}, {longest_path}, {shortest_path}")
+    result_file.write(f", {total_dma_ports}, {total_dma_in_ports}, {total_dma_out_ports}")
+    result_file.write(f", {total_buffer_size}, {total_buffer_on_mem}, {avg_buffer_size_on_mem:.2f}, {total_buffer_on_compute}, {avg_buffer_size_on_compute:.2f}")
+
+
+def collect_results(output_dir = "build", result_file_path = 'results.csv', verbose=False):
+    result_file = open(result_file_path, 'w')
+    result_file.write("benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link")
+    result_file.write(", avg_runtime [us]")
+    result_file.write(", num_neighbour_sharing_objectFIFO, num_circuit_switch_objectFIFO")
+    result_file.write(", total_num_circuit_switch_tracks, largest_circuit_switch_net, smallest_circuit_switch_net, avg_track_per_circuit_switch_net, longest_circuit_switch_path, shortest_circuit_switch_path")
+    result_file.write(", total_num_dma_ports, total_num_dma_in_ports, total_num_dma_out_ports")
+    result_file.write(", total_buffer_size [bytes], total_buffer_size_on_mem [bytes], avg_buffer_size_on_mem [bytes], total_buffer_size_on_compute [bytes], avg_buffer_size_on_compute [bytes]")
+    result_file.write("\n")
+
+    benchmark_output_dir = glob.glob(output_dir + "/*")
+    for benchmark_dir in benchmark_output_dir:
+        if os.path.isdir(benchmark_dir):
+            benchmark_name = os.path.basename(benchmark_dir)
+            task_files = glob.glob(benchmark_dir + "/*.build.mlir")
+            task_names = [os.path.basename(f).split('.')[0] for f in task_files]
+            task_names.sort()
+
+            for task_name in task_names:
+                mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
+                output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
+                json_file_path = os.path.join(benchmark_dir, f"{task_name}.route_summary.build.json")
+
+                result_file.write(f"{benchmark_name}, {task_name}")
+                parse_mlir_file(mlir_file_path, result_file, verbose)
+                parse_output_log_file(output_log_file_path, result_file, verbose)
+                parse_routing_summary_json_file(json_file_path, result_file, verbose)
+                result_file.write(f"\n")
+
+    result_file.close()
+
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        # Look for MLIR file in the build directory
-        build_dir = os.path.join(os.getcwd(), 'build')
-        mlir_files = glob.glob(os.path.join(build_dir, '*.mlir'))
-        mlir_file = mlir_files[0] if mlir_files else ''
-        if os.path.exists(mlir_file):
-            parse_mlir_file(mlir_file)
-        else:
-            print("Usage: python parse_results.py <file.mlir> <file.json>")
-            print("No MLIR file found. Provide as first argument or place .mlir file in build directory.")
-    else:
-        if os.path.exists(sys.argv[1]):
-            parse_mlir_file(sys.argv[1])
-        else:
-            print("Usage: python parse_results.py <file.mlir> <file.json>")
-            print("No MLIR file found. Provide as first argument or place .mlir file in build directory.")
-
-    # Parse JSON file if provided
-    if len(sys.argv) < 3:
-        # Look for route_summary.json in the build directory
-        build_dir = os.path.join(os.getcwd(), 'build')
-        json_file = os.path.join(build_dir, 'route_summary.json')
-        if os.path.exists(json_file):
-            parse_routing_summary_json_file(json_file)
-        else:
-            print("Usage: python parse_results.py <file.mlir> <file.json>")
-            print("No JSON file found. Provide as second argument or place route_summary.json in build directory.")
-    else:
-        if os.path.exists(sys.argv[2]):
-            parse_routing_summary_json_file(sys.argv[2])
-        else:
-            print("Usage: python parse_results.py <file.mlir> <file.json>")
-            print("No JSON file found. Provide as second argument or place route_summary.json in build directory.")
+    collect_results()

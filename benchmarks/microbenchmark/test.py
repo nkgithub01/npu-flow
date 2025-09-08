@@ -231,7 +231,7 @@ def main(opts):
             npu_time_total = npu_time_total + npu_time
 
     if verbosity >= RELEASE_VERBOSITY_LEVEL:  
-        print("\nAvg NPU time: {}us.".format(int((npu_time_total / num_iter) / 1000)))
+        print("\nAvg NPU time: {} us.".format(int((npu_time_total / num_iter) / 1000)))
 
     # -----------------------------------------------------------------------------------
     # Compare the AIE output and the golden reference result
