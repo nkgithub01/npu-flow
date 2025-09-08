@@ -1,5 +1,6 @@
 import yaml
 import os
+import shutil
 import argparse
 from subprocess import Popen, PIPE, TimeoutExpired
 from dataclasses import dataclass
@@ -70,9 +71,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=300):
 
 class Benchmark:
     def __init__(self, config_path):
-        assert os.path.exists(
-            config_path
-        ), f"Config file {config_path} does not exist"
+        assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
@@ -103,13 +102,11 @@ class Benchmark:
                 for key, value in params.items():
                     env_vars[key] = str(value)
                 output_mlir = task.get("output", None)
-                assert (
-                    output_mlir
-                ), f"No output MLIR specified for task {task_name}"
+                assert output_mlir, f"No output MLIR specified for task {task_name}"
                 return env_vars, output_mlir
         assert False, f"Task {task_name} not found in benchmark {self.name}"
 
-    def clean_task_buid(self):
+    def clean_task_build(self):
         subprocess_run_cmd(cmd=self.clean_cmd, cwd=self.root_dir).check()
         self.last_built_task = None
 
@@ -123,9 +120,7 @@ class Benchmark:
 
         output_mlir = self.__get_local_file(output_mlir)
         extract_fifo_cmd = f"aie-opt {output_mlir} --aie-extract-fifo"
-        extract_fifo = subprocess_run_cmd(
-            cmd=extract_fifo_cmd, cwd=self.root_dir
-        )
+        extract_fifo = subprocess_run_cmd(cmd=extract_fifo_cmd, cwd=self.root_dir)
         extract_fifo.check()
 
         self.last_built_task = task_name
@@ -176,17 +171,27 @@ class Benchmark:
         result.check()
         return result.stdout, result.stderr, str(result)
 
+    def custom_task(self, task_name, custom_cmd):
+        param_envs, _ = self.__get_task(task_name)
+        custom = subprocess_run_cmd(cmd=custom_cmd, cwd=self.root_dir, env=param_envs)
+        custom.check()
+        return str(custom)
+
     def __repr__(self):
-        return f"Benchmark(name={self.name}, tasks={[x.get("name") for x in self.tasks]})"
+        return (
+            f"Benchmark(name={self.name}, tasks={[x.get("name") for x in self.tasks]})"
+        )
 
 
 def main_routine(
     benchmark_root,
     benchmark_name,
     task_name,
+    build,
     pnr_after_build,
     pnr_args,
     run_after_build,
+    hook_script,
     output_dir,
 ):
     output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
@@ -196,24 +201,28 @@ def main_routine(
     assert os.path.exists(config_path)
 
     benchmark = Benchmark(config_path)
-    benchmark.clean_task_buid()
-    print("Building ...")
-    mlir, netlist, build_log = benchmark.build_task(task_name)
 
-    write_text_file(
-        os.path.join(output_dir, f"{task_name}.build.mlir"),
-        mlir,
-    )
+    print("Cleaning ...")
+    benchmark.clean_task_build()
 
-    write_text_file(
-        os.path.join(output_dir, f"{task_name}.build.json"),
-        netlist,
-    )
+    if build:
+        print("Building ...")
+        mlir, netlist, build_log = benchmark.build_task(task_name)
 
-    write_text_file(
-        os.path.join(output_dir, f"{task_name}.build.log"),
-        build_log,
-    )
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.build.mlir"),
+            mlir,
+        )
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.build.json"),
+            netlist,
+        )
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.build.log"),
+            build_log,
+        )
 
     if pnr_after_build:
         print("Placing and routing ...")
@@ -246,6 +255,28 @@ def main_routine(
             run_log,
         )
 
+    if hook_script.strip():
+        print(f"Executing hook `{hook_script}` ...")
+
+        hook_script = hook_script.split(" ")
+        if os.path.exists(hook_script[0]):
+            # First argument is a file path
+            hook_script[0] = os.path.abspath(hook_script[0])
+        else:
+            # First argument is a command, try to find it in PATH
+            resolved_path = shutil.which(hook_script[0])
+            assert (
+                resolved_path is not None
+            ), f"Hook command or hook script file {hook_script[0]} does not exist"
+            hook_script[0] = resolved_path
+        hook_script = " ".join(hook_script)
+
+        exec_log = benchmark.custom_task(task_name, hook_script)
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.hook.log"),
+            exec_log,
+        )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Build and optionally run benchmarks")
@@ -270,6 +301,13 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--build",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Build the benchmark (default: True)",
+        required=False,
+    )
+    parser.add_argument(
         "--pnr",
         action="store_true",
         default=False,
@@ -290,6 +328,14 @@ if __name__ == "__main__":
         help="Run the benchmark after building/place-and-route",
         required=False,
     )
+    parser.add_argument(
+        "--hook",
+        type=str,
+        default="",
+        help="""Custom processing command, or path to a custom processing
+        script (python/bash/etc.) to be executed for each task""",
+        required=False,
+    )
 
     args = parser.parse_args()
 
@@ -297,15 +343,17 @@ if __name__ == "__main__":
         os.makedirs(args.output_dir, exist_ok=True)
 
         def handle_task(task_entry):
-            bechmark_name, task_name = task_entry.strip().split("/")
-            print(f"Benchmark: {bechmark_name}, Task: {task_name}")
+            benchmark_name, task_name = task_entry.strip().split("/")
+            print(f"Benchmark: {benchmark_name}, Task: {task_name}")
             main_routine(
                 benchmark_root=args.benchmark_root,
-                benchmark_name=bechmark_name,
+                benchmark_name=benchmark_name,
                 task_name=task_name,
+                build=args.build,
                 pnr_after_build=args.pnr,
                 pnr_args=args.pnr_args,
                 run_after_build=args.run,
+                hook_script=args.hook,
                 output_dir=args.output_dir,
             )
 
