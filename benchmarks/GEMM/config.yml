@@ -1,4 +1,4 @@
-name: LLaMA Multi-Head Attention
+name: General Matrix Multiplication (GEMM)
 clean: make clean
 build: make
 run: make run

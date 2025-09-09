@@ -11,11 +11,15 @@
 # LLaMA MHA
 - llama_mha/default
 
-# Matrix Multiplication
+# General Matrix Multiplication (GEMM)
 - GEMM/GEMM_R6_C8
 - GEMM/GEMM_R6_C4
 - GEMM/GEMM_R6_C2
 - GEMM/GEMM_R6_C1
+
+# Cascade GEMM
+- cascade_GEMM/cascade_GEMM_R6_C8
+- cascade_GEMM/cascade_GEMM_R6_C4
 
 # Microbenchmark
 - microbenchmark/2d_mesh_R3_C1

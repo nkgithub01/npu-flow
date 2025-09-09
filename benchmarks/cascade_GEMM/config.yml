@@ -1,0 +1,13 @@
+name: Cascade GEMM
+clean: make clean
+build: make
+run: make run
+tasks:
+  - name: cascade_GEMM_R6_C8
+    params:
+      n_aie_cols: 8
+    output: build/aie_512x512x512_32x32x32_8c.mlir
+  - name: cascade_GEMM_R6_C4
+    params:
+      n_aie_cols: 4
+    output: build/aie_512x512x512_32x32x32_4c.mlir
