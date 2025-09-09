@@ -3,6 +3,7 @@ import re
 import json
 import os
 import glob
+import argparse
 
 # prefix components:
 prt_space =  '    '
@@ -167,7 +168,7 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
     result_file.write(f", {total_buffer_size}, {total_buffer_on_mem}, {avg_buffer_size_on_mem:.2f}, {total_buffer_on_compute}, {avg_buffer_size_on_compute:.2f}")
 
 
-def collect_results(output_dir = "build", result_file_path = 'results.csv', verbose=False):
+def collect_results(output_dir = "build", result_file_path = 'results.csv', variant = 'std', verbose=False):
     # Create the results file and write the header
     result_file = open(result_file_path, 'w')
     result_file.write("benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link")
@@ -189,9 +190,15 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
 
             # Parse each task within the benchmark directory
             for task_name in task_names:
-                mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
-                output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
-                json_file_path = os.path.join(benchmark_dir, f"{task_name}.route_summary.build.json")
+                mlir_file_path, output_log_file_path, json_file_path = "", "", ""
+                if variant == 'std':
+                    mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
+                    output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
+                    json_file_path = os.path.join(benchmark_dir, f"{task_name}.route_summary.build.json")
+                elif variant == 'pnr':
+                    mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.pnr.mlir")
+                    output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
+                    json_file_path = os.path.join(benchmark_dir, f"{task_name}.route_summary.pnr.json")
 
                 result_file.write(f"{benchmark_name}, {task_name}")
                 if os.path.exists(mlir_file_path):
@@ -215,4 +222,14 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
 
 
 if __name__ == "__main__":
-    collect_results("build", "results.csv")
+    parser = argparse.ArgumentParser("Parse benchmark results and generate a summary CSV file.")
+    parser.add_argument(
+        "--variant",
+        type=str,
+        default="std",
+        help="Specify which variant to parse: 'std' for standard flow, 'pnr' for place-and-route results.",
+        required=False,
+    )
+    args = parser.parse_args()
+
+    collect_results("build", f"{args.variant}_results.csv", args.variant)

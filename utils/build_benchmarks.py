@@ -46,7 +46,7 @@ def write_text_file(file_path, content):
         f.write(content)
 
 
-def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=300):
+def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
     assert isinstance(cmd, str), "Command must be a string"
     process = Popen(cmd, cwd=cwd, shell=True, stdout=PIPE, stderr=PIPE, env=env)
 
@@ -167,6 +167,9 @@ class Benchmark:
         return (
             place_fifo.stdout,
             read_text_file(self.__get_local_file("netlist.json")),
+            # Use PnR generated route summary
+            # TODO: consider switching to standard flow generated route summary
+            read_text_file(self.__get_local_file("route_summary.json")),
             str(pnr),
         )
 
@@ -245,7 +248,7 @@ def main_routine(
 
     if pnr_after_build:
         log("Placing and routing ...")
-        pnr_mlir, pnr_netlist, pnr_log = benchmark.place_and_route_task(
+        pnr_mlir, pnr_netlist, pnr_route, pnr_log = benchmark.place_and_route_task(
             task_name, pnr_args
         )
 
@@ -257,6 +260,11 @@ def main_routine(
         write_text_file(
             os.path.join(output_dir, f"{task_name}.pnr.json"),
             pnr_netlist,
+        )
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.route_summary.pnr.json"),
+            pnr_route,
         )
 
         write_text_file(
@@ -378,7 +386,8 @@ if __name__ == "__main__":
         "-j",
         type=int,
         default=1,
-        help="Number of parallel tasks to process (default: 1)",
+        help="""Number of parallel benchmarks to process (default: 1), within the same
+        benchmark, tasks are processed sequentially due to the task clean method""",
         required=False,
     )
     parser.add_argument(
@@ -395,34 +404,50 @@ if __name__ == "__main__":
         os.makedirs(args.output_dir, exist_ok=True)
 
         def handle_task(task_entry):
-            benchmark_name, task_name = task_entry.strip().split("/")
-            try:
-                main_routine(
-                    benchmark_root=args.benchmark_root,
-                    benchmark_name=benchmark_name,
-                    task_name=task_name,
-                    build=args.build,
-                    build_placed=args.build_placed,
-                    pnr_after_build=args.pnr,
-                    pnr_args=args.pnr_args,
-                    run_after_build=args.run,
-                    hook_script=args.hook,
-                    output_dir=args.output_dir,
-                    verbose=args.verbose,
-                )
-            except Exception as e:
-                print(f"[{benchmark_name}/{task_name}] Error: {e}", flush=True)
-                if args.verbose:
-                    traceback.print_exc()
+            benchmark_name, task_name_list = task_entry
+            for task_name in task_name_list:
+                try:
+                    main_routine(
+                        benchmark_root=args.benchmark_root,
+                        benchmark_name=benchmark_name,
+                        task_name=task_name,
+                        build=args.build,
+                        build_placed=args.build_placed,
+                        pnr_after_build=args.pnr,
+                        pnr_args=args.pnr_args,
+                        run_after_build=args.run,
+                        hook_script=args.hook,
+                        output_dir=args.output_dir,
+                        verbose=args.verbose,
+                    )
+                except Exception as e:
+                    print(f"[{benchmark_name}/{task_name}] Error: {e}", flush=True)
+                    if args.verbose:
+                        traceback.print_exc()
 
-        parallel_tasks = []
+        parallel_benchmarks = {}
+
+        def store_task_entry(entry):
+            if "/" in entry:
+                benchmark_name, task_name = entry.split("/", 1)
+                if benchmark_name not in parallel_benchmarks:
+                    parallel_benchmarks[benchmark_name] = []
+                parallel_benchmarks[benchmark_name].append(task_name)
+            else:
+                raise ValueError(
+                    f"Invalid task entry '{entry}'. Expected format: 'benchmark_name/task_name'"
+                )
+
         for arg_item in args.tasklists:
             if os.path.isfile(arg_item):
                 with open(arg_item, "r") as f:
                     for task in yaml.safe_load(f):
-                        parallel_tasks.append(task)
+                        store_task_entry(task)
             else:
-                parallel_tasks.append(arg_item)
+                store_task_entry(arg_item)
 
         with Pool(args.j) as pool:
-            pool.map(handle_task, parallel_tasks)
+            job_list = []
+            for benchmark_name, task_name_list in parallel_benchmarks.items():
+                job_list.append((benchmark_name, task_name_list))
+            pool.map(handle_task, job_list)
