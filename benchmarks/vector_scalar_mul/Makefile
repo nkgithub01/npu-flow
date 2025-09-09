@@ -2,8 +2,15 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 include ${srcdir}/../makefile-common
 
-targetname = vector_scalar_mul
-aie_py_src = ${targetname}.py
+target_name := vector_scalar_mul
+aie_py_src=${target_name}.py
+
+use_placed ?= 1
+ifeq (${use_placed}, 0)
+aie_py_src=${target_name}.py
+else ifeq (${use_placed}, 1)
+aie_py_src=${target_name}_placed.py
+endif
 
 int_bit_width = 16
 ifeq (${int_bit_width}, 16)

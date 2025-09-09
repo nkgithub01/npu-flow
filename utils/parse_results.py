@@ -168,6 +168,7 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
 
 
 def collect_results(output_dir = "build", result_file_path = 'results.csv', verbose=False):
+    # Create the results file and write the header
     result_file = open(result_file_path, 'w')
     result_file.write("benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link")
     result_file.write(", avg_runtime [us]")
@@ -177,6 +178,7 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
     result_file.write(", total_buffer_size [bytes], total_buffer_size_on_mem [bytes], avg_buffer_size_on_mem [bytes], total_buffer_size_on_compute [bytes], avg_buffer_size_on_compute [bytes]")
     result_file.write("\n")
 
+    # Parse each benchmark directory
     benchmark_output_dir = glob.glob(output_dir + "/*")
     for benchmark_dir in benchmark_output_dir:
         if os.path.isdir(benchmark_dir):
@@ -185,15 +187,28 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
             task_names = [os.path.basename(f).split('.')[0] for f in task_files]
             task_names.sort()
 
+            # Parse each task within the benchmark directory
             for task_name in task_names:
                 mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
                 output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
                 json_file_path = os.path.join(benchmark_dir, f"{task_name}.route_summary.build.json")
 
                 result_file.write(f"{benchmark_name}, {task_name}")
-                parse_mlir_file(mlir_file_path, result_file, verbose)
-                parse_output_log_file(output_log_file_path, result_file, verbose)
-                parse_routing_summary_json_file(json_file_path, result_file, verbose)
+                if os.path.exists(mlir_file_path):
+                    parse_mlir_file(mlir_file_path, result_file, verbose)
+                else:
+                    result_file.write(f", N/A, N/A, N/A, N/A")
+                if os.path.exists(output_log_file_path):
+                    parse_output_log_file(output_log_file_path, result_file, verbose)
+                else:
+                    result_file.write(f", N/A")
+                if os.path.exists(json_file_path):
+                    parse_routing_summary_json_file(json_file_path, result_file, verbose)
+                else:
+                    result_file.write(f", N/A, N/A")
+                    result_file.write(f", N/A, N/A, N/A, N/A, N/A, N/A")
+                    result_file.write(f", N/A, N/A, N/A")
+                    result_file.write(f", N/A, N/A, N/A, N/A, N/A")
                 result_file.write(f"\n")
 
     result_file.close()

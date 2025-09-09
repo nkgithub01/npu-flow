@@ -72,7 +72,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=300):
 
 
 class Benchmark:
-    def __init__(self, config_path):
+    def __init__(self, config_path, build_placed):
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -84,6 +84,7 @@ class Benchmark:
         self.run_cmd = config.get("run", None)
         self.tasks = config.get("tasks", [])
         self.last_built_task = None
+        self.build_placed = build_placed
 
         assert self.clean_cmd, "No clean command specified"
         assert self.build_cmd, "No build command specified"
@@ -103,6 +104,10 @@ class Benchmark:
                 env_vars = os.environ.copy()
                 for key, value in params.items():
                     env_vars[key] = str(value)
+                if self.build_placed:
+                    env_vars["use_placed"] = "1"
+                else:
+                    env_vars["use_placed"] = "0"
                 output_mlir = task.get("output", None)
                 assert output_mlir, f"No output MLIR specified for task {task_name}"
                 return env_vars, output_mlir
@@ -192,6 +197,7 @@ def main_routine(
     benchmark_name,
     task_name,
     build,
+    build_placed,
     pnr_after_build,
     pnr_args,
     run_after_build,
@@ -208,7 +214,7 @@ def main_routine(
     config_path = os.path.join(benchmark_root, benchmark_name, "config.yml")
     assert os.path.exists(config_path)
 
-    benchmark = Benchmark(config_path)
+    benchmark = Benchmark(config_path, build_placed)
 
     log("Cleaning ...")
     benchmark.clean_task_build()
@@ -333,6 +339,13 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--build_placed",
+        type=bool,
+        default=True,
+        help="Build the placed version of the benchmark (default: True)",
+        required=False,
+    )
+    parser.add_argument(
         "--pnr",
         action="store_true",
         default=False,
@@ -389,6 +402,7 @@ if __name__ == "__main__":
                     benchmark_name=benchmark_name,
                     task_name=task_name,
                     build=args.build,
+                    build_placed=args.build_placed,
                     pnr_after_build=args.pnr,
                     pnr_args=args.pnr_args,
                     run_after_build=args.run,

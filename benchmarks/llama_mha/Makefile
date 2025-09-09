@@ -2,6 +2,16 @@ srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 include ${srcdir}/../makefile-common	
 
+target_name := mha
+aie_py_src := ${target_name}.py
+
+use_placed ?= 1
+ifeq (${use_placed}, 0)
+aie_py_src=${target_name}.py
+else ifeq (${use_placed}, 1)
+aie_py_src=${target_name}_placed.py
+endif
+
 embed_dim := 288
 head_dim := 48
 tile_dim := 96
@@ -18,7 +28,7 @@ build/%.cc.o: %.cc
 	mkdir -p ${@D}
 	${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o $@
 
-build/mha.mlir: ${srcdir}/mha.py build/mha.cc.o 
+build/mha.mlir: ${srcdir}/${aie_py_src} build/mha.cc.o 
 	mkdir -p ${@D}
 	python3 $< $(ARGS) > $@
 
