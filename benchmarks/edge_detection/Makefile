@@ -5,7 +5,7 @@ include ${srcdir}/../makefile-common
 targetname = edge_detect
 aie_py_src=${targetname}.py
 
-use_placed?=1
+use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${targetname}.py
 else ifeq (${use_placed}, 1)

@@ -200,4 +200,4 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
 
 
 if __name__ == "__main__":
-    collect_results()
+    collect_results("build", "results.csv")

@@ -9,7 +9,7 @@ dtype := i32
 
 target_name := microbenchmark
 aie_py_src := ${target_name}.py
-use_placed := 1
+use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${target_name}.py
 else ifeq (${use_placed}, 1)
