@@ -1,14 +1,15 @@
 name: NPU Flow Automated Tests on NPU2 Device
 run-name: ${{ github.actor }} is testing out NPU flow on NPU2 device
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-  pull_request:
-    paths-ignore:
-      - '**.md'
+  # push:
+  #   branches:
+  #     - main
+  #   paths-ignore:
+  #     - '**.md'
+  # pull_request:
+  #   paths-ignore:
+  #     - '**.md'
+  workflow_dispatch:
 jobs:
   Test:
     runs-on: self-hosted
