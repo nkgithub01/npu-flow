@@ -9,7 +9,8 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r python/requirements.txt
 pre-commit install
 HOST_MLIR_PYTHON_PACKAGE_PREFIX=aie python3 -m pip install -r python/requirements_extras.txt
-# TODO: install ml dependencies
+python3 -m pip install -r python/requirements_ml.txt
+python3 -m pip install opencv-python
 
 python3 -m pip install https://github.com/Xilinx/llvm-aie/releases/download/nightly/llvm_aie-19.0.0.2025041501+b2a279c1-py3-none-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 

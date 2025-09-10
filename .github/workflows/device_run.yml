@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ secrets.SUBMODULE_PAT_TOKEN }}
-          submodules: true
+          submodules: 'recursive'
 
       - name: Update apt list
         run: sudo apt update
@@ -58,6 +58,8 @@ jobs:
           echo NPU_PNR_BIN_DIR=$(realpath ./apps) >> $GITHUB_ENV
           make test
 
+      # TODO: add --run options to run on device; need to figure out
+      #       how to not interfere with other jobs on the machine
       - name: Build, Place, and Route Benchmarks
         run: |
           source ./mlir-aie/ironenv/bin/activate
