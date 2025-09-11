@@ -16,6 +16,8 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
+placer ?= sequential_placer
+
 # AIE kernels directory for Matrix Multiplication is in different location
 AIE_KERNELS_DIR := ${MLIR_AIE_DIR}/aie_kernels/aie2p
 
@@ -56,8 +58,12 @@ xclbin_target?=build/GEMM_${target_suffix}.xclbin
 trace_xclbin_target?=build/GEMM_trace_${target_suffix}.xclbin
 insts_target?=build/insts_${target_suffix}.bin
 
-runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY}
 aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
+runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY}
+
+ifeq (${use_placed}, 0)
+aieargs+=--placer ${placer}
+endif
 
 .PHONY: all
 all: ${xclbin_target}

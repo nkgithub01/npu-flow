@@ -18,6 +18,7 @@ dtype_map = {
 
 def main(opts):
     module = microbenchmark(
+        opts,
         opts.dev,
         opts.dtype_str,
         opts.input_netlist_file
@@ -127,6 +128,7 @@ def parse_netlist(dtype_str, netlist_file):
 
 
 def microbenchmark(
+    opts,
     dev,
     dtype_str,
     netlist_file
@@ -221,7 +223,14 @@ def microbenchmark(
             rt.drain(netlist_info["obj_fifos"][fifo_id].cons(), Output, tap=tap, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(dev_ty, rt).resolve_program(SequentialPlacer())
+    placer_func = PLACER_CONVERSION[opts.placer]
+    return Program(dev_ty, rt).resolve_program(placer_func())
+
+
+PLACER_CONVERSION = {
+    "null_placer": NullPlacer,
+    "sequential_placer": SequentialPlacer,
+}
 
 
 if __name__ == "__main__":
@@ -248,6 +257,16 @@ if __name__ == "__main__":
         dest="dtype_str",
         choices=["i8", "i16", "i32"], 
         default="i32"
+    )
+    argparser.add_argument(
+        "-p", 
+        "--placer", 
+        type=str,
+        required=False,
+        dest="placer",
+        default="null_placer",
+        choices=PLACER_CONVERSION.keys(),
+        help="Placement strategy to use",
     )
     opts = argparser.parse_args()
     main(opts)

@@ -10,14 +10,18 @@ import sys
 import argparse
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer
+from aie.iron.placers import SequentialPlacer, NullPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
 # Edge Detection using AIE array
-def edge_detect(image_width, image_height, num_compute_flow_column):
-    
+def edge_detect(opts):
+
+    image_width = opts.image_width
+    image_height = opts.image_height
+    num_compute_flow_column = opts.num_compute_flow_column
+
     height_minus1 = image_height - 1
     line_width = image_width
     line_width_in_bytes = image_width * 4
@@ -274,7 +278,14 @@ def edge_detect(image_width, image_height, num_compute_flow_column):
             rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True, placement=shim)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(NPU2(), rt).resolve_program(SequentialPlacer())
+    placer_func = PLACER_CONVERSION[opts.placer]
+    return Program(NPU2(), rt).resolve_program(placer_func())
+
+
+PLACER_CONVERSION = {
+    "null_placer": NullPlacer,
+    "sequential_placer": SequentialPlacer,
+}
 
 
 if __name__ == "__main__":
@@ -306,8 +317,17 @@ if __name__ == "__main__":
         default=4,
         help="Number of compute flow columns on the AIE array that will be used in parallel",
     )
+    p.add_argument(
+        "-p", 
+        "--placer", 
+        type=str,
+        required=False,
+        dest="placer",
+        default="null_placer",
+        choices=PLACER_CONVERSION.keys(),
+        help="Placement strategy to use",
+    )
     
-    opts = p.parse_args(sys.argv[1:])
-
-    module = edge_detect(opts.image_width, opts.image_height, opts.num_compute_flow_column)
+    opts = p.parse_args()
+    module = edge_detect(opts)
     print(module)

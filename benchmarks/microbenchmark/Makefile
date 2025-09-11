@@ -1,5 +1,5 @@
 srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-NETLIST_FILE_DIR := ${srcdir}/AIE_data_flow_netlists
+NETLIST_FILE_DIR := ${srcdir}
 
 include ${srcdir}/../makefile-common
 AIE_KERNELS_DIR := ${srcdir}/kernels
@@ -15,6 +15,8 @@ aie_py_src=${target_name}.py
 else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
+
+placer ?= sequential_placer
 
 # available auto gen topologies (default output netlist file: netlist.json)
 # - single_multicast
@@ -49,6 +51,10 @@ insts_target?=build/${target_name}_insts.bin
 aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
 runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype}
 kernals := accumulate
+
+ifeq (${use_placed}, 0)
+aieargs+=--placer ${placer}
+endif
 
 .PHONY: all
 all: ${xclbin_target}

@@ -583,7 +583,7 @@ if __name__ == "__main__":
         "--topology", 
         type=str, 
         dest="netlist_topologies",
-        choices=list(TOPOLOGIES_CONVERSION.keys()),
+        choices=TOPOLOGIES_CONVERSION.keys(),
         default="tree",
     )
     argparser.add_argument(

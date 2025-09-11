@@ -23,6 +23,8 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
+placer ?= sequential_placer
+
 VERBOSITY := 2
 TRACE_SIZE := 16384
 NUM_ITERATION := 10
@@ -32,8 +34,12 @@ xclbin_target?=build/${target_name}.xclbin
 trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
-aieargs := ${device_name}
+aieargs := --dev ${device_name}
 runargs :=
+
+ifeq (${use_placed}, 0)
+aieargs+=--placer ${placer}
+endif
 
 all: ${xclbin_target}
 

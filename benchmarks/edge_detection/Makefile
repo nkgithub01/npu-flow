@@ -12,11 +12,21 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${targetname}_placed.py
 endif
 
-NUM_COMPUTE_COLUMNS ?= 4
+placer ?= sequential_placer
+
+NUM_COMPUTE_COLUMNS ?= 1
 EDGEDETECT_WIDTH = 1920
 EDGEDETECT_HEIGHT = 1080
 TRACE_SIZE = 134217728
 NUM_ITERATION ?= 10
+
+aieargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS}
+runargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg"
+
+ifeq (${use_placed}, 0)
+aieargs+=--placer ${placer}
+endif
+
 
 all: build/final_${EDGEDETECT_WIDTH}.xclbin
 
@@ -34,11 +44,11 @@ build/combined_gray2rgba_addWeighted.a: build/gray2rgba.cc.o build/addWeighted.c
 
 build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} > $@
+	python3 $< ${aieargs} > $@
 
 build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir: ${srcdir}/${aie_py_src}
 	mkdir -p ${@D}
-	python3 $< -iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} -t ${TRACE_SIZE}> $@
+	python3 $< ${aieargs} -t ${TRACE_SIZE} > $@
 
 build/final_${EDGEDETECT_WIDTH}.xclbin: build/aie2_lineBased_8b_${EDGEDETECT_WIDTH}.mlir build/rgba2gray.cc.o build/gray2rgba.cc.o build/filter2d.cc.o build/threshold.cc.o build/addWeighted.cc.o build/combined_gray2rgba_addWeighted.a
 	mkdir -p ${@D}
@@ -54,13 +64,12 @@ build/final_trace_${EDGEDETECT_WIDTH}.xclbin: build/aie2_trace_lineBased_8b_${ED
 
 run: build/final_${EDGEDETECT_WIDTH}.xclbin
 	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg" 
+			${runargs}
 
 run_trace: build/final_trace_${EDGEDETECT_WIDTH}.xclbin
 	@mkdir -p trace
 	python3 ${srcdir}/test.py -x build/final_trace_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg" \
-			-t ${TRACE_SIZE} --trace_file trace/trace.txt
+			${runargs} -t ${TRACE_SIZE} --trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt
 

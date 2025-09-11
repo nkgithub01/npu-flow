@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 
 from aie.iron import Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer
+from aie.iron.placers import SequentialPlacer, NullPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessSequence, TensorTiler2D
@@ -39,8 +39,19 @@ def main():
         help="Generate TensorAccessPatterns, a Python object to represent each data transfer"
         "of the input/output matrices. These objects can be used for visualization.",
     )
+    argparser.add_argument(
+        "-p", 
+        "--placer", 
+        type=str,
+        required=False,
+        dest="placer",
+        default="null_placer",
+        choices=PLACER_CONVERSION.keys(),
+        help="Placement strategy to use",
+    )
     args = argparser.parse_args()
     maybe_module = my_matmul(
+        args,
         args.dev,
         args.M,
         args.K,
@@ -65,6 +76,7 @@ def ceildiv(a, b):
 
 
 def my_matmul(
+    opts,
     dev,
     M,
     K,
@@ -497,8 +509,15 @@ def my_matmul(
     my_program = Program(dev_ty, rt)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    module = my_program.resolve_program(SequentialPlacer())
+    placer_func = PLACER_CONVERSION[opts.placer]
+    module = my_program.resolve_program(placer_func())
     return module
+
+
+PLACER_CONVERSION = {
+    "null_placer": NullPlacer,
+    "sequential_placer": SequentialPlacer,
+}
 
 
 if __name__ == "__main__":
