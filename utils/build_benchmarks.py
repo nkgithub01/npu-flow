@@ -72,7 +72,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
 
 
 class Benchmark:
-    def __init__(self, config_path, use_placed):
+    def __init__(self, config_path, use_placed, iron_placer):
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -85,6 +85,7 @@ class Benchmark:
         self.tasks = config.get("tasks", [])
         self.last_built_task = None
         self.use_placed = use_placed
+        self.iron_placer = iron_placer
 
         assert self.clean_cmd, "No clean command specified"
         assert self.build_cmd, "No build command specified"
@@ -104,7 +105,11 @@ class Benchmark:
                 env_vars = os.environ.copy()
                 for key, value in params.items():
                     env_vars[key] = str(value)
-                env_vars["use_placed"] = "1" if self.use_placed else "0"
+                if self.use_placed:
+                    env_vars["use_placed"] = "1"
+                else:
+                    env_vars["use_placed"] = "0"
+                    env_vars["placer"] = self.iron_placer
                 output_mlir = task.get("output", None)
                 assert output_mlir, f"No output MLIR specified for task {task_name}"
                 return env_vars, output_mlir
@@ -220,8 +225,9 @@ def main_routine(
     benchmark_root,
     benchmark_name,
     task_name,
-    use_placed,
     build,
+    use_placed,
+    iron_placer,
     pnr_after_build,
     pnr_args,
     imported_pnr_result_dir,
@@ -245,7 +251,7 @@ def main_routine(
     config_path = os.path.join(benchmark_root, benchmark_name, "config.yml")
     assert os.path.exists(config_path)
 
-    benchmark = Benchmark(config_path=config_path, use_placed=use_placed)
+    benchmark = Benchmark(config_path=config_path, use_placed=use_placed, iron_placer=iron_placer)
 
     log("Cleaning ...")
     benchmark.clean_task_build()
@@ -393,6 +399,13 @@ if __name__ == "__main__":
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Use the placed version of the IRON benchmark (default: Placed IRON)",
+    )
+    parser.add_argument(
+        "--iron-placer",
+        type=str,
+        default="sequential_placer",
+        choices=["sequential_placer", "null_placer"],
+        help="Placer to use for the benchmark (default: sequential_placer)",
         required=False,
     )
     parser.add_argument(
@@ -464,8 +477,9 @@ if __name__ == "__main__":
                         benchmark_root=args.benchmark_root,
                         benchmark_name=benchmark_name,
                         task_name=task_name,
-                        use_placed=args.placed_iron,
                         build=args.build,
+                        use_placed=args.placed_iron,
+                        iron_placer=args.iron_placer,
                         pnr_after_build=args.pnr,
                         pnr_args=args.pnr_args,
                         imported_pnr_result_dir=args.import_pnr_results,
