@@ -72,7 +72,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
 
 
 class Benchmark:
-    def __init__(self, config_path, build_placed):
+    def __init__(self, config_path, use_placed):
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -84,7 +84,7 @@ class Benchmark:
         self.run_cmd = config.get("run", None)
         self.tasks = config.get("tasks", [])
         self.last_built_task = None
-        self.build_placed = build_placed
+        self.use_placed = use_placed
 
         assert self.clean_cmd, "No clean command specified"
         assert self.build_cmd, "No build command specified"
@@ -104,10 +104,7 @@ class Benchmark:
                 env_vars = os.environ.copy()
                 for key, value in params.items():
                     env_vars[key] = str(value)
-                if self.build_placed:
-                    env_vars["use_placed"] = "1"
-                else:
-                    env_vars["use_placed"] = "0"
+                env_vars["use_placed"] = "1" if self.use_placed else "0"
                 output_mlir = task.get("output", None)
                 assert output_mlir, f"No output MLIR specified for task {task_name}"
                 return env_vars, output_mlir
@@ -140,7 +137,9 @@ class Benchmark:
             f"{build}\n{extract_fifo}",  # for debugging
         )
 
-    def place_and_route_task(self, task_name, pnr_args):
+    def place_and_route_task(
+        self, task_name, pnr_args, imported_pnr_file, imported_route_summary_file
+    ):
         _, output_mlir = self.__get_task(task_name)
         output_mlir = self.__get_local_file(output_mlir)
 
@@ -149,12 +148,34 @@ class Benchmark:
             f"Current built task: {self.last_built_task}"
         )
 
-        pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
-        assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
-        pnr_cmd = f"{pnr_bin} netlist.json --output=placed.json {pnr_args}"
+        if (imported_pnr_file is not None) and (
+            imported_route_summary_file is not None
+        ):
+            shutil.copyfile(
+                imported_pnr_file, os.path.join(self.root_dir, "placed.json")
+            )
+            shutil.copyfile(
+                imported_route_summary_file,
+                os.path.join(self.root_dir, "route_summary.json"),
+            )
+            pnr = (
+                f"Imported PnR results:\n"
+                "    - Placed file:   {imported_pnr_file}\n"
+                "    - Route summary: {imported_route_summary_file}\n"
+            )
+        else:
+            pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
+            assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
+            pnr_cmd = str(
+                f"{pnr_bin} netlist.json "
+                "--output=placed.json "
+                "--route-summary=route_summary.json"
+            )
+            if pnr_args is not None:
+                pnr_cmd += f" {pnr_args}"
 
-        pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
-        pnr.check()
+            pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
+            pnr.check()
 
         rename_cmd = "mv -f placed.json netlist.json"
         subprocess_run_cmd(cmd=rename_cmd, cwd=self.root_dir).check()
@@ -199,10 +220,11 @@ def main_routine(
     benchmark_root,
     benchmark_name,
     task_name,
+    use_placed,
     build,
-    build_placed,
     pnr_after_build,
     pnr_args,
+    imported_pnr_result_dir,
     run_after_build,
     hook_script,
     output_dir,
@@ -214,10 +236,16 @@ def main_routine(
     output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
     os.makedirs(output_dir, exist_ok=True)
 
+    imported_dir = None
+    if imported_pnr_result_dir is not None:
+        imported_dir = os.path.join(
+            os.path.abspath(imported_pnr_result_dir), benchmark_name
+        )
+
     config_path = os.path.join(benchmark_root, benchmark_name, "config.yml")
     assert os.path.exists(config_path)
 
-    benchmark = Benchmark(config_path, build_placed)
+    benchmark = Benchmark(config_path=config_path, use_placed=use_placed)
 
     log("Cleaning ...")
     benchmark.clean_task_build()
@@ -248,8 +276,22 @@ def main_routine(
 
     if pnr_after_build:
         log("Placing and routing ...")
+
+        if imported_dir is not None:
+            imported_pnr_file = os.path.join(imported_dir, f"{task_name}.pnr.json")
+            imported_route_summary_file = os.path.join(
+                imported_dir, f"{task_name}.route_summary.pnr.json"
+            )
+            if not os.path.exists(imported_pnr_file):
+                imported_pnr_file = None
+            if not os.path.exists(imported_route_summary_file):
+                imported_route_summary_file = None
+        else:
+            imported_pnr_file = None
+            imported_route_summary_file = None
+
         pnr_mlir, pnr_netlist, pnr_route, pnr_log = benchmark.place_and_route_task(
-            task_name, pnr_args
+            task_name, pnr_args, imported_pnr_file, imported_route_summary_file
         )
 
         write_text_file(
@@ -294,7 +336,7 @@ def main_routine(
             run_log,
         )
 
-    if hook_script.strip():
+    if hook_script is not None:
         log(f"Executing hook `{hook_script}` ...")
 
         hook_script = hook_script.split(" ")
@@ -329,14 +371,14 @@ if __name__ == "__main__":
         "--benchmark-root",
         type=str,
         default=f"{os.path.dirname(os.path.abspath(__file__))}/../benchmarks",
-        help="Root directory of benchmarks",
+        help="Root directory of benchmarks (default: /path/to/npu-flow/benchmarks)",
         required=False,
     )
     parser.add_argument(
         "--output-dir",
         type=str,
         default="build",
-        help="Directory to store build outputs",
+        help="Directory to store build outputs (default: ./build)",
         required=False,
     )
     parser.add_argument(
@@ -347,46 +389,57 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
-        "--build_placed",
-        type=bool,
+        "--placed-iron",
+        action=argparse.BooleanOptionalAction,
         default=True,
-        help="Build the placed version of the benchmark (default: True)",
+        help="Use the placed version of the IRON benchmark (default: Placed IRON)",
         required=False,
     )
     parser.add_argument(
         "--pnr",
         action="store_true",
         default=False,
-        help="Run place-and-route after building",
+        help="Run place-and-route after building (default: False)",
         required=False,
     )
     parser.add_argument(
         "--pnr-args",
         type=str,
-        default="",
-        help="Additional arguments to pass to the place-and-route tool",
+        default=None,
+        help="Additional arguments to pass to the place-and-route tool (default: None)",
+        required=False,
+    )
+    parser.add_argument(
+        "--import-pnr-results",
+        type=str,
+        default=None,
+        help="""Path to an existing directory with PnR results to import
+        instead of running PnR as part of the stage in this script.\nThe
+        directory structure should be the same as the output directory of
+        this script, with files named as <task_name>.pnr.json located in
+        each benchmark subdirectory (Default: None)""",
         required=False,
     )
     parser.add_argument(
         "--run",
         action="store_true",
         default=False,
-        help="Run the benchmark after building/place-and-route",
+        help="Run the benchmark after the build/PnR stage (default: False)",
         required=False,
     )
     parser.add_argument(
         "--hook",
         type=str,
-        default="",
+        default=None,
         help="""Custom processing command, or path to a custom processing
-        script (python/bash/etc.) to be executed for each task""",
+        script (python/bash/etc.) to be executed for each task (default: None)""",
         required=False,
     )
     parser.add_argument(
         "-j",
         type=int,
         default=1,
-        help="""Number of parallel benchmarks to process (default: 1), within the same
+        help="""Number of parallel benchmarks to process (default: 1); within the same
         benchmark, tasks are processed sequentially due to the task clean method""",
         required=False,
     )
@@ -394,7 +447,7 @@ if __name__ == "__main__":
         "--verbose",
         action="store_true",
         default=False,
-        help="Enable verbose logging",
+        help="Enable verbose logging (default: False)",
         required=False,
     )
 
@@ -411,10 +464,11 @@ if __name__ == "__main__":
                         benchmark_root=args.benchmark_root,
                         benchmark_name=benchmark_name,
                         task_name=task_name,
+                        use_placed=args.placed_iron,
                         build=args.build,
-                        build_placed=args.build_placed,
                         pnr_after_build=args.pnr,
                         pnr_args=args.pnr_args,
+                        imported_pnr_result_dir=args.import_pnr_results,
                         run_after_build=args.run,
                         hook_script=args.hook,
                         output_dir=args.output_dir,
