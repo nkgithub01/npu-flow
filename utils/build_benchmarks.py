@@ -199,12 +199,13 @@ class Benchmark:
             str(pnr),
         )
 
-    def run_task(self, task_name):
+    def run_task(self, task_name, use_pnr_routing):
         assert self.last_built_task == task_name, (
             f"Task {task_name} has not been built yet. "
             f"Current built task: {self.last_built_task}"
         )
         param_envs, _ = self.__get_task(task_name)
+        param_envs["aiecc_extra_args"] = "--use-pnr-routing" if use_pnr_routing else ""
         result = subprocess_run_cmd(cmd=self.run_cmd, cwd=self.root_dir, env=param_envs)
         result.check()
         return result.stdout, result.stderr, str(result)
@@ -251,7 +252,9 @@ def main_routine(
     config_path = os.path.join(benchmark_root, benchmark_name, "config.yml")
     assert os.path.exists(config_path)
 
-    benchmark = Benchmark(config_path=config_path, use_placed=use_placed, iron_placer=iron_placer)
+    benchmark = Benchmark(
+        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer
+    )
 
     log("Cleaning ...")
     benchmark.clean_task_build()
@@ -322,7 +325,7 @@ def main_routine(
 
     if run_after_build:
         log("Running ...")
-        run_stdout, run_stderr, run_log = benchmark.run_task(task_name)
+        run_stdout, run_stderr, run_log = benchmark.run_task(task_name, pnr_after_build)
         if verbose:
             log(f"Run stdout: {run_stdout}")
             log(f"Run stderr: {run_stderr}")
@@ -388,6 +391,13 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--clean-all",
+        action="store_true",
+        default=False,
+        help="Clean all benchmarks builds (default: False)",
+        required=False,
+    )
+    parser.add_argument(
         "--build",
         action=argparse.BooleanOptionalAction,
         default=True,
@@ -399,6 +409,7 @@ if __name__ == "__main__":
         action=argparse.BooleanOptionalAction,
         default=True,
         help="Use the placed version of the IRON benchmark (default: Placed IRON)",
+        required=False,
     )
     parser.add_argument(
         "--iron-placer",
@@ -451,7 +462,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-j",
         type=int,
-        default=1,
+        default=None,  # multiprocessing.Pool uses number of cores if not specified
         help="""Number of parallel benchmarks to process (default: 1); within the same
         benchmark, tasks are processed sequentially due to the task clean method""",
         required=False,
@@ -465,6 +476,18 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    if args.j is None or args.j > 1:
+        assert args.run is False, str(
+            "Cannot do device run in parallel mode; "
+            "only build and pnr can be done in parallel\n"
+            "Please set `-j 1` to run sequentially"
+        )
+
+    if args.clean_all:
+        args.build = False
+        args.run = False
+        args.pnr = False
 
     if args.tasklists:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -490,6 +513,17 @@ if __name__ == "__main__":
                     )
                 except Exception as e:
                     print(f"[{benchmark_name}/{task_name}] Error: {e}", flush=True)
+                    exception = str(
+                        f"Error type: {type(e).__name__}\n\n"
+                        f"Error message:\n{str(e)}\n\n"
+                        f"Full traceback:\n{traceback.format_exc()}"
+                    )
+                    write_text_file(
+                        os.path.join(
+                            args.output_dir, benchmark_name, f"{task_name}.error.log"
+                        ),
+                        exception,
+                    )
                     if args.verbose:
                         traceback.print_exc()
 
@@ -514,7 +548,7 @@ if __name__ == "__main__":
             else:
                 store_task_entry(arg_item)
 
-        with Pool(args.j) as pool:
+        with Pool(processes=args.j) as pool:
             job_list = []
             for benchmark_name, task_name_list in parallel_benchmarks.items():
                 job_list.append((benchmark_name, task_name_list))

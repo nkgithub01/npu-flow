@@ -43,13 +43,13 @@ build/aie_trace_${data_size}.mlir: ${srcdir}/${aie_py_src}
 build/final_${data_size}.xclbin: build/aie_${data_size}.mlir build/scale.o
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --no-compile-host --xclbin-name=${@F} \
-    	  		--no-xchesscc --no-xbridge --aie-generate-npu-insts --get-routing-summary \
+    	  		--no-xchesscc --no-xbridge --aie-generate-npu-insts --get-routing-summary ${aiecc_extra_args} \
 				--npu-insts-name=insts.bin $(<:%=../%)
 
 build/final_trace_${data_size}.xclbin: build/aie_trace_${data_size}.mlir build/scale.o
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --no-compile-host --xclbin-name=${@F} \
-    			--no-xchesscc --no-xbridge --aie-generate-npu-insts --get-routing-summary \
+    			--no-xchesscc --no-xbridge --aie-generate-npu-insts --get-routing-summary ${aiecc_extra_args} \
 				--npu-insts-name=insts.bin $(<:%=../%)
 
 run: build/final_${data_size}.xclbin 

@@ -83,18 +83,18 @@ ${trace_mlir_target}: ${srcdir}/${aie_py_src} gen_netlist
 ${xclbin_target}: ${mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary ${aiecc_extra_args} \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 ${trace_xclbin_target}: ${trace_mlir_target} ${kernals:%=build/%.o}
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=${buffer_aloc_flag} \
-				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary \
+				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary ${aiecc_extra_args} \
 				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
 
 .PHONY: run
 run: ${xclbin_target}
-	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} 
+	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs}
 
 .PHONY: run_trace
 run_trace: ${trace_xclbin_target}

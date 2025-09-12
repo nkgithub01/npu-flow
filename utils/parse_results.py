@@ -230,6 +230,22 @@ if __name__ == "__main__":
         help="Specify which variant to parse: 'std' for standard flow, 'pnr' for place-and-route results.",
         required=False,
     )
+    parser.add_argument(
+        "--input-dir",
+        type=str,
+        default="build",
+        help="Directory containing benchmark output folders.",
+        required=False,
+    )
+    parser.add_argument(
+        "--output-csv",
+        type=str,
+        default=None,
+        help="Output CSV file path.",
+        required=False,
+    )
     args = parser.parse_args()
 
-    collect_results("build", f"{args.variant}_results.csv", args.variant)
+    result_file_path = args.output_csv if args.output_csv else f"{args.variant}_results.csv"
+
+    collect_results(args.input_dir, result_file_path, args.variant)
