@@ -16,6 +16,8 @@ import numpy as np
 from aie.utils.xrt import setup_aie, extract_trace, write_out_trace, execute
 import aie.utils.test as test_utils
 
+from execute_aie import execute_aie_multi_with_timing
+
 torch.use_deterministic_algorithms(True)
 torch.manual_seed(0)
 
@@ -29,7 +31,6 @@ def main(opts):
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
 
-    num_iter = 1
     npu_time_total = 0
     npu_time_min = 9999999
     npu_time_max = 0
@@ -443,24 +444,20 @@ def main(opts):
     # ------------------------------------------------------
     # Main run loop
     # ------------------------------------------------------
-    for i in range(num_iter):
-        start = time.time_ns()
-        aie_output = execute(app, ifm_mem_fmt, total_wts3) * block_2_relu_3
-        stop = time.time_ns()
-
-        if enable_trace:
-            aie_output, trace = extract_trace(
-                aie_output, shape_out, dtype_out, trace_size
-            )
-            write_out_trace(trace, trace_file)
-
-        npu_time = stop - start
-        npu_time_total = npu_time_total + npu_time
+    data_buffer = execute_aie_multi_with_timing(
+        app,
+        input_one=ifm_mem_fmt,
+        input_two=total_wts3,
+        enable_trace=enable_trace,
+        num_iters=opts.iters,
+        warmup_iters=opts.warmup_iters,
+        trace_file=opts.trace_file
+    ) * block_2_relu_3
 
     # ------------------------------------------------------
     # Reorder output data-layout
     # ------------------------------------------------------
-    temp_out = aie_output.reshape(32, 32, 32, 8)
+    temp_out = data_buffer.reshape(32, 32, 32, 8)
     temp_out = ds.reorder_mat(temp_out, "CDYX", "YCXD")
     ofm_mem_fmt = temp_out.reshape(256, 32, 32)
     ofm_mem_fmt.tofile(
@@ -471,7 +468,6 @@ def main(opts):
     # ------------------------------------------------------
     # Compare the AIE output and the golden reference
     # ------------------------------------------------------
-    print("\nAvg NPU time: {}us.".format(int((npu_time_total / num_iter) / 1000)))
 
     if np.allclose(
         ofm_mem_fmt_out.detach().numpy(),

@@ -27,7 +27,8 @@ placer ?= sequential_placer
 
 VERBOSITY := 2
 TRACE_SIZE := 16384
-NUM_ITERATION := 10
+NUM_ITERATION := 30
+WARMUP_ITERATION := 20
 mlir_target?=build/${target_name}.mlir
 trace_mlir_target?=build/${target_name}_trace.mlir
 xclbin_target?=build/${target_name}.xclbin
@@ -35,7 +36,7 @@ trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
 aieargs := --dev ${device_name}
-runargs :=
+runargs := --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 
 ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
@@ -95,7 +96,7 @@ ${xclbin_target}: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o 
 
 .PHONY: run
 run: ${xclbin_target}
-	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} 
+	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs} 
 
 .PHONY: clean_trace
 clean_trace:

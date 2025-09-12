@@ -26,7 +26,7 @@ placer ?= sequential_placer
 # - tree
 # - cnn
 netlist_file := ${NETLIST_FILE_DIR}/netlist.json
-netlist_topology ?= 3d_mesh
+netlist_topology ?= tree
 num_rows ?= 6
 num_cols ?= 8
 
@@ -41,7 +41,8 @@ endif
 
 VERBOSITY := 2
 TRACE_SIZE := 16384
-NUM_ITERATION := 10
+NUM_ITERATION := 30
+WARMUP_ITERATION := 20
 mlir_target?=build/${target_name}.mlir
 trace_mlir_target?=build/${target_name}_trace.mlir
 xclbin_target?=build/${target_name}.xclbin
@@ -49,7 +50,7 @@ trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
 aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
-runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype}
+runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 kernals := accumulate
 
 ifeq (${use_placed}, 0)
@@ -94,12 +95,12 @@ ${trace_xclbin_target}: ${trace_mlir_target} ${kernals:%=build/%.o}
 
 .PHONY: run
 run: ${xclbin_target}
-	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} 
+	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs}
 
 .PHONY: run_trace
 run_trace: ${trace_xclbin_target}
 	@mkdir -p trace
-	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} \
+	python3 ${srcdir}/test.py -x ${trace_xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs} \
 			-t ${TRACE_SIZE} --trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir ${trace_mlir_target} --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt

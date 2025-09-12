@@ -23,8 +23,10 @@ endif
 in2_size = 4 # in bytes, should always be 4 (1x int32)
 trace_size = 131072
 data_size = in1_size
-warmup ?= 20
-iters ?= 100
+NUM_ITERATION := 30
+WARMUP_ITERATION := 20
+
+runargs+=--iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 
 all: build/final_${data_size}.xclbin 
 
@@ -54,12 +56,12 @@ build/final_trace_${data_size}.xclbin: build/aie_trace_${data_size}.mlir build/s
 
 run: build/final_${data_size}.xclbin 
 	python3 ${srcdir}/test.py -x build/final_${data_size}.xclbin -i build/insts.bin -k MLIR_AIE \
-			-i1s ${in1_size} -i2s ${in2_size} -os ${out_size} --iters ${iters} --warmup ${warmup}
+			-i1s ${in1_size} -i2s ${in2_size} -os ${out_size} ${runargs}
 
 run_trace: build/final_trace_${data_size}.xclbin 
 	@mkdir -p trace
 	python3 ${srcdir}/test.py -x build/final_trace_${data_size}.xclbin -i build/insts.bin -k MLIR_AIE -t ${trace_size} \
-		-i1s ${in1_size} -i2s ${in2_size} -os ${out_size} --iters 1 --warmup 0 \
+		-i1s ${in1_size} -i2s ${in2_size} -os ${out_size} ${runargs}\
 		--trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir build/aie_trace_${data_size}.mlir --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt

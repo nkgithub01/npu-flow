@@ -17,9 +17,6 @@ def main(opts):
     out_size = int(opts.out_size)  # in bytes
     num_iters = opts.iters
     warmup_iters = opts.warmup_iters
-    npu_time_total = 0
-    npu_time_min = 9999999
-    npu_time_max = 0
     print(
         "\nNumber of iterations:",
         str(opts.iters),

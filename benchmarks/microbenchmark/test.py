@@ -6,6 +6,7 @@ import numpy as np
 
 from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils
+from execute_aie import execute_aie_multi_with_timing
 
 RELEASE_VERBOSITY_LEVEL = 1
 DEBUG_VERBOSITY_LEVEL = 2
@@ -125,7 +126,6 @@ def main(opts):
     do_verify = opts.verify
     num_iter = opts.iters
     num_warmup_iter = opts.warmup_iters
-    total_iters = num_iter + num_warmup_iter
     trace_size = opts.trace_size
     enable_trace = False if not trace_size else True
 
@@ -214,24 +214,15 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     # Main run loop
     # -----------------------------------------------------------------------------------
-    for i in range(total_iters):
-        start = time.time_ns()
-        if enable_trace:
-            data_buffer, trace_buffer = execute(app=app, input_one=NPU_input_one, input_two=NPU_input_two, enable_trace=enable_trace, trace_after_output=False)
-        else:
-            data_buffer = execute(app=app, input_one=NPU_input_one, input_two=NPU_input_two, enable_trace=enable_trace, trace_after_output=False)
-        stop = time.time_ns()
-
-        if enable_trace and i == num_iter - 1:
-            write_out_trace(trace_buffer.view(np.uint32), str(opts.trace_file))
-
-        npu_time = stop - start
-        # Warmup iterations are not counted in the average time
-        if i >= num_warmup_iter:
-            npu_time_total = npu_time_total + npu_time
-
-    if verbosity >= RELEASE_VERBOSITY_LEVEL:  
-        print("\nAvg NPU time: {} us.".format(int((npu_time_total / num_iter) / 1000)))
+    data_buffer = execute_aie_multi_with_timing(
+        app,
+        input_one=NPU_input_one,
+        input_two=NPU_input_two,
+        enable_trace=enable_trace,
+        num_iters=num_iter,
+        warmup_iters=num_warmup_iter,
+        trace_file=opts.trace_file
+    )
 
     # -----------------------------------------------------------------------------------
     # Compare the AIE output and the golden reference result
