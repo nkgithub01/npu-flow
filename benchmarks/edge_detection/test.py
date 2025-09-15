@@ -108,6 +108,7 @@ def main(opts):
     data_buffer = execute_aie_multi_with_timing(
         app,
         input_one=image_buffer_in,
+        warmup_iters=opts.warmup_iters,
         enable_trace=enable_trace,
         num_iters=num_iter,
         trace_file=trace_file

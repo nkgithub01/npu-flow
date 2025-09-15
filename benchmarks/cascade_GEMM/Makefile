@@ -44,14 +44,15 @@ endif
 # Trace size
 VERBOSITY := 2
 TRACE_SIZE := 1048576
-NUM_ITERATION := 10
+NUM_ITERATION := 30
+WARMUP_ITERATION := 20
 mlir_target?=build/aie_${target_suffix}.mlir
 trace_mlir_target?=build/aie_trace_${target_suffix}.mlir
 xclbin_target?=build/GEMM_${target_suffix}.xclbin
 trace_xclbin_target?=build/GEMM_trace_${target_suffix}.xclbin
 insts_target?=build/insts_${target_suffix}.bin
 
-runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY}
+runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
 
 .PHONY: all
@@ -84,7 +85,7 @@ ${trace_xclbin_target}: ${trace_mlir_target} ${kernels:%=build/%.o}
 .PHONY: run
 run: ${xclbin_target}
 	export XRT_HACK_UNSECURE_LOADING_XCLBIN=1
-	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE --iters ${NUM_ITERATION} ${runargs} 
+	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs} 
 
 .PHONY: run_trace
 run_trace: ${trace_xclbin_target}

@@ -18,10 +18,11 @@ NUM_COMPUTE_COLUMNS ?= 1
 EDGEDETECT_WIDTH = 1920
 EDGEDETECT_HEIGHT = 1080
 TRACE_SIZE = 134217728
-NUM_ITERATION ?= 10
+NUM_ITERATION ?= 30
+WARMUP_ITERATION ?= 20
 
 aieargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS}
-runargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg"
+runargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS} --image "${srcdir}/input_image.jpg" --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 
 ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
@@ -63,13 +64,11 @@ build/final_trace_${EDGEDETECT_WIDTH}.xclbin: build/aie2_trace_lineBased_8b_${ED
 				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
 run: build/final_${EDGEDETECT_WIDTH}.xclbin
-	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			${runargs}
+	python3 ${srcdir}/test.py -x build/final_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE ${runargs}
 
 run_trace: build/final_trace_${EDGEDETECT_WIDTH}.xclbin
 	@mkdir -p trace
-	python3 ${srcdir}/test.py -x build/final_trace_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE --iters ${NUM_ITERATION} \
-			${runargs} -t ${TRACE_SIZE} --trace_file trace/trace.txt
+	python3 ${srcdir}/test.py -x build/final_trace_${EDGEDETECT_WIDTH}.xclbin -i build/insts.bin -k MLIR_AIE ${runargs} -t ${TRACE_SIZE} --trace_file trace/trace.txt
 	${AIE_PARSE_TRACE_DIR}/parse_trace.py --input trace/trace.txt --mlir build/aie2_trace_lineBased_8b_${EDGEDETECT_WIDTH}.mlir --output trace/trace.json
 	python3 ${srcdir}/../../utils/get_cycle_summary.py --input trace/trace.json --output trace/summary.txt
 
