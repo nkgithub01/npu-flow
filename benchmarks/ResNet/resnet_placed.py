@@ -6,6 +6,7 @@
 # Copyright (C) 2024-2025, Advanced Micro Devices, Inc.
 import numpy as np
 import sys
+import argparse
 
 from aie.dialects.aie import *
 from aie.dialects.aiex import *
@@ -13,49 +14,44 @@ from aie.extras.context import mlir_mod_ctx
 from aie.helpers.dialects.ext.scf import _for as range_
 from aie.helpers.util import np_ndarray_type_get_shape
 
-# tracing definitions
-trace_sz_in_bytes = 8192
-trace_sz_in_i32s = trace_sz_in_bytes // 4
-enableTrace = False
 
-# Define bottleneck layer sizes
-tensorInW = 32
-tensorInH = 32
-tensorInCInit = 64
-tensorInCRest = 4 * tensorInCInit
-n_cols = 3
-repeat = 2
+def resnet_conv_x(opts):
+    # tracing definitions
+    trace_sz_in_bytes = 8192
+    trace_sz_in_i32s = trace_sz_in_bytes // 4
+    enableTrace = False
 
-activationsIn = tensorInW * tensorInH * tensorInCInit
-acitivationsOut = tensorInW * tensorInH * tensorInCRest
+    # Define bottleneck layer sizes
+    tensorInW = 32
+    tensorInH = 32
+    tensorInCInit = 64
+    tensorInCRest = 4 * tensorInCInit
+    n_cols = 3
+    repeat = 2
 
-totalWeights_init = (
-    tensorInCInit * tensorInCInit
-    + 3 * 3 * tensorInCInit * tensorInCInit
-    + 2 * tensorInCInit * tensorInCRest
-)
+    activationsIn = tensorInW * tensorInH * tensorInCInit
+    acitivationsOut = tensorInW * tensorInH * tensorInCRest
 
-totalWeights_rest = (
-    tensorInCInit * tensorInCRest
-    + 3 * 3 * tensorInCInit * tensorInCInit
-    + tensorInCInit * tensorInCRest
-)
+    totalWeights_init = (
+        tensorInCInit * tensorInCInit
+        + 3 * 3 * tensorInCInit * tensorInCInit
+        + 2 * tensorInCInit * tensorInCRest
+    )
 
-totalWeights_complete = totalWeights_init + repeat * totalWeights_rest
+    totalWeights_rest = (
+        tensorInCInit * tensorInCRest
+        + 3 * 3 * tensorInCInit * tensorInCInit
+        + tensorInCInit * tensorInCRest
+    )
 
+    totalWeights_complete = totalWeights_init + repeat * totalWeights_rest
 
-if len(sys.argv) != 2:
-    raise ValueError("[ERROR] Need 1 command line argument (Device name)")
-
-if sys.argv[1] == "npu":
-    dev = AIEDevice.npu1_3col
-elif sys.argv[1] == "npu2":
-    dev = AIEDevice.npu2
-else:
-    raise ValueError("[ERROR] Device name {} is unknown".format(sys.argv[1]))
-
-
-def resnet_conv_x():
+    if opts.dev == "npu":
+        dev = AIEDevice.npu1_3col
+    elif opts.dev == "npu2":
+        dev = AIEDevice.npu2
+    else:
+        raise ValueError("[ERROR] Device name {} is unknown".format(opts.dev))
 
     with mlir_mod_ctx() as ctx:
 
@@ -943,4 +939,17 @@ def resnet_conv_x():
         print(res)
 
 
-resnet_conv_x()
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(
+        prog="ResNet Placed",
+        description="Emits MLIR code for ResNet.",
+    )
+    argparser.add_argument(
+        "--dev", 
+        type=str, 
+        dest="dev",
+        default="npu2",
+    )
+    opts = argparser.parse_args()
+
+    resnet_conv_x(opts)

@@ -22,14 +22,14 @@ placer ?= sequential_placer
 AIE_KERNELS_DIR := ${MLIR_AIE_DIR}/aie_kernels/aie2p
 
 # M, K, N: final GEMM dimensions
-M:=512
-K:=512
-N:=512
+M?=512
+K?=512
+N?=512
 
 # m, k, n: single AIE core GEMM dimensions
-m:=32
-k:=32
-n:=32
+m?=32
+k?=32
+n?=32
 
 n_aie_cols?=8
 b_col_maj?=0
