@@ -25,7 +25,7 @@ placer ?= sequential_placer
 # - line
 # - tree
 # - cnn
-netlist_file := ${NETLIST_FILE_DIR}/netlist.json
+netlist_file := ${NETLIST_FILE_DIR}/auto_gen_netlist.json
 netlist_topology ?= tree
 num_rows ?= 6
 num_cols ?= 8
@@ -60,8 +60,7 @@ endif
 .PHONY: all
 all: ${xclbin_target}
 
-.PHONY: gen_netlist
-gen_netlist:
+${netlist_file}:
 ifeq (${use_auto_gen_netlist}, 0)
 	@echo "Using custom netlist file: ${netlist_file}"
 else
@@ -73,11 +72,11 @@ build/%.o: ${AIE_KERNELS_DIR}/%.cc
 	mkdir -p ${@D}
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o ${@F}
 
-${mlir_target}: ${srcdir}/${aie_py_src} gen_netlist
+${mlir_target}: ${srcdir}/${aie_py_src} ${netlist_file}
 	mkdir -p ${@D}
 	python3 $< ${aieargs} > $@
 
-${trace_mlir_target}: ${srcdir}/${aie_py_src} gen_netlist
+${trace_mlir_target}: ${srcdir}/${aie_py_src} ${netlist_file}
 	mkdir -p ${@D}
 	python3 $< ${aieargs} --trace_size ${TRACE_SIZE} > $@
 
