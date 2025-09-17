@@ -1,5 +1,5 @@
 srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-NETLIST_FILE_DIR := ${srcdir}
+NETLIST_FILE_DIR := ${srcdir}/output
 
 include ${srcdir}/../makefile-common
 AIE_KERNELS_DIR := ${srcdir}/kernels
@@ -61,6 +61,7 @@ endif
 all: ${xclbin_target}
 
 ${netlist_file}:
+	mkdir -p ${@D}
 ifeq (${use_auto_gen_netlist}, 0)
 	@echo "Using custom netlist file: ${netlist_file}"
 else
