@@ -17,6 +17,10 @@ head_dim := 48
 tile_dim := 96
 seq_len := 16
 
+NUM_ITERATION := 1
+WARMUP_ITERATION := 0
+runargs+=--iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
+
 ARGS := --embed-dim $(embed_dim) \
         --head-dim $(head_dim) \
         --tile-dim $(tile_dim) \
@@ -39,7 +43,7 @@ build/mha.xclbin: build/mha.mlir
 				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
 
 run: build/mha.xclbin
-	python3 ${srcdir}/test.py $(ARGS) -x build/mha.xclbin -i build/insts.bin -k MLIR_AIE
+	python3 ${srcdir}/test.py $(ARGS) -x build/mha.xclbin -i build/insts.bin -k MLIR_AIE ${runargs}
 
 clean: 
 	rm -rf build 

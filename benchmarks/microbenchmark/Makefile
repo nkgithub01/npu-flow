@@ -41,8 +41,8 @@ endif
 
 VERBOSITY := 2
 TRACE_SIZE := 16384
-NUM_ITERATION := 30
-WARMUP_ITERATION := 20
+NUM_ITERATION := 100
+WARMUP_ITERATION := 50
 mlir_target?=build/${target_name}.mlir
 trace_mlir_target?=build/${target_name}_trace.mlir
 xclbin_target?=build/${target_name}.xclbin

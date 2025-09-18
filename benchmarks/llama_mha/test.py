@@ -55,9 +55,14 @@ def main(opts):
     # -----------------------------------------------------------------------------------
     app.buffers[3].write(qkv_a_data)
     app.buffers[4].write(qkv_w_data)
+    total_time = 0
     start = time.time_ns()
-    app.run()
+    for iter_idx in range(opts.warmup_iters+opts.iters):
+        if iter_idx == opts.warmup_iters:
+            start = time.time_ns()
+        app.run()
     stop = time.time_ns()
+    total_time = stop - start
     
     score_buf = app.buffers[5].read()
     aie_score = score_buf[:score_size].view(out_dtype)   
@@ -139,7 +144,8 @@ def main(opts):
         exit(1)
 
     print("\nPASS!\n")
-    print(f"Total NPU time: {(stop - start) // 1000} us")
+    print(f"Total NPU time: {total_time // 1000} us")
+    print(f"Avg NPU time: {total_time // opts.iters // 1000} us")
 
 if __name__ == "__main__":
     p = test_utils.create_default_argparser()

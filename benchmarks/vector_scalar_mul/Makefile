@@ -23,8 +23,8 @@ endif
 in2_size = 4 # in bytes, should always be 4 (1x int32)
 trace_size = 131072
 data_size = in1_size
-NUM_ITERATION := 30
-WARMUP_ITERATION := 20
+NUM_ITERATION := 100
+WARMUP_ITERATION := 50
 
 runargs+=--iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 
