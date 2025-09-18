@@ -165,8 +165,8 @@ class Benchmark:
             )
             pnr = (
                 f"Imported PnR results:\n"
-                "    - Placed file:   {imported_pnr_file}\n"
-                "    - Route summary: {imported_route_summary_file}\n"
+                f"    - Placed file:   {imported_pnr_file}\n"
+                f"    - Route summary: {imported_route_summary_file}\n"
             )
         else:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
@@ -284,8 +284,6 @@ def main_routine(
         )
 
     if pnr_after_build:
-        log("Placing and routing ...")
-
         if imported_dir is not None:
             imported_pnr_file = os.path.join(imported_dir, f"{task_name}.pnr.json")
             imported_route_summary_file = os.path.join(
@@ -298,6 +296,13 @@ def main_routine(
         else:
             imported_pnr_file = None
             imported_route_summary_file = None
+
+        suffix = (
+            f" (import from {imported_dir})"
+            if imported_pnr_file and imported_route_summary_file
+            else ""
+        )
+        log("Placing and routing ..." + suffix)
 
         pnr_mlir, pnr_netlist, pnr_route, pnr_log = benchmark.place_and_route_task(
             task_name, pnr_args, imported_pnr_file, imported_route_summary_file
