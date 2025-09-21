@@ -1,6 +1,7 @@
 name: Edge Detection
 clean: make clean
-build: make -j
+build: make build
+compile: make aiecc
 run: make run
 tasks:
   - name: col_1

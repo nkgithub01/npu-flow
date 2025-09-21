@@ -57,6 +57,13 @@ ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
 endif
 
+ifeq (${placer}, sa_placer)
+aieargs+=--pnr-args "${pnr_args}"
+endif
+
+build: ${mlir_target} ${kernals:%=build/%.o}
+aiecc: ${xclbin_target}
+
 .PHONY: all
 all: ${xclbin_target}
 

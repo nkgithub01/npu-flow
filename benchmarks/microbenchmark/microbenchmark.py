@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer, NullPlacer
+from aie.iron.placers import SequentialPlacer, SAPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
@@ -16,12 +16,13 @@ dtype_map = {
 }
 
 
-def main(opts):
+def main(opts, placer):
     module = microbenchmark(
         opts,
         opts.dev,
         opts.dtype_str,
-        opts.input_netlist_file
+        opts.input_netlist_file,
+        placer
     )
 
     # Print the python-to-mlir conversion to stdout
@@ -131,7 +132,8 @@ def microbenchmark(
     opts,
     dev,
     dtype_str,
-    netlist_file
+    netlist_file,
+    placer,
 ):
     dtype = dtype_map[dtype_str]
     if dev == "npu2":
@@ -223,13 +225,12 @@ def microbenchmark(
             rt.drain(netlist_info["obj_fifos"][fifo_id].cons(), Output, tap=tap, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    placer_func = PLACER_CONVERSION[opts.placer]
-    return Program(dev_ty, rt).resolve_program(placer_func())
+    return Program(dev_ty, rt).resolve_program(placer)
 
 
 PLACER_CONVERSION = {
-    "null_placer": NullPlacer,
-    "sequential_placer": SequentialPlacer,
+    "sa_placer": lambda args: SAPlacer(args),
+    "sequential_placer": lambda _: SequentialPlacer(),
 }
 
 
@@ -264,9 +265,18 @@ if __name__ == "__main__":
         type=str,
         required=False,
         dest="placer",
-        default="null_placer",
+        default="sequential_placer",
         choices=PLACER_CONVERSION.keys(),
         help="Placement strategy to use",
     )
-    opts = argparser.parse_args()
-    main(opts)
+    argparser.add_argument(
+        "-pnr",
+        "--pnr-args",
+        type=str,
+        required=False,
+        dest="pnr_args",
+        default="-n 1",
+        help="PnR tool arguments (only used when placer is sa_placer)",
+    )
+    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    main(opts, placer)

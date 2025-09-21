@@ -1,0 +1,1523 @@
+{
+  "pre_alloc_buffers": [
+    {
+      "node_id": 36,
+      "sizes_bytes": [
+        64
+      ],
+      "total_size_bytes": 64
+    },
+    {
+      "node_id": 26,
+      "sizes_bytes": [
+        64,
+        33800
+      ],
+      "total_size_bytes": 33864
+    },
+    {
+      "node_id": 14,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 13,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 18,
+      "sizes_bytes": [
+        64,
+        400
+      ],
+      "total_size_bytes": 464
+    },
+    {
+      "node_id": 38,
+      "sizes_bytes": [
+        64
+      ],
+      "total_size_bytes": 64
+    },
+    {
+      "node_id": 10,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 15,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 47,
+      "sizes_bytes": [
+        10240
+      ],
+      "total_size_bytes": 10240
+    },
+    {
+      "node_id": 20,
+      "sizes_bytes": [
+        38400,
+        64
+      ],
+      "total_size_bytes": 38464
+    },
+    {
+      "node_id": 19,
+      "sizes_bytes": [
+        64,
+        1152
+      ],
+      "total_size_bytes": 1216
+    },
+    {
+      "node_id": 41,
+      "sizes_bytes": [
+        9600,
+        64
+      ],
+      "total_size_bytes": 9664
+    },
+    {
+      "node_id": 45,
+      "sizes_bytes": [
+        64,
+        10240
+      ],
+      "total_size_bytes": 10304
+    },
+    {
+      "node_id": 27,
+      "sizes_bytes": [
+        37632,
+        64
+      ],
+      "total_size_bytes": 37696
+    },
+    {
+      "node_id": 25,
+      "sizes_bytes": [
+        4320,
+        64
+      ],
+      "total_size_bytes": 4384
+    },
+    {
+      "node_id": 12,
+      "sizes_bytes": [
+        76800,
+        409600
+      ],
+      "total_size_bytes": 486400
+    },
+    {
+      "node_id": 44,
+      "sizes_bytes": [
+        64
+      ],
+      "total_size_bytes": 64
+    },
+    {
+      "node_id": 42,
+      "sizes_bytes": [
+        64,
+        10240
+      ],
+      "total_size_bytes": 10304
+    },
+    {
+      "node_id": 46,
+      "sizes_bytes": [
+        10240
+      ],
+      "total_size_bytes": 10240
+    },
+    {
+      "node_id": 21,
+      "sizes_bytes": [
+        64,
+        30960
+      ],
+      "total_size_bytes": 31024
+    },
+    {
+      "node_id": 28,
+      "sizes_bytes": [
+        37632,
+        64
+      ],
+      "total_size_bytes": 37696
+    },
+    {
+      "node_id": 8,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 11,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 37,
+      "sizes_bytes": [
+        8640,
+        64
+      ],
+      "total_size_bytes": 8704
+    },
+    {
+      "node_id": 31,
+      "sizes_bytes": [
+        37632,
+        64
+      ],
+      "total_size_bytes": 37696
+    },
+    {
+      "node_id": 30,
+      "sizes_bytes": [
+        64,
+        62192
+      ],
+      "total_size_bytes": 62256
+    },
+    {
+      "node_id": 33,
+      "sizes_bytes": [
+        29904,
+        64
+      ],
+      "total_size_bytes": 29968
+    },
+    {
+      "node_id": 17,
+      "sizes_bytes": [
+        64,
+        3136
+      ],
+      "total_size_bytes": 3200
+    },
+    {
+      "node_id": 22,
+      "sizes_bytes": [
+        64,
+        5256
+      ],
+      "total_size_bytes": 5320
+    },
+    {
+      "node_id": 9,
+      "sizes_bytes": [
+        409600
+      ],
+      "total_size_bytes": 409600
+    },
+    {
+      "node_id": 24,
+      "sizes_bytes": [
+        53760,
+        64
+      ],
+      "total_size_bytes": 53824
+    },
+    {
+      "node_id": 29,
+      "sizes_bytes": [
+        3024,
+        64
+      ],
+      "total_size_bytes": 3088
+    },
+    {
+      "node_id": 43,
+      "sizes_bytes": [
+        8640,
+        64
+      ],
+      "total_size_bytes": 8704
+    },
+    {
+      "node_id": 39,
+      "sizes_bytes": [
+        64
+      ],
+      "total_size_bytes": 64
+    },
+    {
+      "node_id": 16,
+      "sizes_bytes": [
+        64,
+        4104
+      ],
+      "total_size_bytes": 4168
+    },
+    {
+      "node_id": 23,
+      "sizes_bytes": [
+        64,
+        21360
+      ],
+      "total_size_bytes": 21424
+    }
+  ],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "SHIM",
+      "col_x": 0,
+      "row_y": 0
+    },
+    {
+      "id": 1,
+      "type": "SHIM",
+      "col_x": 1,
+      "row_y": 0
+    },
+    {
+      "id": 2,
+      "type": "SHIM",
+      "col_x": 2,
+      "row_y": 0
+    },
+    {
+      "id": 3,
+      "type": "SHIM",
+      "col_x": 3,
+      "row_y": 0
+    },
+    {
+      "id": 4,
+      "type": "SHIM",
+      "col_x": 4,
+      "row_y": 0
+    },
+    {
+      "id": 5,
+      "type": "SHIM",
+      "col_x": 5,
+      "row_y": 0
+    },
+    {
+      "id": 6,
+      "type": "SHIM",
+      "col_x": 6,
+      "row_y": 0
+    },
+    {
+      "id": 7,
+      "type": "SHIM",
+      "col_x": 7,
+      "row_y": 0
+    },
+    {
+      "id": 8,
+      "type": "MEM",
+      "col_x": 0,
+      "row_y": 1
+    },
+    {
+      "id": 9,
+      "type": "MEM",
+      "col_x": 1,
+      "row_y": 1
+    },
+    {
+      "id": 10,
+      "type": "MEM",
+      "col_x": 2,
+      "row_y": 1
+    },
+    {
+      "id": 11,
+      "type": "MEM",
+      "col_x": 3,
+      "row_y": 1
+    },
+    {
+      "id": 12,
+      "type": "MEM",
+      "col_x": 4,
+      "row_y": 1
+    },
+    {
+      "id": 13,
+      "type": "MEM",
+      "col_x": 5,
+      "row_y": 1
+    },
+    {
+      "id": 14,
+      "type": "MEM",
+      "col_x": 6,
+      "row_y": 1
+    },
+    {
+      "id": 15,
+      "type": "MEM",
+      "col_x": 7,
+      "row_y": 1
+    },
+    {
+      "id": 16,
+      "type": "COMP",
+      "col_x": 0,
+      "row_y": 5
+    },
+    {
+      "id": 17,
+      "type": "COMP",
+      "col_x": 0,
+      "row_y": 4
+    },
+    {
+      "id": 18,
+      "type": "COMP",
+      "col_x": 0,
+      "row_y": 3
+    },
+    {
+      "id": 19,
+      "type": "COMP",
+      "col_x": 0,
+      "row_y": 2
+    },
+    {
+      "id": 20,
+      "type": "COMP",
+      "col_x": 1,
+      "row_y": 5
+    },
+    {
+      "id": 21,
+      "type": "COMP",
+      "col_x": 1,
+      "row_y": 4
+    },
+    {
+      "id": 22,
+      "type": "COMP",
+      "col_x": 1,
+      "row_y": 3
+    },
+    {
+      "id": 23,
+      "type": "COMP",
+      "col_x": 1,
+      "row_y": 2
+    },
+    {
+      "id": 24,
+      "type": "COMP",
+      "col_x": 2,
+      "row_y": 5
+    },
+    {
+      "id": 25,
+      "type": "COMP",
+      "col_x": 2,
+      "row_y": 4
+    },
+    {
+      "id": 26,
+      "type": "COMP",
+      "col_x": 2,
+      "row_y": 3
+    },
+    {
+      "id": 27,
+      "type": "COMP",
+      "col_x": 2,
+      "row_y": 2
+    },
+    {
+      "id": 28,
+      "type": "COMP",
+      "col_x": 3,
+      "row_y": 5
+    },
+    {
+      "id": 29,
+      "type": "COMP",
+      "col_x": 3,
+      "row_y": 4
+    },
+    {
+      "id": 30,
+      "type": "COMP",
+      "col_x": 3,
+      "row_y": 3
+    },
+    {
+      "id": 31,
+      "type": "COMP",
+      "col_x": 3,
+      "row_y": 2
+    },
+    {
+      "id": 32,
+      "type": "COMP",
+      "col_x": 4,
+      "row_y": 5
+    },
+    {
+      "id": 33,
+      "type": "COMP",
+      "col_x": 4,
+      "row_y": 4
+    },
+    {
+      "id": 34,
+      "type": "COMP",
+      "col_x": 4,
+      "row_y": 3
+    },
+    {
+      "id": 35,
+      "type": "COMP",
+      "col_x": 4,
+      "row_y": 2
+    },
+    {
+      "id": 36,
+      "type": "COMP",
+      "col_x": 5,
+      "row_y": 5
+    },
+    {
+      "id": 37,
+      "type": "COMP",
+      "col_x": 5,
+      "row_y": 4
+    },
+    {
+      "id": 38,
+      "type": "COMP",
+      "col_x": 5,
+      "row_y": 3
+    },
+    {
+      "id": 39,
+      "type": "COMP",
+      "col_x": 5,
+      "row_y": 2
+    },
+    {
+      "id": 40,
+      "type": "COMP",
+      "col_x": 6,
+      "row_y": 5
+    },
+    {
+      "id": 41,
+      "type": "COMP",
+      "col_x": 6,
+      "row_y": 4
+    },
+    {
+      "id": 42,
+      "type": "COMP",
+      "col_x": 6,
+      "row_y": 3
+    },
+    {
+      "id": 43,
+      "type": "COMP",
+      "col_x": 6,
+      "row_y": 2
+    },
+    {
+      "id": 44,
+      "type": "COMP",
+      "col_x": 7,
+      "row_y": 5
+    },
+    {
+      "id": 45,
+      "type": "COMP",
+      "col_x": 7,
+      "row_y": 4
+    },
+    {
+      "id": 46,
+      "type": "COMP",
+      "col_x": 7,
+      "row_y": 3
+    },
+    {
+      "id": 47,
+      "type": "COMP",
+      "col_x": 7,
+      "row_y": 2
+    }
+  ],
+  "nets": [
+    {
+      "net_id": 0,
+      "src_id": 4,
+      "dst_ids": [
+        8
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 76800
+    },
+    {
+      "net_id": 1,
+      "src_id": 8,
+      "dst_ids": [
+        32
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 2,
+      "src_id": 8,
+      "dst_ids": [
+        36
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 3,
+      "src_id": 5,
+      "dst_ids": [
+        9
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 76800
+    },
+    {
+      "net_id": 4,
+      "src_id": 9,
+      "dst_ids": [
+        34
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 5,
+      "src_id": 9,
+      "dst_ids": [
+        38
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 6,
+      "src_id": 6,
+      "dst_ids": [
+        10
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 76800
+    },
+    {
+      "net_id": 7,
+      "src_id": 10,
+      "dst_ids": [
+        40
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 8,
+      "src_id": 10,
+      "dst_ids": [
+        44
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 9,
+      "src_id": 7,
+      "dst_ids": [
+        11
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 76800
+    },
+    {
+      "net_id": 10,
+      "src_id": 11,
+      "dst_ids": [
+        35
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 11,
+      "src_id": 11,
+      "dst_ids": [
+        39
+      ],
+      "depths": [
+        1,
+        1
+      ],
+      "byte_size_per_depth": 19200
+    },
+    {
+      "net_id": 12,
+      "src_id": 0,
+      "dst_ids": [
+        19
+      ],
+      "depths": [
+        1,
+        5
+      ],
+      "byte_size_per_depth": 1792
+    },
+    {
+      "net_id": 13,
+      "src_id": 19,
+      "dst_ids": [
+        18
+      ],
+      "depths": [
+        5,
+        3
+      ],
+      "byte_size_per_depth": 1792
+    },
+    {
+      "net_id": 14,
+      "src_id": 18,
+      "dst_ids": [
+        17
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1792
+    },
+    {
+      "net_id": 15,
+      "src_id": 18,
+      "dst_ids": [
+        18
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 1792
+    },
+    {
+      "net_id": 16,
+      "src_id": 17,
+      "dst_ids": [
+        16
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1344
+    },
+    {
+      "net_id": 17,
+      "src_id": 17,
+      "dst_ids": [
+        17
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 7168
+    },
+    {
+      "net_id": 18,
+      "src_id": 17,
+      "dst_ids": [
+        17
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 3584
+    },
+    {
+      "net_id": 19,
+      "src_id": 16,
+      "dst_ids": [
+        22
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1344
+    },
+    {
+      "net_id": 20,
+      "src_id": 16,
+      "dst_ids": [
+        16
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 4032
+    },
+    {
+      "net_id": 21,
+      "src_id": 16,
+      "dst_ids": [
+        16
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 4032
+    },
+    {
+      "net_id": 22,
+      "src_id": 22,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 23,
+      "src_id": 22,
+      "dst_ids": [
+        22
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 4032
+    },
+    {
+      "net_id": 24,
+      "src_id": 22,
+      "dst_ids": [
+        22
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 2016
+    },
+    {
+      "net_id": 25,
+      "src_id": 23,
+      "dst_ids": [
+        21
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 26,
+      "src_id": 23,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 27,
+      "src_id": 23,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 28,
+      "src_id": 23,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 29,
+      "src_id": 23,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 30,
+      "src_id": 23,
+      "dst_ids": [
+        23
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 31,
+      "src_id": 21,
+      "dst_ids": [
+        26
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 32,
+      "src_id": 21,
+      "dst_ids": [
+        21
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 6720
+    },
+    {
+      "net_id": 33,
+      "src_id": 21,
+      "dst_ids": [
+        21
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 34,
+      "src_id": 26,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 35,
+      "src_id": 26,
+      "dst_ids": [
+        26
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 2800
+    },
+    {
+      "net_id": 36,
+      "src_id": 26,
+      "dst_ids": [
+        26
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 2800
+    },
+    {
+      "net_id": 37,
+      "src_id": 30,
+      "dst_ids": [
+        20
+      ],
+      "depths": [
+        1,
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 38,
+      "src_id": 30,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 39,
+      "src_id": 30,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 40,
+      "src_id": 30,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 41,
+      "src_id": 30,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        3
+      ],
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 42,
+      "src_id": 30,
+      "dst_ids": [
+        30
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 43,
+      "src_id": 33,
+      "dst_ids": [
+        32,
+        36,
+        13
+      ],
+      "depths": [
+        2,
+        2,
+        2,
+        6
+      ],
+      "byte_size_per_depth": 560
+    },
+    {
+      "net_id": 44,
+      "src_id": 13,
+      "dst_ids": [
+        38
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 560
+    },
+    {
+      "net_id": 45,
+      "src_id": 20,
+      "dst_ids": [
+        25
+      ],
+      "depths": [
+        4
+      ],
+      "byte_size_per_depth": 6720
+    },
+    {
+      "net_id": 46,
+      "src_id": 25,
+      "dst_ids": [
+        24
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 6720
+    },
+    {
+      "net_id": 47,
+      "src_id": 24,
+      "dst_ids": [
+        31,
+        10
+      ],
+      "depths": [
+        2,
+        2,
+        6
+      ],
+      "byte_size_per_depth": 1568
+    },
+    {
+      "net_id": 48,
+      "src_id": 10,
+      "dst_ids": [
+        27
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1568
+    },
+    {
+      "net_id": 49,
+      "src_id": 31,
+      "dst_ids": [
+        29
+      ],
+      "depths": [
+        4
+      ],
+      "byte_size_per_depth": 4704
+    },
+    {
+      "net_id": 50,
+      "src_id": 29,
+      "dst_ids": [
+        27
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 4704
+    },
+    {
+      "net_id": 51,
+      "src_id": 27,
+      "dst_ids": [
+        28
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 1568
+    },
+    {
+      "net_id": 52,
+      "src_id": 28,
+      "dst_ids": [
+        33
+      ],
+      "depths": [
+        4
+      ],
+      "byte_size_per_depth": 4704
+    },
+    {
+      "net_id": 53,
+      "src_id": 33,
+      "dst_ids": [
+        33
+      ],
+      "depths": [
+        1
+      ],
+      "byte_size_per_depth": 2352
+    },
+    {
+      "net_id": 54,
+      "src_id": 39,
+      "dst_ids": [
+        41
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 560
+    },
+    {
+      "net_id": 55,
+      "src_id": 36,
+      "dst_ids": [
+        37
+      ],
+      "depths": [
+        4
+      ],
+      "byte_size_per_depth": 6720
+    },
+    {
+      "net_id": 56,
+      "src_id": 37,
+      "dst_ids": [
+        34
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 57,
+      "src_id": 37,
+      "dst_ids": [
+        38
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 58,
+      "src_id": 38,
+      "dst_ids": [
+        40,
+        44,
+        15
+      ],
+      "depths": [
+        2,
+        2,
+        2,
+        6
+      ],
+      "byte_size_per_depth": 560
+    },
+    {
+      "net_id": 59,
+      "src_id": 15,
+      "dst_ids": [
+        39
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 560
+    },
+    {
+      "net_id": 60,
+      "src_id": 44,
+      "dst_ids": [
+        43
+      ],
+      "depths": [
+        4
+      ],
+      "byte_size_per_depth": 6720
+    },
+    {
+      "net_id": 61,
+      "src_id": 43,
+      "dst_ids": [
+        35
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 62,
+      "src_id": 43,
+      "dst_ids": [
+        39
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 63,
+      "src_id": 41,
+      "dst_ids": [
+        3
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 2560
+    },
+    {
+      "net_id": 64,
+      "src_id": 4,
+      "dst_ids": [
+        42,
+        45,
+        46,
+        47
+      ],
+      "depths": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "byte_size_per_depth": 2560
+    },
+    {
+      "net_id": 65,
+      "src_id": 42,
+      "dst_ids": [
+        14
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 16
+    },
+    {
+      "net_id": 66,
+      "src_id": 45,
+      "dst_ids": [
+        14
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 16
+    },
+    {
+      "net_id": 67,
+      "src_id": 46,
+      "dst_ids": [
+        14
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 16
+    },
+    {
+      "net_id": 68,
+      "src_id": 47,
+      "dst_ids": [
+        14
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 16
+    },
+    {
+      "net_id": 69,
+      "src_id": 14,
+      "dst_ids": [
+        7
+      ],
+      "depths": [
+        2
+      ],
+      "byte_size_per_depth": 2560
+    }
+  ],
+  "links": [
+    {
+      "src_net_ids": [
+        0
+      ],
+      "dst_net_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "src_net_ids": [
+        3
+      ],
+      "dst_net_ids": [
+        4,
+        5
+      ]
+    },
+    {
+      "src_net_ids": [
+        6
+      ],
+      "dst_net_ids": [
+        7,
+        8
+      ]
+    },
+    {
+      "src_net_ids": [
+        9
+      ],
+      "dst_net_ids": [
+        10,
+        11
+      ]
+    },
+    {
+      "src_net_ids": [
+        43
+      ],
+      "dst_net_ids": [
+        44
+      ]
+    },
+    {
+      "src_net_ids": [
+        47
+      ],
+      "dst_net_ids": [
+        48
+      ]
+    },
+    {
+      "src_net_ids": [
+        58
+      ],
+      "dst_net_ids": [
+        59
+      ]
+    },
+    {
+      "src_net_ids": [
+        65,
+        66,
+        67,
+        68
+      ],
+      "dst_net_ids": [
+        69
+      ]
+    }
+  ],
+  "cascades": [
+    {
+      "src_node_id": 32,
+      "dst_node_id": 36
+    },
+    {
+      "src_node_id": 34,
+      "dst_node_id": 38
+    },
+    {
+      "src_node_id": 40,
+      "dst_node_id": 44
+    },
+    {
+      "src_node_id": 35,
+      "dst_node_id": 39
+    }
+  ],
+  "pre_alloc_intra_nets": [
+    {
+      "net_id": 26,
+      "node_id": 19,
+      "depth": 3,
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 27,
+      "node_id": 19,
+      "depth": 1,
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 28,
+      "node_id": 19,
+      "depth": 2,
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 29,
+      "node_id": 19,
+      "depth": 3,
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 30,
+      "node_id": 19,
+      "depth": 1,
+      "byte_size_per_depth": 3360
+    },
+    {
+      "net_id": 38,
+      "node_id": 29,
+      "depth": 3,
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 39,
+      "node_id": 29,
+      "depth": 1,
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 40,
+      "node_id": 29,
+      "depth": 2,
+      "byte_size_per_depth": 1120
+    },
+    {
+      "net_id": 41,
+      "node_id": 29,
+      "depth": 3,
+      "byte_size_per_depth": 2576
+    },
+    {
+      "net_id": 42,
+      "node_id": 29,
+      "depth": 1,
+      "byte_size_per_depth": 2576
+    }
+  ]
+}

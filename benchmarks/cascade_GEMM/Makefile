@@ -55,6 +55,9 @@ insts_target?=build/insts_${target_suffix}.bin
 runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
 
+build: ${mlir_target} build/mm_${m}x${k}x${n}.o
+aiecc: ${xclbin_target}
+
 .PHONY: all
 all: ${xclbin_target}
 

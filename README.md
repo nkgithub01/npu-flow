@@ -86,7 +86,18 @@ source mlir-aie/ironenv/bin/activate
 export NPU_PNR_BIN_DIR=$PWD/npu-pnr/build/apps
 ```
 
-### Build Placed IRON
+### Build Placed IRON with MLIR-AIE Routing
+```bash
+# Build benchmarks with standard MLIR-AIE routing
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+--build --placed-iron \
+--output-dir=./build/placed --verbose
+
+# Parse results and generate CSV table with standard results
+python3 utils/parse_results.py --variant=std \
+--input-dir=./build/placed --output-csv=placed_std_results.csv
+```
+### Build Placed IRON and Re-Place-and-Route with PnR
 
 ```bash
 # Build benchmarks and run PnR (set -n <num_sa_iters> to determine # SA iters to run; 0 means doing only routing on the initial placement)
@@ -94,15 +105,9 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
 --build --placed-iron \
 --pnr --pnr-args="-n 0" \
 --output-dir=./build/placed --verbose
-
-# Parse results and generate CSV table for both std (standard flow) and pnr (PnR flow) variants
-python3 utils/parse_results.py --variant=std \
---input-dir=./build/placed --output-csv=placed_std_results.csv
-python3 utils/parse_results.py --variant=pnr \
---input-dir=./build/placed --output-csv=placed_pnr_results.csv
 ```
 
-### Build Unplaced IRON w/ Sequential Placer
+### Build Unplaced IRON w/ MLIR-AIE Sequential Placer and Routing 
 
 ```bash
 # Build benchmarks and run PnR
@@ -110,28 +115,27 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
 --build --no-placed-iron --iron-placer="sequential_placer" \
 --pnr --pnr-args="-n 0" \
 --output-dir=./build/unplaced_seq --verbose
-
-# Parse results and generate CSV table
-python3 utils/parse_results.py --variant=std \
---input-dir=./build/unplaced_seq --output-csv=unplaced_seq_std_results.csv
-python3 utils/parse_results.py --variant=pnr \
---input-dir=./build/unplaced_seq --output-csv=unplaced_seq_pnr_results.csv
 ```
 
-### Build Unplaced IRON w/ Null Placer
+### Build Unplaced IRON w/ PnR SA Placer and PnR Routing
 
 ```bash
 # Build benchmarks and run PnR
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build --no-placed-iron --iron-placer="null_placer" \
+--build --no-placed-iron --iron-placer="sa_placer" \
 --pnr --pnr-args="-n 0" \
---output-dir=./build/unplaced_null --verbose
+--output-dir=./build/unplaced_sa --verbose
+```
 
-# Parse results and generate CSV table
-python3 utils/parse_results.py --variant=std \
---input-dir=./build/unplaced_null --output-csv=unplaced_null_std_results.csv
+### Parse Results and Generate CSV Table
+```bash
+# If PnR placement and routing was used
 python3 utils/parse_results.py --variant=pnr \
---input-dir=./build/unplaced_null --output-csv=unplaced_null_pnr_results.csv
+--input-dir=path/to/build/folder --output-csv=path/to/csv
+
+# If MLIR-AIE standard routing was used
+python3 utils/parse_results.py --variant=std \
+--input-dir=path/to/build/folder --output-csv=path/to/csv
 ```
 
 ## Run Benchmarks

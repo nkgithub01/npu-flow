@@ -1,6 +1,7 @@
 name: General Matrix Multiplication (GEMM)
 clean: make clean
-build: make
+build: make build
+compile: make aiecc
 run: make run
 tasks:
   - name: GEMM_R6_C8

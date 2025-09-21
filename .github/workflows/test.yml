@@ -61,44 +61,47 @@ jobs:
           echo NPU_PNR_BIN_DIR=$(realpath ./apps) >> $GITHUB_ENV
           make test
 
-      - name: Build Placed-IRON Benchmarks
+      - name: Build Placed-IRON Benchmarks Standard Flow
+        run: |
+          source ./mlir-aie/ironenv/bin/activate
+          mkdir -p build
+          python3 utils/build_benchmarks.py benchmarks/tasklist.yml --benchmark-root=benchmarks \
+            --build --placed-iron \
+            --output-dir=./build/placed --verbose
+          python3 utils/parse_results.py --variant=std \
+            --input-dir=./build/placed --output-csv=placed_std_results.csv
+
+      - name: Build Placed-IRON Benchmarks PnR Flow
         run: |
           source ./mlir-aie/ironenv/bin/activate
           mkdir -p build
           python3 utils/build_benchmarks.py benchmarks/tasklist.yml --benchmark-root=benchmarks \
             --build --placed-iron \
             --pnr --pnr-args="-n 0" \
-            --output-dir=./build/placed --verbose
-          python3 utils/parse_results.py --variant=std \
-            --input-dir=./build/placed --output-csv=placed_std_results.csv
+            --output-dir=./build/placed_pnr_replace --verbose
           python3 utils/parse_results.py --variant=pnr \
-            --input-dir=./build/placed --output-csv=placed_pnr_results.csv
+            --input-dir=./build/placed_pnr_replace --output-csv=placed_pnr_replace_results.csv
 
-      - name: Build Unplaced-IRON (w/ Sequential Placer) Benchmarks
+      - name: Build Unplaced-IRON (w/ Sequential Placer) Benchmarks Standard Flow
         run: |
           source ./mlir-aie/ironenv/bin/activate
           mkdir -p build
           python3 utils/build_benchmarks.py benchmarks/tasklist.yml --benchmark-root=benchmarks \
             --build --no-placed-iron --iron-placer="sequential_placer" \
-            --pnr --pnr-args="-n 0" \
             --output-dir=./build/unplaced_seq --verbose
           python3 utils/parse_results.py --variant=std \
             --input-dir=./build/unplaced_seq --output-csv=unplaced_seq_std_results.csv
-          python3 utils/parse_results.py --variant=pnr \
-            --input-dir=./build/unplaced_seq --output-csv=unplaced_seq_pnr_results.csv
 
-      - name: Build Unplaced-IRON (w/ Null Placer) Benchmarks
+      - name: Build Unplaced-IRON (w/ SA Placer) Benchmarks
         run: |
           source ./mlir-aie/ironenv/bin/activate
           mkdir -p build
           python3 utils/build_benchmarks.py benchmarks/tasklist.yml --benchmark-root=benchmarks \
-            --build --no-placed-iron --iron-placer="null_placer" \
+            --build --no-placed-iron --iron-placer="sa_placer" \
             --pnr --pnr-args="-n 0" \
-            --output-dir=./build/unplaced_null --verbose
-          python3 utils/parse_results.py --variant=std \
-            --input-dir=./build/unplaced_null --output-csv=unplaced_null_std_results.csv
+            --output-dir=./build/unplaced_sa --verbose
           python3 utils/parse_results.py --variant=pnr \
-            --input-dir=./build/unplaced_null --output-csv=unplaced_null_pnr_results.csv
+            --input-dir=./build/unplaced_sa --output-csv=unplaced_sa_pnr_results.csv
 
       - name: Store Build Artifact
         if: always()
@@ -115,9 +118,7 @@ jobs:
           name: result-tables
           path: |
             placed_std_results.csv
-            placed_pnr_results.csv
+            placed_pnr_replace_results.csv
             unplaced_seq_std_results.csv
-            unplaced_seq_pnr_results.csv
-            unplaced_null_std_results.csv
-            unplaced_null_pnr_results.csv
+            unplaced_sa_pnr_results.csv
           if-no-files-found: 'error'

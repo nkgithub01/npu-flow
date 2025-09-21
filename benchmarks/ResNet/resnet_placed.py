@@ -381,7 +381,7 @@ def resnet_conv_x(opts):
                     act1_fifo_names[0],
                     shims[0],
                     [cores[0][0], mems[0]],
-                    [2, 2, 4],
+                    [2, 2, 2],
                     laye1_act_sizes[0],
                 )
             )

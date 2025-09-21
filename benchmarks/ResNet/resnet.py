@@ -9,13 +9,13 @@ import sys
 import argparse
 
 from aie.iron import GlobalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer, NullPlacer
+from aie.iron.placers import SequentialPlacer, SAPlacer
 from aie.iron.device import NPU1Col3, NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.util import np_ndarray_type_get_shape
 from aie.helpers.taplib import TensorAccessPattern
 
-def main(opts):
+def main(opts, placer):
     if opts.dev == "npu":
         dev = NPU1Col3()
     elif opts.dev == "npu2":
@@ -592,16 +592,15 @@ def main(opts):
         rt.drain(outOFL2L3.cons(), outputToL3, placement=Tile(1, 0), wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    placer_func = PLACER_CONVERSION[opts.placer]
-    module = Program(dev, rt).resolve_program(placer_func())
+    module = Program(dev, rt).resolve_program(placer)
 
     # Print the generated MLIR
     print(module)
 
 
 PLACER_CONVERSION = {
-    "null_placer": NullPlacer,
-    "sequential_placer": SequentialPlacer,
+    "sa_placer": lambda args: SAPlacer(args),
+    "sequential_placer": lambda _: SequentialPlacer(),
 }
 
 if __name__ == "__main__":
@@ -621,9 +620,19 @@ if __name__ == "__main__":
         type=str,
         required=False,
         dest="placer",
-        default="null_placer",
+        default="sequential_placer",
         choices=PLACER_CONVERSION.keys(),
         help="Placement strategy to use",
     )
+    argparser.add_argument(
+        "-pnr",
+        "--pnr-args",
+        type=str,
+        required=False,
+        dest="pnr_args",
+        default="-n 1",
+        help="PnR tool arguments (only used when placer is sa_placer)",
+    )
     opts = argparser.parse_args()
-    main(opts)
+    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    main(opts, placer)

@@ -42,6 +42,13 @@ ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
 endif
 
+ifeq (${placer}, sa_placer)
+aieargs+=--pnr-args "${pnr_args}"
+endif
+
+build: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o
+aiecc: ${xclbin_target}
+
 all: ${xclbin_target}
 
 ${mlir_target}: ${srcdir}/${aie_py_src}

@@ -10,13 +10,13 @@ import sys
 import argparse
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer, NullPlacer
+from aie.iron.placers import SequentialPlacer, SAPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
 # Edge Detection using AIE array
-def edge_detect(opts):
+def edge_detect(opts, placer):
 
     image_width = opts.image_width
     image_height = opts.image_height
@@ -74,7 +74,7 @@ def edge_detect(opts):
     inOF_L2L1s = []
     for j in range(num_compute_flow_column):
         inOF_L3L2s.append(ObjectFifo(line_bytes_ty, name=f"inOF_L3L2_{j}"))
-        inOF_L2L1s.append(inOF_L3L2s[-1].cons(7).forward(depth=7, name=f"inOF_L2L1_{j}"))
+        inOF_L2L1s.append(inOF_L3L2s[-1].cons(7).forward(depth=2, name=f"inOF_L2L1_{j}"))
 
     # Output
     outOF_L1L2s = []
@@ -267,24 +267,22 @@ def edge_detect(opts):
     with rt.sequence(i_tensor_ty, o_tensor_ty) as (I, O):
         rt.start(*workers)
         for col_idx in range(num_compute_flow_column):
-            shim = Tile(col_idx, 0)
             tap = TensorAccessPattern(
                 tensor_dims=[1, 1, 1, tensor_size*num_compute_flow_column], # unused dims are set to 1
                 sizes=[1, 1, 1, tensor_size*num_compute_flow_column],
                 offset=col_idx * tensor_size,
                 strides=[1, 1, 1, 1] # strides for the tensor, at least 1
             )
-            rt.fill(inOF_L3L2s[col_idx].prod(), I, tap=tap, placement=shim)
-            rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True, placement=shim)
+            rt.fill(inOF_L3L2s[col_idx].prod(), I, tap=tap)
+            rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    placer_func = PLACER_CONVERSION[opts.placer]
-    return Program(NPU2(), rt).resolve_program(placer_func())
+    return Program(NPU2(), rt).resolve_program(placer)
 
 
 PLACER_CONVERSION = {
-    "null_placer": NullPlacer,
-    "sequential_placer": SequentialPlacer,
+    "sa_placer": lambda args: SAPlacer(args),
+    "sequential_placer": lambda _: SequentialPlacer(),
 }
 
 
@@ -323,11 +321,20 @@ if __name__ == "__main__":
         type=str,
         required=False,
         dest="placer",
-        default="null_placer",
+        default="sequential_placer",
         choices=PLACER_CONVERSION.keys(),
         help="Placement strategy to use",
     )
-    
+    p.add_argument(
+        "-pnr",
+        "--pnr-args",
+        type=str,
+        required=False,
+        dest="pnr_args",
+        default="-n 1",
+        help="PnR tool arguments (only used when placer is sa_placer)",
+    )
     opts = p.parse_args()
-    module = edge_detect(opts)
+    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    module = edge_detect(opts, placer)
     print(module)

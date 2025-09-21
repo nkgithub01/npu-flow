@@ -2,6 +2,7 @@ import yaml
 import os
 import shutil
 import argparse
+import json
 from multiprocessing import Pool
 from subprocess import Popen, PIPE, TimeoutExpired
 from dataclasses import dataclass
@@ -72,7 +73,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
 
 
 class Benchmark:
-    def __init__(self, config_path, use_placed, iron_placer):
+    def __init__(self, config_path, use_placed, iron_placer, pnr_args=None):
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -81,14 +82,17 @@ class Benchmark:
         self.name = config.get("name", "undefined")
         self.clean_cmd = config.get("clean", None)
         self.build_cmd = config.get("build", None)
+        self.compile_cmd = config.get("compile", None)
         self.run_cmd = config.get("run", None)
         self.tasks = config.get("tasks", [])
         self.last_built_task = None
         self.use_placed = use_placed
         self.iron_placer = iron_placer
+        self.pnr_args = pnr_args if pnr_args is not None else "-n 1"
 
         assert self.clean_cmd, "No clean command specified"
         assert self.build_cmd, "No build command specified"
+        assert self.compile_cmd, "No compile command specified"
         assert self.run_cmd, "No run command specified"
 
     def __get_local_file(self, filename):
@@ -109,6 +113,8 @@ class Benchmark:
                     env_vars["use_placed"] = "1"
                 else:
                     env_vars["use_placed"] = "0"
+                    if self.iron_placer == "sa_placer":
+                        env_vars["pnr_args"] = self.pnr_args
                     env_vars["placer"] = self.iron_placer
                 output_mlir = task.get("output", None)
                 assert output_mlir, f"No output MLIR specified for task {task_name}"
@@ -121,25 +127,32 @@ class Benchmark:
 
     def build_task(self, task_name):
         param_envs, output_mlir = self.__get_task(task_name)
-
+        if param_envs.get("placer") == "sa_placer":
+            pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
+            assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
         build = subprocess_run_cmd(
             cmd=self.build_cmd, cwd=self.root_dir, env=param_envs
         )
         build.check()
 
         output_mlir = self.__get_local_file(output_mlir)
-        extract_fifo_cmd = f"aie-opt {output_mlir} --aie-extract-fifo"
-        extract_fifo = subprocess_run_cmd(cmd=extract_fifo_cmd, cwd=self.root_dir)
-        extract_fifo.check()
-
+        if param_envs.get("placer") != "sa_placer":
+            route_summary = None
+            placed_netlist = None
+            extract_fifo_cmd = f"aie-opt {output_mlir} --aie-extract-fifo --output-netlist-file=build/netlist.json"
+            extract_fifo = subprocess_run_cmd(cmd=extract_fifo_cmd, cwd=self.root_dir)
+            extract_fifo.check()
+        else:
+            route_summary = self.__get_local_file("build/pnr_route_summary.json")
+            placed_netlist = self.__get_local_file("build/pnr_placed_netlist.json")
         self.last_built_task = task_name
-
         return (
             read_text_file(output_mlir),
-            read_text_file(self.__get_local_file("netlist.json")),
+            read_text_file(self.__get_local_file("build/netlist.json")),
+            None if placed_netlist is None else read_text_file(placed_netlist),
+            None if route_summary is None else read_text_file(route_summary),
             # TODO: merge pnr format file and route summary file
-            read_text_file(self.__get_local_file("./build/route_summary.json")),
-            f"{build}\n{extract_fifo}",  # for debugging
+            f"{build}",  # for debugging
         )
 
     def place_and_route_task(
@@ -157,11 +170,11 @@ class Benchmark:
             imported_route_summary_file is not None
         ):
             shutil.copyfile(
-                imported_pnr_file, os.path.join(self.root_dir, "placed.json")
+                imported_pnr_file, os.path.join(self.root_dir, "pnr_placed_netlist.json")
             )
             shutil.copyfile(
                 imported_route_summary_file,
-                os.path.join(self.root_dir, "route_summary.json"),
+                os.path.join(self.root_dir, "pnr_route_summary.json"),
             )
             pnr = (
                 f"Imported PnR results:\n"
@@ -172,9 +185,9 @@ class Benchmark:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
             assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
             pnr_cmd = str(
-                f"{pnr_bin} netlist.json "
-                "--output=placed.json "
-                "--route-summary=route_summary.json"
+                f"{pnr_bin} build/netlist.json "
+                "--output=build/pnr_placed_netlist.json "
+                "--route-summary=build/pnr_route_summary.json"
             )
             if pnr_args is not None:
                 pnr_cmd += f" {pnr_args}"
@@ -182,30 +195,44 @@ class Benchmark:
             pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
             pnr.check()
 
-        rename_cmd = "mv -f placed.json netlist.json"
-        subprocess_run_cmd(cmd=rename_cmd, cwd=self.root_dir).check()
-
-        place_fifo_cmd = f"aie-opt {output_mlir} --aie-place-tiles"
+        place_fifo_cmd = f"aie-opt {output_mlir} --aie-place-tiles --input-netlist-file=build/pnr_placed_netlist.json"
         place_fifo = subprocess_run_cmd(cmd=place_fifo_cmd, cwd=self.root_dir)
         place_fifo.check()
         write_text_file(output_mlir, place_fifo.stdout)
 
         return (
             place_fifo.stdout,
-            read_text_file(self.__get_local_file("netlist.json")),
+            read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")),
             # Use PnR generated route summary
             # TODO: consider switching to standard flow generated route summary
-            read_text_file(self.__get_local_file("route_summary.json")),
+            read_text_file(self.__get_local_file("build/pnr_route_summary.json")),
             str(pnr),
         )
 
-    def run_task(self, task_name, use_pnr_routing):
+    def compile_task(self, task_name, use_pnr_routing):
         assert self.last_built_task == task_name, (
             f"Task {task_name} has not been built yet. "
             f"Current built task: {self.last_built_task}"
         )
         param_envs, _ = self.__get_task(task_name)
         param_envs["aiecc_extra_args"] = "--use-pnr-routing" if use_pnr_routing else ""
+        result = subprocess_run_cmd(cmd=self.compile_cmd, cwd=self.root_dir, env=param_envs)
+        result.check()
+
+        return (
+            result.stdout,
+            result.stderr,
+            read_text_file(self.__get_local_file("build/post_compile_routing_summary.json")),
+            read_text_file(self.__get_local_file("build/input_physical.mlir")),
+            str(result)
+        )
+
+    def run_task(self, task_name):
+        assert self.last_built_task == task_name, (
+            f"Task {task_name} has not been built yet. "
+            f"Current built task: {self.last_built_task}"
+        )
+        param_envs, _ = self.__get_task(task_name)
         result = subprocess_run_cmd(cmd=self.run_cmd, cwd=self.root_dir, env=param_envs)
         result.check()
         return result.stdout, result.stderr, str(result)
@@ -232,13 +259,45 @@ def main_routine(
     pnr_after_build,
     pnr_args,
     imported_pnr_result_dir,
-    run_after_build,
+    aiecc_compile,
+    run_after_compile,
     hook_script,
     output_dir,
     verbose,
 ):
     def log(msg):
         print(f"[{benchmark_name}/{task_name}] {msg}", flush=True)
+
+    # If PnR was run, compare PnR's routing with compiled physical routing
+    def load_json(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+
+    # TODO: make buffer reporting consistent between PnR and MLIR
+    # Current workaround:
+    # - Remove "sizes_bytes" from each buffer object
+    # - Drop shim buffers (row_y == 0), since MLIR does not allocate them
+    def normalize_buffers(buffers):
+        return [
+            {k: v for k, v in buf.items() if k != "sizes_bytes"}
+            for buf in buffers
+            if buf.get("row_y", None) != 0
+        ]
+
+    #TODO: make comparison fail a ValueError failure. For now just print difference.
+    def compare_unordered_list(list1, list2, label):
+        set1 = {json.dumps(x, sort_keys=True) for x in list1}
+        set2 = {json.dumps(x, sort_keys=True) for x in list2}
+
+        if set1 != set2:
+            missing_in_2 = set1 - set2
+            missing_in_1 = set2 - set1
+            log(
+                f"{label} comparison failed!\n"
+                f"Only in PnR: {[json.loads(x) for x in missing_in_2]}\n"
+                f"Only in AIECC: {[json.loads(x) for x in missing_in_1]}"
+            )
+        return True
 
     output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
     os.makedirs(output_dir, exist_ok=True)
@@ -253,7 +312,7 @@ def main_routine(
     assert os.path.exists(config_path)
 
     benchmark = Benchmark(
-        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer
+        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer, pnr_args=pnr_args
     )
 
     log("Cleaning ...")
@@ -261,7 +320,9 @@ def main_routine(
 
     if build:
         log("Building ...")
-        mlir, netlist, std_route, build_log = benchmark.build_task(task_name)
+        if not use_placed and iron_placer == "sa_placer":
+            log("Placing and routing ...")
+        mlir, netlist, early_placed_netlist, early_route_summary, build_log = benchmark.build_task(task_name)
 
         write_text_file(
             os.path.join(output_dir, f"{task_name}.build.mlir"),
@@ -274,16 +335,24 @@ def main_routine(
         )
 
         write_text_file(
-            os.path.join(output_dir, f"{task_name}.route_summary.build.json"),
-            std_route,
-        )
-
-        write_text_file(
             os.path.join(output_dir, f"{task_name}.build.log"),
             build_log,
         )
+        # sa_placer returns placed netlist and route summary during build.
+        # these are named .pnr. to be consistent with running pnr stage
+        # since it runs pnr as part of the build
+        if early_placed_netlist is not None:
+            write_text_file(
+                os.path.join(output_dir, f"{task_name}.placed_netlist.pnr.json"),
+                early_placed_netlist,
+            )
+        if early_route_summary is not None:
+            write_text_file(
+                os.path.join(output_dir, f"{task_name}.route_summary.pnr.json"),
+                early_route_summary,
+            )
 
-    if pnr_after_build:
+    if pnr_after_build and iron_placer != "sa_placer":
         if imported_dir is not None:
             imported_pnr_file = os.path.join(imported_dir, f"{task_name}.pnr.json")
             imported_route_summary_file = os.path.join(
@@ -314,7 +383,7 @@ def main_routine(
         )
 
         write_text_file(
-            os.path.join(output_dir, f"{task_name}.pnr.json"),
+            os.path.join(output_dir, f"{task_name}.placed_netlist.pnr.json"),
             pnr_netlist,
         )
 
@@ -328,9 +397,67 @@ def main_routine(
             pnr_log,
         )
 
-    if run_after_build:
+    if aiecc_compile:
+        log("Compiling binaries ...")
+        use_pnr_routing = pnr_after_build
+        if not use_placed and iron_placer == "sa_placer":
+            use_pnr_routing = True
+        aiecc_stdout, aiecc_stderr, aiecc_route, input_physical, aiecc_log = benchmark.compile_task(task_name, use_pnr_routing)
+
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.stdout.compile.log"),
+            aiecc_stdout,
+        )
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.stderr.compile.log"),
+            aiecc_stderr,
+        )
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json"),
+            aiecc_route,
+        )
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.compile.log"),
+            aiecc_log,
+        )
+        write_text_file(
+            os.path.join(output_dir, f"{task_name}.input_physical.compile.mlir"),
+            input_physical,
+        )
+
+    if pnr_after_build:
+        log("Verifying PnR routing against physical compiled routing ...")
+        pnr_route_summary_path = os.path.join(output_dir, f"{task_name}.route_summary.pnr.json")
+        aiecc_route_summary_path = os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json")
+        if os.path.exists(pnr_route_summary_path):
+            pnr_route_summary = load_json(pnr_route_summary_path)
+        else:
+            raise ValueError(f"PnR route summary file {pnr_route_summary_path} does not exist")
+        if os.path.exists(aiecc_route_summary_path):
+            aiecc_route_summary = load_json(aiecc_route_summary_path)
+        else:
+            raise ValueError(f"AIECC route summary file {aiecc_route_summary_path} does not exist")
+        
+        # Compare buffers (ignoring individual size reporting)
+        pnr_no_size_bufs = normalize_buffers(pnr_route_summary.get("buffers", []))
+        aiecc_no_size_bufs = normalize_buffers(aiecc_route_summary.get("buffers", []))
+        compare_unordered_list(pnr_no_size_bufs, aiecc_no_size_bufs, "Buffer")
+        
+        # Compare cct_routes
+        pnr_cct = pnr_route_summary.get("cct_routes", [])
+        aiecc_cct = aiecc_route_summary.get("cct_routes", [])
+        compare_unordered_list(pnr_cct, aiecc_cct, "CCT route")
+
+        # Compare nbr_routes
+        pnr_nbr = pnr_route_summary.get("nbr_routes", [])
+        aiecc_nbr = aiecc_route_summary.get("nbr_routes", [])
+        compare_unordered_list(pnr_nbr, aiecc_nbr, "NBR route")
+
+        log("PnR routing compiled successfully ...")
+
+    if run_after_compile:
         log("Running ...")
-        run_stdout, run_stderr, run_log = benchmark.run_task(task_name, pnr_after_build)
+        run_stdout, run_stderr, run_log = benchmark.run_task(task_name)
         if verbose:
             log(f"Run stdout: {run_stdout}")
             log(f"Run stderr: {run_stderr}")
@@ -371,7 +498,6 @@ def main_routine(
             os.path.join(output_dir, f"{task_name}.hook.log"),
             exec_log,
         )
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Build and optionally run benchmarks")
@@ -420,7 +546,7 @@ if __name__ == "__main__":
         "--iron-placer",
         type=str,
         default="sequential_placer",
-        choices=["sequential_placer", "null_placer"],
+        choices=["sequential_placer", "sa_placer"],
         help="Placer to use for the benchmark (default: sequential_placer)",
         required=False,
     )
@@ -450,10 +576,17 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--compile",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Compile binaries and instructions using aiecc.py (default: True)",
+        required=False,
+    )
+    parser.add_argument(
         "--run",
         action="store_true",
         default=False,
-        help="Run the benchmark after the build/PnR stage (default: False)",
+        help="Run the benchmark host program (default: False)",
         required=False,
     )
     parser.add_argument(
@@ -491,8 +624,10 @@ if __name__ == "__main__":
 
     if args.clean_all:
         args.build = False
-        args.run = False
         args.pnr = False
+        args.compile = False
+        args.run = False
+        
 
     if args.tasklists:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -511,7 +646,8 @@ if __name__ == "__main__":
                         pnr_after_build=args.pnr,
                         pnr_args=args.pnr_args,
                         imported_pnr_result_dir=args.import_pnr_results,
-                        run_after_build=args.run,
+                        aiecc_compile=args.compile,
+                        run_after_compile=args.run,
                         hook_script=args.hook,
                         output_dir=args.output_dir,
                         verbose=args.verbose,

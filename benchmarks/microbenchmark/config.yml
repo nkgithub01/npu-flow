@@ -1,6 +1,7 @@
 name: Microbenchmark Suite
 clean: make clean
-build: make
+build: make build
+compile: make aiecc
 run: make run
 tasks:
   - name: 2d_mesh_R3_C1

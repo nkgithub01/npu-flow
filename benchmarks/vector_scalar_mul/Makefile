@@ -28,6 +28,9 @@ WARMUP_ITERATION := 50
 
 runargs+=--iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 
+build: build/aie_${data_size}.mlir build/scale.o
+aiecc: build/final_${data_size}.xclbin
+
 all: build/final_${data_size}.xclbin 
 
 build/%.o: ${AIE_KERNELS_DIR}/%.cc
