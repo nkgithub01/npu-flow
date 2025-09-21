@@ -8,10 +8,11 @@
 import numpy as np
 import sys
 import argparse
+import random
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer, SAPlacer
-from aie.iron.device import NPU2, Tile
+from aie.iron.device import NPU2
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
@@ -261,7 +262,7 @@ def edge_detect(opts, placer):
                 ],
             )
         )
-
+    random.shuffle(workers)
     # Runtime operations to move data to/from the AIE-array
     rt = Runtime()
     with rt.sequence(i_tensor_ty, o_tensor_ty) as (I, O):

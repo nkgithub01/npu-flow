@@ -3,6 +3,7 @@
 
 import argparse
 import numpy as np
+import random
 
 from aie.iron import Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer, NullPlacer
@@ -329,7 +330,7 @@ def my_matmul(
                     placement=Tile(tile_col, tile_row),
                 )
             )
-
+    random.shuffle(workers)
     # We are limited in the number of BDs. After synchronizing, we can reuse BDs.
     # We only transfer 6 rows of tiles at once before starting a new transfer block.
     # tb = transfer block; block of transfers before sync call

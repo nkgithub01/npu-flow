@@ -1,6 +1,7 @@
 import json
 import argparse
 import numpy as np
+import random
 
 from aie.iron import LocalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer, SAPlacer
@@ -187,7 +188,7 @@ def microbenchmark(
                 [zero_i32, accumulate_i32, len(in_items), len(out_items), *in_items, *out_items],
             )
         )
-
+    random.shuffle(workers)
     # Runtime operations to move data to/from the AIE-array
     rt = Runtime()
     with rt.sequence(

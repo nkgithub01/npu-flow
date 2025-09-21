@@ -7,6 +7,7 @@
 import numpy as np
 import sys
 import argparse
+import random
 
 from aie.iron import GlobalBuffer, Kernel, ObjectFifo, Program, Runtime, Worker
 from aie.iron.placers import SequentialPlacer, SAPlacer
@@ -527,6 +528,7 @@ def main(opts, placer):
             placement=cores[i][3],
         )
         workers.append(w)
+    random.shuffle(workers)
 
     # Runtime operations to move data to/from the AIE-array
     rt = Runtime()
