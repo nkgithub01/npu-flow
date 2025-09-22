@@ -397,7 +397,7 @@ def resnet_conv_x(opts):
                             act1_fifo_names[i],
                             cores[i - 1][2],
                             [cores[i][0], mems[i - 1]],
-                            [2, 2, 4],
+                            [2, 2, 2],
                             laye1_act_sizes[i],
                         )
                     )
@@ -417,7 +417,7 @@ def resnet_conv_x(opts):
                             act1_fifo_names[i],
                             cores[i - 1][2],
                             [cores[i][0], mems[i]],
-                            [2, 2, 4],
+                            [2, 2, 2],
                             laye1_act_sizes[i],
                         )
                     )

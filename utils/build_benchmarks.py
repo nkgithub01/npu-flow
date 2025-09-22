@@ -285,11 +285,27 @@ def main_routine(
             for buf in buffers
             if buf.get("row_y", None) != 0
         ]
-
+    def normalize_cct_routes(entry):
+        return {
+            "src": entry["src"],
+            # sort dsts so order doesn't matter
+            "dsts": sorted(entry["dsts"], key=lambda d: (d["col_x"], d["row_y"])),
+            # reorder intermediates to match sorted dsts
+            "intermediates": [
+                path for _, path in sorted(
+                    zip(entry["dsts"], entry["intermediates"]),
+                    key=lambda p: (p[0]["col_x"], p[0]["row_y"])
+                )
+            ],
+        }
     #TODO: make comparison fail a ValueError failure. For now just print difference.
     def compare_unordered_list(list1, list2, label):
-        set1 = {json.dumps(x, sort_keys=True) for x in list1}
-        set2 = {json.dumps(x, sort_keys=True) for x in list2}
+        if label == "CCT route":
+            set1 = {json.dumps(normalize_cct_routes(x), sort_keys=True) for x in list1}
+            set2 = {json.dumps(normalize_cct_routes(x), sort_keys=True) for x in list2}
+        else:
+            set1 = {json.dumps(x, sort_keys=True) for x in list1}
+            set2 = {json.dumps(x, sort_keys=True) for x in list2}
 
         if set1 != set2:
             missing_in_2 = set1 - set2
