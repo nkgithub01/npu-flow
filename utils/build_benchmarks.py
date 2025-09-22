@@ -156,7 +156,7 @@ class Benchmark:
         )
 
     def place_and_route_task(
-        self, task_name, pnr_args, imported_pnr_file, imported_route_summary_file
+        self, task_name, pnr_args, imported_pnr_files
     ):
         _, output_mlir = self.__get_task(task_name)
         output_mlir = self.__get_local_file(output_mlir)
@@ -166,20 +166,22 @@ class Benchmark:
             f"Current built task: {self.last_built_task}"
         )
 
-        if (imported_pnr_file is not None) and (
-            imported_route_summary_file is not None
-        ):
+        if all(f is not None for f in imported_pnr_files):
+            imported_pnr_file, imported_route_summary, imported_pnr_log = imported_pnr_files
             shutil.copyfile(
                 imported_pnr_file, os.path.join(self.root_dir, "pnr_placed_netlist.json")
             )
             shutil.copyfile(
-                imported_route_summary_file,
+                imported_route_summary,
                 os.path.join(self.root_dir, "pnr_route_summary.json"),
             )
             pnr = (
                 f"Imported PnR results:\n"
                 f"    - Placed file:   {imported_pnr_file}\n"
-                f"    - Route summary: {imported_route_summary_file}\n"
+                f"    - Route summary: {imported_route_summary}\n"
+                f"    - PnR log file:  {imported_pnr_log}\n\n"
+                f" Original PnR log content:\n"
+                f"{read_text_file(imported_pnr_log)}"
             )
         else:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
@@ -354,27 +356,30 @@ def main_routine(
 
     if pnr_after_build and iron_placer != "sa_placer":
         if imported_dir is not None:
-            imported_pnr_file = os.path.join(imported_dir, f"{task_name}.pnr.json")
-            imported_route_summary_file = os.path.join(
-                imported_dir, f"{task_name}.route_summary.pnr.json"
-            )
-            if not os.path.exists(imported_pnr_file):
-                imported_pnr_file = None
-            if not os.path.exists(imported_route_summary_file):
-                imported_route_summary_file = None
+            imported_pnr_file_list = [
+                os.path.join(imported_dir, f)
+                for f in [
+                    f"{task_name}.placed_netlist.pnr.json",
+                    f"{task_name}.route_summary.pnr.json",
+                    f"{task_name}.pnr.log",
+                ]
+            ]
+            for i in range(len(imported_pnr_file_list)):
+                if not os.path.exists(imported_pnr_file_list[i]):
+                    print(f"Warning: imported PnR file {imported_pnr_file_list[i]} does not exist")
+                    imported_pnr_file_list[i] = None
         else:
-            imported_pnr_file = None
-            imported_route_summary_file = None
+            imported_pnr_file_list = [None, None, None]
 
         suffix = (
             f" (import from {imported_dir})"
-            if imported_pnr_file and imported_route_summary_file
+            if all(f is not None for f in imported_pnr_file_list)
             else ""
         )
         log("Placing and routing ..." + suffix)
 
         pnr_mlir, pnr_netlist, pnr_route, pnr_log = benchmark.place_and_route_task(
-            task_name, pnr_args, imported_pnr_file, imported_route_summary_file
+            task_name, pnr_args, imported_pnr_file_list
         )
 
         write_text_file(
@@ -437,12 +442,12 @@ def main_routine(
             aiecc_route_summary = load_json(aiecc_route_summary_path)
         else:
             raise ValueError(f"AIECC route summary file {aiecc_route_summary_path} does not exist")
-        
+
         # Compare buffers (ignoring individual size reporting)
         pnr_no_size_bufs = normalize_buffers(pnr_route_summary.get("buffers", []))
         aiecc_no_size_bufs = normalize_buffers(aiecc_route_summary.get("buffers", []))
         compare_unordered_list(pnr_no_size_bufs, aiecc_no_size_bufs, "Buffer")
-        
+
         # Compare cct_routes
         pnr_cct = pnr_route_summary.get("cct_routes", [])
         aiecc_cct = aiecc_route_summary.get("cct_routes", [])
@@ -571,8 +576,8 @@ if __name__ == "__main__":
         help="""Path to an existing directory with PnR results to import
         instead of running PnR as part of the stage in this script.\nThe
         directory structure should be the same as the output directory of
-        this script, with files named as <task_name>.pnr.json located in
-        each benchmark subdirectory (Default: None)""",
+        this script, with files named <task_name>.placed_netlist.pnr.json
+        located in each benchmark subdirectory (Default: None)""",
         required=False,
     )
     parser.add_argument(
@@ -627,7 +632,7 @@ if __name__ == "__main__":
         args.pnr = False
         args.compile = False
         args.run = False
-        
+
 
     if args.tasklists:
         os.makedirs(args.output_dir, exist_ok=True)

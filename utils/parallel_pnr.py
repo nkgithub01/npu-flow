@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-This script finds all <some_task>.pnr.json files in input_dir/<some_benchmark>
+This script finds all <some_task>.placed_netlist.pnr.json files in input_dir/<some_benchmark>
 subdirectories and places-and-routes them in parallel. It creates output files,
 route summary files, and detailed log files for each processed file.
 
@@ -23,17 +23,17 @@ def log_heading(heading, char="-"):
 
 
 def find_pnr_files(input_dir):
-    pattern = os.path.join(input_dir, "*", "*.pnr.json")
+    pattern = os.path.join(input_dir, "*", "*.placed_netlist.pnr.json")
     files = glob.glob(pattern)
-    exclude_pattern = ".route_summary.pnr.json"
-    files = [f for f in files if not f.endswith(exclude_pattern)]
     return sorted(files)  # Sort for consistent ordering
 
 
 def process_single_file(job_args):
     input_file, output_file, log_file, pnr_args = job_args
     # TODO: remove capturing route summary via PnR tool in future versions
-    output_route_summary = output_file.replace(".pnr.json", ".route_summary.pnr.json")
+    output_route_summary = output_file.replace(
+        ".placed_netlist.pnr.json", ".route_summary.pnr.json"
+    )
 
     # Result dictionary to capture execution details
     r = {
@@ -134,7 +134,7 @@ def main():
 
     parser.add_argument(
         "input_dir",
-        help="Input directory containing benchmark subdirectories with *.pnr.json files",
+        help="Input directory containing benchmark subdirectories with *.placed_netlist.pnr.json files",
     )
     parser.add_argument(
         "-o",
@@ -167,14 +167,14 @@ def main():
         sys.exit(1)
 
     # Find all PnR files
-    print(f"Searching for <some_task>.pnr.json files in {input_dir} ...")
+    print(f"Searching for <some_task>.placed_netlist.pnr.json files in {input_dir} ...")
     pnr_files = find_pnr_files(input_dir)
 
     if not pnr_files:
-        print(f"No <some_task>.pnr.json files found in {input_dir}")
+        print(f"No <some_task>.placed_netlist.pnr.json files found in {input_dir}")
         print(
             "Make sure your directory structure is: "
-            "input_dir/<some_benchmark>/<some_task>.pnr.json"
+            "input_dir/<some_benchmark>/<some_task>.placed_netlist.pnr.json"
         )
         sys.exit(1)
 
@@ -192,10 +192,8 @@ def main():
         # Create output file path (same name and extension)
         output_file = os.path.join(output_dir, rel_path)
 
-        # Create log file path (same base name but with .pnr.log extension)
-        # Remove .json and add .log
-        output_base = os.path.splitext(output_file)[0]
-        log_file = output_base + ".log"
+        # Create log file path (same task/base name but with .pnr.log extension)
+        log_file = output_file.replace(".placed_netlist.pnr.json", ".pnr.log")
 
         job_args.append((input_file, output_file, log_file, args.pnr_args))
 
