@@ -1,4 +1,4 @@
-name: NPU Flow Automated Tests on NPU2 Device
+name: Device Runs
 run-name: ${{ github.actor }} is testing out NPU flow on NPU2 device
 on:
   # push:
