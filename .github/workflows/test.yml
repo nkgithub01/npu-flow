@@ -1,4 +1,4 @@
-name: NPU Flow Automated Tests
+name: Tests
 run-name: ${{ github.actor }} is testing out NPU flow
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - '**.md'
 jobs:
   Test:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted # Ubuntu 24.04
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "The name of the branch is ${{ github.ref }}."
