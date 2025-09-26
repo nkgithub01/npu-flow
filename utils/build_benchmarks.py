@@ -197,6 +197,29 @@ class Benchmark:
             pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
             pnr.check()
 
+        route = json.loads(read_text_file(self.__get_local_file("custom_route.json")))
+        if route != {}:
+            netlist_file = json.loads(read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")))
+            src_id = 0
+            dst_id = 0
+            for node in netlist_file["nodes"]:
+                if node['type'] == 'COMP' and node['col_x'] == route['src_col_x'] and node['row_y'] == route['src_row_y']:
+                    src_id = node['id']
+                if node['type'] == 'COMP' and node['col_x'] == route['dst_col_x'] and node['row_y'] == route['dst_row_y']:
+                    dst_id = node['id']
+
+            for net in netlist_file["nets"]:
+                if net['src_id'] == src_id and net['dst_ids'][0] == dst_id:
+                    net['routing_info']['connection_type'] = 'circuit_switch'
+                    net['routing_info']['src_channel'] = 0
+                    net['routing_info']['dst_channels'] = [0]
+                    net['routing_info']['intermediates'] = route['intermediates']
+            netlist_file = json.dumps(netlist_file, indent=4)
+            write_text_file(
+                self.__get_local_file("build/pnr_placed_netlist.json"),
+                netlist_file,
+            )
+
         place_fifo_cmd = f"aie-opt {output_mlir} --aie-place-tiles --input-netlist-file=build/pnr_placed_netlist.json"
         place_fifo = subprocess_run_cmd(cmd=place_fifo_cmd, cwd=self.root_dir)
         place_fifo.check()
