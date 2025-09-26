@@ -620,13 +620,6 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
-        "--compile",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Compile binaries and instructions using aiecc.py (default: True)",
-        required=False,
-    )
-    parser.add_argument(
         "--run",
         action="store_true",
         default=False,

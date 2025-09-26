@@ -186,7 +186,10 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
             benchmark_name = os.path.basename(benchmark_dir)
             task_files = glob.glob(benchmark_dir + "/*.build.mlir")
             task_names = [os.path.basename(f).split('.')[0] for f in task_files]
-            task_names.sort()
+            # Sort task names in natural order (e.g., 1, 2, 10, 20)
+            def natural_key(s):
+                return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+            task_names.sort(key=natural_key)
 
             # Parse each task within the benchmark directory
             for task_name in task_names:
