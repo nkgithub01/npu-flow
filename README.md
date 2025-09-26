@@ -97,6 +97,11 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
 python3 utils/parse_results.py --variant=std \
 --input-dir=./build/placed --output-csv=placed_std_results.csv
 ```
+### Packet switched routing with MLIR-AIE Routing
+```bash
+# Add this parser option to utils/build_benchmarks.py
+--aie-pkt-routing
+```
 ### Build Placed IRON and Re-Place-and-Route with PnR
 
 ```bash

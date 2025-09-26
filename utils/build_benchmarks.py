@@ -211,13 +211,19 @@ class Benchmark:
             str(pnr),
         )
 
-    def compile_task(self, task_name, use_pnr_routing):
+    def compile_task(self, task_name, use_pnr_routing, aie_pkt_routing):
         assert self.last_built_task == task_name, (
             f"Task {task_name} has not been built yet. "
             f"Current built task: {self.last_built_task}"
         )
         param_envs, _ = self.__get_task(task_name)
-        param_envs["aiecc_extra_args"] = "--use-pnr-routing" if use_pnr_routing else ""
+        param_envs["aiecc_extra_args"] = (
+            "--use-pnr-routing"
+            if use_pnr_routing
+            else "--packet-sw-objFifos"
+            if aie_pkt_routing
+            else ""
+        )
         result = subprocess_run_cmd(cmd=self.compile_cmd, cwd=self.root_dir, env=param_envs)
         result.check()
 
@@ -258,6 +264,7 @@ def main_routine(
     build,
     use_placed,
     iron_placer,
+    aie_pkt_routing,
     pnr_after_build,
     pnr_args,
     imported_pnr_result_dir,
@@ -423,7 +430,9 @@ def main_routine(
         use_pnr_routing = pnr_after_build
         if not use_placed and iron_placer == "sa_placer":
             use_pnr_routing = True
-        aiecc_stdout, aiecc_stderr, aiecc_route, input_physical, aiecc_log = benchmark.compile_task(task_name, use_pnr_routing)
+        if use_pnr_routing and aie_pkt_routing:
+            raise ValueError("Cannot set packet routing for AIE routing when using PnR routing")
+        aiecc_stdout, aiecc_stderr, aiecc_route, input_physical, aiecc_log = benchmark.compile_task(task_name, use_pnr_routing, aie_pkt_routing)
 
         write_text_file(
             os.path.join(output_dir, f"{task_name}.stdout.compile.log"),
@@ -572,6 +581,13 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--aie-pkt-routing",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Use packet routing for standard AIE routing (default: False)",
+        required=False,
+    )
+    parser.add_argument(
         "--pnr",
         action="store_true",
         default=False,
@@ -664,6 +680,7 @@ if __name__ == "__main__":
                         build=args.build,
                         use_placed=args.placed_iron,
                         iron_placer=args.iron_placer,
+                        aie_pkt_routing=args.aie_pkt_routing,
                         pnr_after_build=args.pnr,
                         pnr_args=args.pnr_args,
                         imported_pnr_result_dir=args.import_pnr_results,
