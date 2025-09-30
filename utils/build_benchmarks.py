@@ -73,7 +73,7 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
 
 
 class Benchmark:
-    def __init__(self, config_path, use_placed, iron_placer, pnr_args=None):
+    def __init__(self, config_path, use_placed, iron_placer, pnr_args=None, inject_routing=False):
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
@@ -89,6 +89,7 @@ class Benchmark:
         self.use_placed = use_placed
         self.iron_placer = iron_placer
         self.pnr_args = pnr_args if pnr_args is not None else "-n 1"
+        self.inject_routing = inject_routing
 
         assert self.clean_cmd, "No clean command specified"
         assert self.build_cmd, "No build command specified"
@@ -196,29 +197,35 @@ class Benchmark:
 
             pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
             pnr.check()
+        
+        if self.inject_routing:
+            route = json.loads(read_text_file(self.__get_local_file("custom_route.json")))
+            if route != {}:
+                netlist_file = json.loads(read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")))
+                src_id = 0
+                dst_id = 0
+                for node in netlist_file["nodes"]:
+                    if node['type'] == 'COMP' and node['col_x'] == route['src_col_x'] and node['row_y'] == route['src_row_y']:
+                        src_id = node['id']
+                    if node['type'] == 'COMP' and node['col_x'] == route['dst_col_x'] and node['row_y'] == route['dst_row_y']:
+                        dst_id = node['id']
 
-        route = json.loads(read_text_file(self.__get_local_file("custom_route.json")))
-        if route != {}:
-            netlist_file = json.loads(read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")))
-            src_id = 0
-            dst_id = 0
-            for node in netlist_file["nodes"]:
-                if node['type'] == 'COMP' and node['col_x'] == route['src_col_x'] and node['row_y'] == route['src_row_y']:
-                    src_id = node['id']
-                if node['type'] == 'COMP' and node['col_x'] == route['dst_col_x'] and node['row_y'] == route['dst_row_y']:
-                    dst_id = node['id']
-
-            for net in netlist_file["nets"]:
-                if net['src_id'] == src_id and net['dst_ids'][0] == dst_id:
-                    net['routing_info']['connection_type'] = 'circuit_switch'
-                    net['routing_info']['src_channel'] = 0
-                    net['routing_info']['dst_channels'] = [0]
-                    net['routing_info']['intermediates'] = route['intermediates']
-            netlist_file = json.dumps(netlist_file, indent=4)
-            write_text_file(
-                self.__get_local_file("build/pnr_placed_netlist.json"),
-                netlist_file,
-            )
+                for net in netlist_file["nets"]:
+                    if net['src_id'] == src_id and net['dst_ids'][0] == dst_id:
+                        net['routing_info']['connection_type'] = 'circuit_switch'
+                        net['routing_info']['src_channel'] = 2
+                        net['routing_info']['dst_channels'] = [2]
+                        net['routing_info']['intermediates'] = route['intermediates']
+                    if net['src_id'] == dst_id and net['dst_ids'][0] == src_id:
+                        net['routing_info']['connection_type'] = 'circuit_switch'
+                        net['routing_info']['src_channel'] = 3
+                        net['routing_info']['dst_channels'] = [3]
+                        net['routing_info']['intermediates'] = [route['intermediates'][0][::-1]]
+                netlist_file = json.dumps(netlist_file, indent=4)
+                write_text_file(
+                    self.__get_local_file("build/pnr_placed_netlist.json"),
+                    netlist_file,
+                )
 
         place_fifo_cmd = f"aie-opt {output_mlir} --aie-place-tiles --input-netlist-file=build/pnr_placed_netlist.json"
         place_fifo = subprocess_run_cmd(cmd=place_fifo_cmd, cwd=self.root_dir)
@@ -290,6 +297,7 @@ def main_routine(
     aie_pkt_routing,
     pnr_after_build,
     pnr_args,
+    inject_routing,
     imported_pnr_result_dir,
     aiecc_compile,
     run_after_compile,
@@ -360,7 +368,7 @@ def main_routine(
     assert os.path.exists(config_path)
 
     benchmark = Benchmark(
-        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer, pnr_args=pnr_args
+        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer, pnr_args=pnr_args , inject_routing=inject_routing
     )
 
     log("Cleaning ...")
@@ -625,6 +633,13 @@ if __name__ == "__main__":
         required=False,
     )
     parser.add_argument(
+        "--inject-routing",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Enable injection of external routing information (default: False)",
+        required=False,
+    )
+    parser.add_argument(
         "--import-pnr-results",
         type=str,
         default=None,
@@ -705,6 +720,7 @@ if __name__ == "__main__":
                         aie_pkt_routing=args.aie_pkt_routing,
                         pnr_after_build=args.pnr,
                         pnr_args=args.pnr_args,
+                        inject_routing=args.inject_routing,
                         imported_pnr_result_dir=args.import_pnr_results,
                         aiecc_compile=args.compile,
                         run_after_compile=args.run,

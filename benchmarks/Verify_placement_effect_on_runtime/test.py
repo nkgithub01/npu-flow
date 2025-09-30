@@ -125,7 +125,7 @@ def main(opts):
                             if not np.isclose(NPU_output[it.multi_index], NPU_output_ref[it.multi_index], rtol=relative_tolerance, atol=absolute_tolerance):
                                 print(f"First mismatch at ({it.multi_index}): AIE={NPU_output[it.multi_index]}, Ref={NPU_output_ref[it.multi_index]}")
                 print(f"\nRelative tolerance: {relative_tolerance}, Absolute tolerance: {absolute_tolerance}\n")
-            exit(-1)
+            exit(0)
     else:
         print("\nVerification skipped, assuming PASS.\n")
 

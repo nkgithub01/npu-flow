@@ -15,6 +15,226 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
+  - name: placement_single_node_neighbour_inoutsize_2_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_4_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_8_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_16_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_32_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_64_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_128_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_256_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_512_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_1024_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_2048_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_4096_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4096
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_8192_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8192
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_16384_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16384
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_32768_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32768
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_65536_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 65536
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_131072_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 131072
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_262144_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 262144
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_524288_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 524288
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_neighbour_inoutsize_1048576_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1048576
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 0
+    output: build/verify.mlir
+
   - name: placement_single_node_inoutsize_1_distance_1
     params:
       num_rows: 6
@@ -352,17 +572,6 @@ tasks:
       inout_size: 1
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_2_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 2
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -708,17 +917,6 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
-  - name: placement_single_node_neighbour_inoutsize_4_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 4
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
   - name: placement_single_node_inoutsize_4_distance_1
     params:
       num_rows: 6
@@ -1056,17 +1254,6 @@ tasks:
       inout_size: 4
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_8_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 8
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -1412,17 +1599,6 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
-  - name: placement_single_node_neighbour_inoutsize_16_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 16
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
   - name: placement_single_node_inoutsize_16_distance_1
     params:
       num_rows: 6
@@ -1760,17 +1936,6 @@ tasks:
       inout_size: 16
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_32_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 32
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -2116,17 +2281,6 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
-  - name: placement_single_node_neighbour_inoutsize_64_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 64
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
   - name: placement_single_node_inoutsize_64_distance_1
     params:
       num_rows: 6
@@ -2464,17 +2618,6 @@ tasks:
       inout_size: 64
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_128_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 128
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -2820,17 +2963,6 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
-  - name: placement_single_node_neighbour_inoutsize_256_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 256
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
   - name: placement_single_node_inoutsize_256_distance_1
     params:
       num_rows: 6
@@ -3168,17 +3300,6 @@ tasks:
       inout_size: 256
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_512_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 512
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -3524,17 +3645,6 @@ tasks:
       enable_feedback: 0
     output: build/verify.mlir
 
-  - name: placement_single_node_neighbour_inoutsize_1024_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 1024
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
   - name: placement_single_node_inoutsize_1024_distance_1
     params:
       num_rows: 6
@@ -3872,17 +3982,6 @@ tasks:
       inout_size: 1024
       expand_rate: 1000000
       placement: single_node_distance_31
-      placement_seed: 0
-      enable_feedback: 0
-    output: build/verify.mlir
-
-  - name: placement_single_node_neighbour_inoutsize_2048_distance_1
-    params:
-      num_rows: 6
-      num_cols: 8
-      inout_size: 2048
-      expand_rate: 1000000
-      placement: single_node_neighbour_distance_1
       placement_seed: 0
       enable_feedback: 0
     output: build/verify.mlir
@@ -15259,6 +15358,4329 @@ tasks:
       placement: random
       placement_seed: 999
       enable_feedback: 0
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_1_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_2_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_4_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_8_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_16_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_32_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_64_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_128_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_256_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_512_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_1024_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_2048_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_4096_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4096
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_8192_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8192
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_16384_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16384
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_32768_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32768
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_65536_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 65536
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_131072_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 131072
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_262144_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 262144
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_524288_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 524288
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_neighbour_inoutsize_1048576_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1048576
+      expand_rate: 1000000
+      placement: single_node_neighbour_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_4_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 4
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_8_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 8
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_16_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 16
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_32_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 32
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_64_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 64
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_128_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 128
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_256_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 256
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_512_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 512
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_1024_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 1024
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_1
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_1
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_2
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_2
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_3
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_3
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_4
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_4
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_5
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_5
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_6
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_6
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_7
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_7
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_8
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_8
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_9
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_9
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_10
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_10
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_11
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_11
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_12
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_12
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_13
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_13
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_14
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_14
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_15
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_15
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_16
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_16
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_17
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_17
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_18
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_18
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_19
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_19
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_20
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_20
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_21
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_21
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_22
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_22
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_23
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_23
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_24
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_24
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_25
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_25
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_26
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_26
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_27
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_27
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_28
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_28
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_29
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_29
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_30
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_30
+      placement_seed: 0
+      enable_feedback: 1
+    output: build/verify.mlir
+
+  - name: placement_single_node_with_feedback_inoutsize_2048_distance_31
+    params:
+      num_rows: 6
+      num_cols: 8
+      inout_size: 2048
+      expand_rate: 1000000
+      placement: single_node_distance_31
+      placement_seed: 0
+      enable_feedback: 1
     output: build/verify.mlir
 
   - name: placement_regular_with_feedback

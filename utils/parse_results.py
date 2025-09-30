@@ -202,6 +202,8 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
                     mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.pnr.mlir")
                     output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
                     json_file_path = os.path.join(benchmark_dir, f"{task_name}.post_compile_routing_summary.compile.json")
+                if not os.path.exists(output_log_file_path):
+                    output_log_file_path = os.path.join(benchmark_dir, f"{task_name}.error.log")
 
                 result_file.write(f"{benchmark_name}, {task_name}")
                 if os.path.exists(mlir_file_path):

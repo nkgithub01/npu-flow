@@ -10,26 +10,9 @@ data = {
 }
 
 tasklist = []
-
-for inout_size in [2**i for i in range(0, 12)]:
-    taskname = f"placement_single_node_neighbour_inoutsize_{inout_size}_distance_1"
-    data['tasks'].append({
-        'name': taskname,
-        'params': {
-            'num_rows': 6,
-            'num_cols': 8,
-            'inout_size': inout_size,
-            'expand_rate': 1000000,
-            'placement': f'single_node_neighbour_distance_1',
-            'placement_seed': 0,
-            'enable_feedback': 0
-        },
-        'output': "build/verify.mlir"
-    })
-    tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
-
-    for distance in range(1, 32):
-        taskname = f"placement_single_node_inoutsize_{inout_size}_distance_{distance}"
+for with_feedback in [0, 1]:
+    for inout_size in [2**i for i in range(0, 21)]:
+        taskname = f"placement_single_node{'_with_feedback' if with_feedback else ''}_neighbour_inoutsize_{inout_size}_distance_1"
         data['tasks'].append({
             'name': taskname,
             'params': {
@@ -37,15 +20,32 @@ for inout_size in [2**i for i in range(0, 12)]:
                 'num_cols': 8,
                 'inout_size': inout_size,
                 'expand_rate': 1000000,
-                'placement': f'single_node_distance_{distance}',
+                'placement': f'single_node_neighbour_distance_1',
                 'placement_seed': 0,
-                'enable_feedback': 0
+                'enable_feedback': with_feedback
             },
             'output': "build/verify.mlir"
         })
         tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
-for with_feedback in [0, 1]:
+    for inout_size in [2**i for i in range(0, 12)]:
+        for distance in range(1, 32):
+            taskname = f"placement_single_node{'_with_feedback' if with_feedback else ''}_inoutsize_{inout_size}_distance_{distance}"
+            data['tasks'].append({
+                'name': taskname,
+                'params': {
+                    'num_rows': 6,
+                    'num_cols': 8,
+                    'inout_size': inout_size,
+                    'expand_rate': 1000000,
+                    'placement': f'single_node_distance_{distance}',
+                    'placement_seed': 0,
+                    'enable_feedback': with_feedback
+                },
+                'output': "build/verify.mlir"
+            })
+            tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+
     for placement in ["regular", "1-hop", "2-hop"]:
         taskname = f"placement_{placement}_with_feedback" if with_feedback else f"placement_{placement}"
         data['tasks'].append({

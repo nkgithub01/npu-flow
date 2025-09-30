@@ -83,17 +83,28 @@ def my_benchmark(
             temp = [dict(row=y, col=x) for x in range(8) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
             distance = int(opts.placement.split("_")[-1])
             if distance < 4:
-                src_node = temp[0]
+                src_node = dict(row=2, col=1)
                 dst_node = dict(row=src_node["row"], col=src_node["col"]+distance)
-                intermediates = [[[x,src_node["row"]] for x in range(distance+1)]]
+                intermediates = [[[x,src_node["row"]] for x in range(src_node["col"], dst_node["col"]+1)]]
+                start_node = dict(row=2, col=0)
+                end_node = dict(row=dst_node["row"], col=dst_node["col"]+1)
             else:
                 src_node = temp[0]
                 dst_node = temp[distance]
                 intermediates=[[[x,y] for x in range(8) for y in (range(2,6) if x%2==0 else range(5,1,-1))][:distance+1]]
+                start_node = dict(row=src_node["row"], col=src_node["col"]+1)
+                end_node = dict(row=dst_node["row"], col=dst_node["col"]-1)
             route = dict(src_col_x=src_node["col"], src_row_y=src_node["row"], dst_col_x=dst_node["col"], dst_row_y=dst_node["row"], intermediates=intermediates)
+            if start_node == dst_node:
+                start_node = dict(row=src_node["row"]+1, col=src_node["col"])
+            if end_node == src_node or end_node == start_node:
+                end_node = dict(row=dst_node["row"]+1, col=dst_node["col"])
+
             connection_order = [
+                start_node,
                 src_node,
                 dst_node,
+                end_node
             ]
 
             if 'neighbour' in opts.placement:
