@@ -84,16 +84,6 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
     if buffer_on_compute:
         avg_buffer_size_on_compute = total_buffer_on_compute / len(buffer_on_compute)
 
-    # Count neighbor connections
-    nbr_routes_count = 0
-    if 'nbr_routes' in data:
-        nbr_routes_count = len(data['nbr_routes'])
-
-    # Count circuit switch connections
-    cct_routes_count = 0
-    if 'cct_routes' in data:
-        cct_routes_count = len(data['cct_routes'])
-
     # Count number of DMA port Usage
     total_dma_ports = 0
     total_dma_in_ports = 0
@@ -119,14 +109,29 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
             else:
                 dma_ports[(x, y)] = dict(in_count=1, out_count=0)
 
+    # Count neighbor connections
+    nbr_routes_count = 0
+    if 'nbr_routes' in data:
+        nbr_routes_count = len(data['nbr_routes'])
+
+    # Count circuit switch connections
+    cct_routes_count = 0
+    if 'cct_routes' in data:
+        cct_routes_count = len(data['cct_routes'])
+
+    # Count packet flow connections
+    pkt_routes_count = 0
+    if 'pkt_routes' in data:
+        pkt_flow_count = len(data['pkt_routes'])
+    
     # Count number of circuit switch track used
     total_circuit_switch_tracks = 0
-    largest_net = 0
-    longest_path = 0
-    smallest_net = sys.maxsize
-    shortest_path = sys.maxsize
-    num_tracks_per_net = []
-    avg_num_tracks_per_net = 0
+    largest_circuit_switch_net = 0
+    longest_circuit_switch_path = 0
+    smallest_circuit_switch_net = sys.maxsize
+    shortest_circuit_switch_path = sys.maxsize
+    num_tracks_per_circuit_switch_net = []
+    avg_num_tracks_per_circuit_switch_net = 0
     for cct_route in data.get('cct_routes', []):
         unique_tracks = set()   # account for track sharing in multicast
         for path in cct_route.get("intermediates", []):
@@ -134,24 +139,55 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
                 segment_id = (node["col_x"], node["row_y"], path[node_idx + 1]["col_x"], path[node_idx + 1]["row_y"])
                 unique_tracks.add(segment_id)
         total_circuit_switch_tracks += len(unique_tracks)
-        largest_net = max(largest_net, len(unique_tracks))
-        longest_path = max(longest_path, len(path)-1)
-        smallest_net = min(smallest_net, len(unique_tracks))
-        shortest_path = min(shortest_path, len(path)-1)
-        num_tracks_per_net.append(len(unique_tracks))
+        largest_circuit_switch_net = max(largest_circuit_switch_net, len(unique_tracks))
+        longest_circuit_switch_path = max(longest_circuit_switch_path, len(path)-1)
+        smallest_circuit_switch_net = min(smallest_circuit_switch_net, len(unique_tracks))
+        shortest_circuit_switch_path = min(shortest_circuit_switch_path, len(path)-1)
+        num_tracks_per_circuit_switch_net.append(len(unique_tracks))
 
-    if num_tracks_per_net:
-        avg_num_tracks_per_net = sum(num_tracks_per_net) / len(num_tracks_per_net)
+    if num_tracks_per_circuit_switch_net:
+        avg_num_tracks_per_circuit_switch_net = sum(num_tracks_per_circuit_switch_net) / len(num_tracks_per_circuit_switch_net)
+
+    # Count number of packet flow track used
+    total_pkt_routes_tracks = 0
+    largest_pkt_routes_net = 0
+    longest_pkt_routes_path = 0
+    smallest_pkt_routes_net = sys.maxsize
+    shortest_pkt_routes_path = sys.maxsize
+    num_tracks_per_pkt_routes_net = []
+    avg_num_tracks_per_pkt_routes_net = 0
+    for cct_route in data.get('cct_routes', []):
+        unique_tracks = set()   # account for track sharing in multicast
+        for path in cct_route.get("intermediates", []):
+            for node_idx, node in enumerate(path[:-1]):
+                segment_id = (node["col_x"], node["row_y"], path[node_idx + 1]["col_x"], path[node_idx + 1]["row_y"])
+                unique_tracks.add(segment_id)
+        total_pkt_routes_tracks += len(unique_tracks)
+        largest_pkt_routes_net = max(largest_pkt_routes_net, len(unique_tracks))
+        longest_pkt_routes_path = max(longest_pkt_routes_path, len(path)-1)
+        smallest_pkt_routes_net = min(smallest_pkt_routes_net, len(unique_tracks))
+        shortest_pkt_routes_path = min(shortest_pkt_routes_path, len(path)-1)
+        num_tracks_per_pkt_routes_net.append(len(unique_tracks))
+
+    if num_tracks_per_pkt_routes_net:
+        avg_num_tracks_per_pkt_routes_net = sum(num_tracks_per_pkt_routes_net) / len(num_tracks_per_pkt_routes_net)
 
     if verbose:
         print(f"Number of neighbour connections: {nbr_routes_count}")
         print(f"Number of circuit switch connections: {cct_routes_count}")
+        print(f"Number of packet flow connections: {pkt_routes_count}")
         print(f"Total circuit switch tracks: {total_circuit_switch_tracks}")
-        print(f"{prt_tee}Largest circuit switch net: {largest_net}")
-        print(f"{prt_tee}Smallest circuit switch net: {smallest_net}")
-        print(f"{prt_tee}Average number of track per net: {avg_num_tracks_per_net:.2f}")
-        print(f"{prt_tee}Longest circuit switch path: {longest_path}")
-        print(f"{prt_last}Shortest circuit switch path: {shortest_path}")
+        print(f"{prt_tee}Largest circuit switch net: {largest_circuit_switch_net}")
+        print(f"{prt_tee}Smallest circuit switch net: {smallest_circuit_switch_net}")
+        print(f"{prt_tee}Average number of track per net: {avg_num_tracks_per_circuit_switch_net:.2f}")
+        print(f"{prt_tee}Longest circuit switch path: {longest_circuit_switch_path}")
+        print(f"{prt_last}Shortest circuit switch path: {shortest_circuit_switch_path}")
+        print(f"Total packet flow tracks: {total_pkt_routes_tracks}")
+        print(f"{prt_tee}Largest packet flow net: {largest_pkt_routes_net}")
+        print(f"{prt_tee}Smallest packet flow net: {smallest_pkt_routes_net}")
+        print(f"{prt_tee}Average number of track per net: {avg_num_tracks_per_pkt_routes_net:.2f}")
+        print(f"{prt_tee}Longest packet flow path: {longest_pkt_routes_path}")
+        print(f"{prt_last}Shortest packet flow path: {shortest_pkt_routes_path}")
         print(f"Total DMA ports: {total_dma_ports}")
         print(f"{prt_tee}Total DMA in port used: {total_dma_in_ports}")
         print(f"{prt_last}Total DMA out port used: {total_dma_out_ports}")
@@ -162,8 +198,9 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
         print(f"{prt_last}Average buffer size on compute: {avg_buffer_size_on_compute:.2f} bytes")
 
     # Append to results.csv
-    result_file.write(f", {nbr_routes_count}, {cct_routes_count}")
-    result_file.write(f", {total_circuit_switch_tracks}, {largest_net}, {smallest_net}, {avg_num_tracks_per_net:.2f}, {longest_path}, {shortest_path}")
+    result_file.write(f", {nbr_routes_count}, {cct_routes_count}, {pkt_flow_count}")
+    result_file.write(f", {total_circuit_switch_tracks}, {largest_circuit_switch_net}, {smallest_circuit_switch_net}, {avg_num_tracks_per_circuit_switch_net:.2f}, {longest_circuit_switch_path}, {shortest_circuit_switch_path}")
+    result_file.write(f", {total_pkt_routes_tracks}, {largest_pkt_routes_net}, {smallest_pkt_routes_net}, {avg_num_tracks_per_pkt_routes_net:.2f}, {longest_pkt_routes_path}, {shortest_pkt_routes_path}")
     result_file.write(f", {total_dma_ports}, {total_dma_in_ports}, {total_dma_out_ports}")
     result_file.write(f", {total_buffer_size}, {total_buffer_on_mem}, {avg_buffer_size_on_mem:.2f}, {total_buffer_on_compute}, {avg_buffer_size_on_compute:.2f}")
 
@@ -173,8 +210,9 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
     result_file = open(result_file_path, 'w')
     result_file.write("benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link")
     result_file.write(", avg_runtime [us]")
-    result_file.write(", num_neighbour_sharing_objectFIFO, num_circuit_switch_objectFIFO")
+    result_file.write(", num_neighbour_sharing_objectFIFO, num_circuit_switch_objectFIFO, num_packet_flow_objectFIFO")
     result_file.write(", total_num_circuit_switch_tracks, largest_circuit_switch_net, smallest_circuit_switch_net, avg_track_per_circuit_switch_net, longest_circuit_switch_path, shortest_circuit_switch_path")
+    result_file.write(", total_num_packet_flow_tracks, largest_packet_flow_net, smallest_packet_flow_net, avg_track_per_packet_flow_net, longest_packet_flow_path, shortest_packet_flow_path")
     result_file.write(", total_num_dma_ports, total_num_dma_in_ports, total_num_dma_out_ports")
     result_file.write(", total_buffer_size [bytes], total_buffer_size_on_mem [bytes], avg_buffer_size_on_mem [bytes], total_buffer_size_on_compute [bytes], avg_buffer_size_on_compute [bytes]")
     result_file.write("\n")
@@ -217,7 +255,8 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
                 if os.path.exists(json_file_path):
                     parse_routing_summary_json_file(json_file_path, result_file, verbose)
                 else:
-                    result_file.write(f", N/A, N/A")
+                    result_file.write(f", N/A, N/A, N/A")
+                    result_file.write(f", N/A, N/A, N/A, N/A, N/A, N/A")
                     result_file.write(f", N/A, N/A, N/A, N/A, N/A, N/A")
                     result_file.write(f", N/A, N/A, N/A")
                     result_file.write(f", N/A, N/A, N/A, N/A, N/A")
