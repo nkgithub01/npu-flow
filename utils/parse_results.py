@@ -45,7 +45,7 @@ def parse_mlir_file(mlir_file_path, result_file, verbose=False):
 
 
 def parse_output_log_file(output_log_file_path, result_file, verbose=False):
-    avg_runtime = 0
+    avg_runtime = -1.0
     with open(output_log_file_path, 'r') as f:
         for line in f:
             avg_runtime_match = re.search(r'Avg NPU time:\s*([\d.]+)\s*us', line)
