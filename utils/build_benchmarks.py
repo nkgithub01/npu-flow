@@ -169,11 +169,11 @@ class Benchmark:
         if all(f is not None for f in imported_pnr_files):
             imported_pnr_file, imported_route_summary, imported_pnr_log = imported_pnr_files
             shutil.copyfile(
-                imported_pnr_file, os.path.join(self.root_dir, "pnr_placed_netlist.json")
+                imported_pnr_file, os.path.join(self.root_dir, "build/pnr_placed_netlist.json")
             )
             shutil.copyfile(
                 imported_route_summary,
-                os.path.join(self.root_dir, "pnr_route_summary.json"),
+                os.path.join(self.root_dir, "build/pnr_route_summary.json"),
             )
             pnr = (
                 f"Imported PnR results:\n"
@@ -455,35 +455,35 @@ def main_routine(
             input_physical,
         )
 
-    if pnr_after_build:
-        log("Verifying PnR routing against physical compiled routing ...")
-        pnr_route_summary_path = os.path.join(output_dir, f"{task_name}.route_summary.pnr.json")
-        aiecc_route_summary_path = os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json")
-        if os.path.exists(pnr_route_summary_path):
-            pnr_route_summary = load_json(pnr_route_summary_path)
-        else:
-            raise ValueError(f"PnR route summary file {pnr_route_summary_path} does not exist")
-        if os.path.exists(aiecc_route_summary_path):
-            aiecc_route_summary = load_json(aiecc_route_summary_path)
-        else:
-            raise ValueError(f"AIECC route summary file {aiecc_route_summary_path} does not exist")
+        if pnr_after_build:
+            log("Verifying PnR routing against physical compiled routing ...")
+            pnr_route_summary_path = os.path.join(output_dir, f"{task_name}.route_summary.pnr.json")
+            aiecc_route_summary_path = os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json")
+            if os.path.exists(pnr_route_summary_path):
+                pnr_route_summary = load_json(pnr_route_summary_path)
+            else:
+                raise ValueError(f"PnR route summary file {pnr_route_summary_path} does not exist")
+            if os.path.exists(aiecc_route_summary_path):
+                aiecc_route_summary = load_json(aiecc_route_summary_path)
+            else:
+                raise ValueError(f"AIECC route summary file {aiecc_route_summary_path} does not exist")
 
-        # Compare buffers (ignoring individual size reporting)
-        pnr_no_size_bufs = normalize_buffers(pnr_route_summary.get("buffers", []))
-        aiecc_no_size_bufs = normalize_buffers(aiecc_route_summary.get("buffers", []))
-        compare_unordered_list(pnr_no_size_bufs, aiecc_no_size_bufs, "Buffer")
+            # Compare buffers (ignoring individual size reporting)
+            pnr_no_size_bufs = normalize_buffers(pnr_route_summary.get("buffers", []))
+            aiecc_no_size_bufs = normalize_buffers(aiecc_route_summary.get("buffers", []))
+            compare_unordered_list(pnr_no_size_bufs, aiecc_no_size_bufs, "Buffer")
 
-        # Compare cct_routes
-        pnr_cct = pnr_route_summary.get("cct_routes", [])
-        aiecc_cct = aiecc_route_summary.get("cct_routes", [])
-        compare_unordered_list(pnr_cct, aiecc_cct, "CCT route")
+            # Compare cct_routes
+            pnr_cct = pnr_route_summary.get("cct_routes", [])
+            aiecc_cct = aiecc_route_summary.get("cct_routes", [])
+            compare_unordered_list(pnr_cct, aiecc_cct, "CCT route")
 
-        # Compare nbr_routes
-        pnr_nbr = pnr_route_summary.get("nbr_routes", [])
-        aiecc_nbr = aiecc_route_summary.get("nbr_routes", [])
-        compare_unordered_list(pnr_nbr, aiecc_nbr, "NBR route")
+            # Compare nbr_routes
+            pnr_nbr = pnr_route_summary.get("nbr_routes", [])
+            aiecc_nbr = aiecc_route_summary.get("nbr_routes", [])
+            compare_unordered_list(pnr_nbr, aiecc_nbr, "NBR route")
 
-        log("PnR routing compiled successfully ...")
+            log("PnR routing applied to physical routing successfully ...")
 
     if run_after_compile:
         log("Running ...")
