@@ -26,7 +26,8 @@ ARGS := --embed-dim $(embed_dim) \
         --tile-dim $(tile_dim) \
         --seq-len $(seq_len) \
 
-all: build/mha.xclbin
+build: build/mha.mlir
+aiecc: build/mha.xclbin
 
 build/%.cc.o: %.cc 
 	mkdir -p ${@D}
