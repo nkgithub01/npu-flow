@@ -1,2 +1,4 @@
 build
 **/.vscode
+Results
+**/__pycache__
