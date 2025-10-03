@@ -143,6 +143,20 @@ python3 utils/parse_results.py --variant=std \
 --input-dir=path/to/build/folder --output-csv=path/to/csv
 ```
 
+### Parse CSV Table and Generate Excels
+Simple Excel generation script that takes in at least 1 CSV file. It treats the first csv as the baseline.
+For each input CSV file, the script generate 4 sheets:
+- Original Data
+- Filtered out failed testcases which have runtime == -1.0 in that CSV file
+- Filtered out testcases that fails in any of the CSV file given
+- Normalized the results with respect to the baseline (first CSV file)
+The script will add an overall summary sheet as well.
+```bash
+python3 utils/python utils/compare_results.py \
+-f path/to/csv1 path/to/csv2 path/to/csv3 \
+-l sheet_name_for_csv1 sheet_name_for_csv2 sheet_name_for_csv3
+```
+
 ## Run Benchmarks
 
 Simply adding `--run -j 1` to the build commands in the "Build Placed IRON" sections is enough. For example:
