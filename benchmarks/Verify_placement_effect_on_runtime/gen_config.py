@@ -63,22 +63,24 @@ for with_feedback in [0, 1]:
         })
         tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
     
-    for seed in range(1000):
-        taskname = f"full_array_random_seed_{seed}_with_feedback" if with_feedback else f"full_array_random_seed_{seed}"
-        data['tasks'].append({
-            'name': taskname,
-            'params': {
-                'num_rows': 6,
-                'num_cols': 8,
-                'inout_size': 256,
-                'expand_rate': 100000,
-                'placement': 'random',
-                'placement_seed': seed,
-                'enable_feedback': with_feedback
-            },
-            'output': "build/verify.mlir"
-        })
-        tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+    for seed in range(10):
+        for length in range(4,33):
+            taskname = f"length_{length}_random_seed_{seed}_with_feedback" if with_feedback else f"length_{length}_random_seed_{seed}"
+            data['tasks'].append({
+                'name': taskname,
+                'params': {
+                    'num_rows': 6,
+                    'num_cols': 8,
+                    'inout_size': 256,
+                    'expand_rate': 100000,
+                    'placement': 'random',
+                    'placement_seed': seed,
+                    'enable_feedback': with_feedback,
+                    'length': length
+                },
+                'output': "build/verify.mlir"
+            })
+            tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
 with open('config.yml', 'w') as file:
     yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, indent=2)

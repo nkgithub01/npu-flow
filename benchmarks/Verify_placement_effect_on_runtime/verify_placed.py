@@ -1,3 +1,4 @@
+import os
 import json
 import argparse
 import random
@@ -25,20 +26,14 @@ def main(opts):
     random.seed(opts.placement_seed)
 
     with mlir_mod_ctx() as ctx:
-        my_benchmark(
-            opts.dev,
-            opts.dtype_str,
-            opts.inout_size
-        )
-
+        my_benchmark(opts)
         # Print the python-to-mlir conversion to stdout
         print(ctx.module)
 
-def my_benchmark(
-    dev,
-    dtype_str,
-    inout_size
-):
+def my_benchmark(opts):
+    dev = opts.dev
+    dtype_str = opts.dtype_str
+    inout_size = opts.inout_size
     dtype = dtype_map[dtype_str]
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
@@ -78,7 +73,7 @@ def my_benchmark(
             connection_order.remove(dict(row=2,col=0))
             connection_order.remove(dict(row=2,col=7))
             random.shuffle(connection_order)
-            connection_order = [dict(row=2,col=0)] + connection_order[:14] + [dict(row=2,col=7)]
+            connection_order = [dict(row=2,col=0)] + connection_order[:opts.length-2] + [dict(row=2,col=7)]
         elif "single_node" in opts.placement:
             temp = [dict(row=y, col=x) for x in range(8) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
             distance = int(opts.placement.split("_")[-1])
@@ -109,7 +104,8 @@ def my_benchmark(
 
             if 'neighbour' in opts.placement:
                 route = dict()
-            json.dump(route, open("./custom_route.json", "w"), indent=4)
+            os.makedirs(os.path.dirname("./build"), exist_ok=True)
+            json.dump(route, open("./build/custom_route.json", "w"), indent=4)
         else:
             connection_order = [dict(row=y, col=x) for x in range(4) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
         
@@ -353,6 +349,12 @@ if __name__ == "__main__":
         type=int, 
         dest="expand_rate",
         default=10**6,
+    )
+    argparser.add_argument(
+        "--length", 
+        type=int, 
+        dest="length",
+        default=16,
     )
     argparser.add_argument(
         "--dtype", 

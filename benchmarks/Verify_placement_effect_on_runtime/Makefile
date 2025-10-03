@@ -7,6 +7,7 @@ AIE_KERNELS_DIR := ${srcdir}/kernels
 device_name := npu2
 dtype := i32
 inout_size ?= 1
+length ?= 16
 # options for placement: 
 # - regular
 # - 1-hop
@@ -50,7 +51,7 @@ xclbin_target?=build/${target_name}.xclbin
 trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
-aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} --placement=${placement} --placement_seed=${placement_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate}
+aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} --placement=${placement} --placement_seed=${placement_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
 runargs+= -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION} --inout_size=${inout_size}
 kernals := accumulate
 
