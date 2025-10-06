@@ -2,7 +2,7 @@ import argparse
 import csv
 import numpy as np
 import pandas as pd
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Border, Side
 
 # Calculate average and geometric mean for each column in a DataFrame and add these values back to the DataFrame
 def calculate_averages_and_geometric_means(df, prefix=""):
@@ -207,42 +207,66 @@ def main(args):
                     for col in range(1, worksheet.max_column + 1):
                         worksheet.cell(row=row, column=col).fill = light_green_fill
 
-        # Color the cell base on the value in normalized sheets, green to red gradient from 0 to 2, N/A in gray
+        # Color the cell base on the value in normalized sheets, green to red gradient from 0 to 10
         for file in args.files:
             file_name = file_label_map[file]
             worksheet = writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]]
             for row in range(2, worksheet.max_row + 1):
                 for col in range(3, worksheet.max_column + 1):
                     cell_value = worksheet.cell(row=row, column=col).value
-                    if isinstance(cell_value, (int, float)):
+                    if isinstance(cell_value, (int, float)) and float(cell_value) != 1.0:
+                        # Map the value to a color
+                        R0, G0, B0 = 0x00, 0xAF, 0x00  # green
+                        R1, G1, B1 = 0xFF, 0xFF, 0xFF  # white
+                        R2, G2, B2 = 0xAF, 0x00, 0x00  # red
                         if cell_value <= 1.0:
-                            # Gradient from green (0.0) to light green (1.0)
-                            # 0.0 -> green (00FF00), 1.0 -> light green (C6EFCE)
-                            r0, g0, b0 = 0x00, 0xFF, 0x00  # green
-                            r1, g1, b1 = 0xC6, 0xEF, 0xCE  # light green
-                            t = cell_value  # cell_value in [0,1]
-                            red_intensity = int(r0 + (r1 - r0) * t)
-                            green_intensity = int(g0 + (g1 - g0) * t)
-                            blue_intensity = int(b0 + (b1 - b0) * t)
-                            fill_color = f"{red_intensity:02X}{green_intensity:02X}{blue_intensity:02X}"
-                        elif cell_value <= 2.0:
-                            # Gradient from light green (1.0) to red (2.0)
-                            # 1.0 -> light green (C6EFCE), 2.0 -> red (FF0000)
-                            r0, g0, b0 = 0xC6, 0xEF, 0xCE  # light green
-                            r1, g1, b1 = 0xFF, 0x00, 0x00  # red
-                            t = cell_value - 1.0  # t in [0,1]
-                            red_intensity = int(r0 + (r1 - r0) * t)
-                            green_intensity = int(g0 + (g1 - g0) * t)
-                            blue_intensity = int(b0 + (b1 - b0) * t)
-                            fill_color = f"{red_intensity:02X}{green_intensity:02X}{blue_intensity:02X}"
+                            # Gradient from green (0.0) to white (1.0)
+                            # 0.0 -> green (00AF00), 1.0 -> white (FFFFFF)
+                            scale = cell_value
+                            red_intensity = int(R0 + (R1 - R0) * scale)
+                            green_intensity = int(G0 + (G1 - G0) * scale)
+                            blue_intensity = int(B0 + (B1 - B0) * scale)
+                        elif cell_value <= 10.0:
+                            # Gradient from white (1.0) to red (10.0)
+                            # 1.0 -> white (FFFFFF), 10.0 -> red (FF0000)
+                            scale = cell_value / 10.0
+                            red_intensity = int(R1 + (R2 - R1) * scale)
+                            green_intensity = int(G1 + (G2 - G1) * scale)
+                            blue_intensity = int(B1 + (B2 - B1) * scale)
                         else:
                             # Bright red for values > 2.0
-                            red_intensity = 255
-                            green_intensity = 0
-                            blue_intensity = 0
+                            red_intensity = R2
+                            green_intensity = G2
+                            blue_intensity = B2
                         fill_color = f"{red_intensity:02X}{green_intensity:02X}{blue_intensity:02X}"
                         fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                         worksheet.cell(row=row, column=col).fill = fill
+
+        # Add border to the average and geometric_mean rows in each sheet with orange border
+        for file in args.files:
+            file_name = file_label_map[file]
+            worksheet = writer.sheets[f"common_success_{file_name}"[:31]]
+            for row in range(2, worksheet.max_row + 1):
+                if any(item in worksheet.cell(row=row, column=2).value for item in ["average", "geometric_mean"]):
+                    for col in range(1, worksheet.max_column + 1):
+                        thick_border_side = Side(border_style="thick", color="FFA500") # orange border
+                        worksheet.cell(row=row, column=col).border = Border(
+                            left=thick_border_side,
+                            right=thick_border_side,
+                            top=thick_border_side,
+                            bottom=thick_border_side
+                        )
+            worksheet = writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]]
+            for row in range(2, worksheet.max_row + 1):
+                if any(item in worksheet.cell(row=row, column=2).value for item in ["average", "geometric_mean"]):
+                    for col in range(1, worksheet.max_column + 1):
+                        thick_border_side = Side(border_style="thick", color="FFA500") # orange border
+                        worksheet.cell(row=row, column=col).border = Border(
+                            left=thick_border_side,
+                            right=thick_border_side,
+                            top=thick_border_side,
+                            bottom=thick_border_side
+                        )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compare CSV files")
