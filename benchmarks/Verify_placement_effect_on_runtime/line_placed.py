@@ -50,7 +50,7 @@ def my_benchmark(opts):
         # kernal function declarations
         accumulate_i32 = external_func(
             "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
-    )
+        )
         
         # Tile declarations as tile[row][col]
         tiles = [
@@ -290,22 +290,6 @@ def my_benchmark(opts):
             dma_start_task(*in_tasks, *out_tasks)
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
-
-
-# zeroing the values of the items
-def zero_func(items):
-    for data in items:
-        for i in range_(data.shape[0]):
-            data[i] = 0
-
-
-# Accumulate the input and adding a constant for each element one by one (simple function to prevent optimization)
-def add_func(in_items, out_items, increment=1):
-    for data_out in out_items:
-        for i in range_(data_out.shape[0]):
-            data_out[i] = increment
-            for data_in in in_items:
-                data_out[i] += data_in[i]
 
 
 if __name__ == "__main__":

@@ -18,7 +18,10 @@ placement_seed ?= 0
 enable_feedback ?= 0
 expand_rate ?= 1000000
 
-target_name := verify
+# options for target:
+# - line
+# - mesh
+target_name ?= mesh
 aie_py_src := ${target_name}.py
 use_placed ?= 1
 ifeq (${use_placed}, 0)
@@ -52,7 +55,7 @@ trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
 aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} --placement=${placement} --placement_seed=${placement_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
-runargs+= -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION} --inout_size=${inout_size}
+runargs+= -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION} --inout_size=${inout_size} --verify=""
 kernals := accumulate
 
 ifeq (${use_placed}, 0)
