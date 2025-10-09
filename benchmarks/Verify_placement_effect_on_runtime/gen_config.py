@@ -24,7 +24,7 @@ for with_feedback in [0, 1]:
                 'placement_seed': 0,
                 'enable_feedback': with_feedback
             },
-            'output': "build/verify.mlir"
+            'output': "build/line.mlir"
         })
         tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
@@ -42,7 +42,7 @@ for with_feedback in [0, 1]:
                     'placement_seed': 0,
                     'enable_feedback': with_feedback
                 },
-                'output': "build/verify.mlir"
+                'output': "build/line.mlir"
             })
             tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
@@ -59,7 +59,7 @@ for with_feedback in [0, 1]:
                 'placement_seed': 0,
                 'enable_feedback': with_feedback
             },
-            'output': "build/verify.mlir"
+            'output': "build/line.mlir"
         })
         tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
     
@@ -78,7 +78,7 @@ for with_feedback in [0, 1]:
                     'enable_feedback': with_feedback,
                     'length': length
                 },
-                'output': "build/verify.mlir"
+                'output': "build/line.mlir"
             })
             tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 

@@ -52,10 +52,6 @@ def my_benchmark(opts):
             "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
         )
         
-        # Tile declarations as tile[row][col]
-        tiles = [
-            [tile(col, row) for col in range(0, 8)] for row in range(0, 6)
-        ]
         connection_order = []
         if opts.placement == "regular":
             connection_order = [dict(row=y, col=x) for x in range(4) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
@@ -125,6 +121,15 @@ def my_benchmark(opts):
         obj_fifo_lookup = dict()
         obj_fifos = []
 
+        # Tile declarations as tile[row][col]
+        tiles = { '0':dict(), '1':dict(), '2':dict(), '3':dict(), '4':dict(), '5':dict() }
+        for node in connection_order:
+            row = str(node["row"])
+            col = str(node["col"])
+            if col not in tiles[row]:
+                tiles[row][col] = tile(col, row)
+
+
         for node in connection_order:
             obj_fifo_lookup[(node['row'],node['col'])] = {"in":[], "out":[]}
 
@@ -136,8 +141,8 @@ def my_benchmark(opts):
             obj_fifo_id = len(obj_fifos)
             obj_fifos.append(object_fifo(
                 f"obj_fifo_{connection_order[cur_idx]['row']}_{connection_order[cur_idx]['col']}_to_{connection_order[next_idx]['row']}_{connection_order[next_idx]['col']}",
-                tiles[connection_order[cur_idx]['row']][connection_order[cur_idx]['col']],
-                tiles[connection_order[next_idx]['row']][connection_order[next_idx]['col']],
+                tiles[str(connection_order[cur_idx]['row'])][str(connection_order[cur_idx]['col'])],
+                tiles[str(connection_order[next_idx]['row'])][str(connection_order[next_idx]['col'])],
                 fifo_depth,
                 intermediate_data_dtype,
             ))
@@ -163,8 +168,8 @@ def my_benchmark(opts):
             feedback_obj_fifo_id = len(obj_fifos)
             obj_fifos.append(object_fifo(
                 f"obj_fifo_{connection_order[contracting_from_node-1]['row']}_{connection_order[contracting_from_node-1]['col']}_to_{connection_order[expanding_till_node]['row']}_{connection_order[expanding_till_node]['col']}",
-                tiles[connection_order[contracting_from_node-1]['row']][connection_order[contracting_from_node-1]['col']],
-                tiles[connection_order[expanding_till_node]['row']][connection_order[expanding_till_node]['col']],
+                tiles[str(connection_order[contracting_from_node-1]['row'])][str(connection_order[contracting_from_node-1]['col'])],
+                tiles[str(connection_order[expanding_till_node]['row'])][str(connection_order[expanding_till_node]['col'])],
                 fifo_depth,
                 intermediate_data_dtype,
             ))
@@ -175,7 +180,7 @@ def my_benchmark(opts):
         for node in connection_order[compute_core_start_idx:expanding_till_node]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
                 for _ in range_(0xFFFFFFFF):
                     in_items = []
@@ -195,7 +200,7 @@ def my_benchmark(opts):
         if expanding_till_node < len(connection_order) + contracting_from_node:
             row = connection_order[expanding_till_node]['row']
             col = connection_order[expanding_till_node]['col']
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
                 in_items = []
                 out_items = []
@@ -228,7 +233,7 @@ def my_benchmark(opts):
         for node in connection_order[expanding_till_node+1:contracting_from_node]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
                 for _ in range_(0xFFFFFFFF):
                     in_items = []
@@ -247,7 +252,7 @@ def my_benchmark(opts):
         for node in connection_order[contracting_from_node:compute_core_end_idx]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
                 for _ in range_(0xFFFFFFFF):
                     in_items = []

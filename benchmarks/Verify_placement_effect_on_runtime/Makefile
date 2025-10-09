@@ -21,7 +21,7 @@ expand_rate ?= 1000000
 # options for target:
 # - line
 # - mesh
-target_name ?= mesh
+target_name ?= line
 aie_py_src := ${target_name}.py
 use_placed ?= 1
 ifeq (${use_placed}, 0)

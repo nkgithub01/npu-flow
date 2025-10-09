@@ -51,6 +51,9 @@ def my_benchmark(opts):
         accumulate_i32 = external_func(
             "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
         )
+        zero_i32 = external_func(
+            "zero_int32_t_1", inputs=[intermediate_data_dtype]
+        )
 
         # Tile declarations as tile[row][col]
         tiles = [
@@ -86,6 +89,9 @@ def my_benchmark(opts):
                 ))
                 obj_fifo_lookup[(curr_node[0], curr_node[1])]['out'].append(to_top_obj_fifo_id)
                 obj_fifo_lookup[(top_node[0], top_node[1])]['in'].append(to_top_obj_fifo_id)
+                # To avoid deadlock, we need to initialize some object fifos with data
+                if col == 0 and row > 2:
+                    obj_fifo_lookup[(top_node[0], top_node[1])]['initial_in'].append(to_top_obj_fifo_id)
 
                 # Create object fifos to right nodes
                 to_right_obj_fifo_id = len(obj_fifos)
@@ -98,12 +104,9 @@ def my_benchmark(opts):
                 ))
                 obj_fifo_lookup[(curr_node[0], curr_node[1])]['out'].append(to_right_obj_fifo_id)
                 obj_fifo_lookup[(right_node[0], right_node[1])]['in'].append(to_right_obj_fifo_id)
-
                 # To avoid deadlock, we need to initialize some object fifos with data
                 if row == 3 and col < 7:
                     obj_fifo_lookup[(right_node[0], right_node[1])]['initial_in'].append(to_right_obj_fifo_id)
-                if col == 0 and row > 2:
-                    obj_fifo_lookup[(top_node[0], top_node[1])]['initial_in'].append(to_top_obj_fifo_id)
 
         in_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
@@ -130,37 +133,33 @@ def my_benchmark(opts):
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel([in_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
-                        # Main loop
+                        do_kernel([in_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(0xFFFFFFFF):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
+                            do_kernel([in_obj_fifo_id] + obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
 
                 # Output core that takes input from the previous cores then repeatedly sends to outside AIE-array
                 elif (row == 2 and col == 7):
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
-                        # Main loop
+                        do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(0xFFFFFFFF):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], [out_obj_fifo_id], obj_fifos, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[(row, col)]["in"], [out_obj_fifo_id] + obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 # Intermediate cores
                 elif row == 3 or col == 0:
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
-                        # Main loop
+                        do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(0xFFFFFFFF):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 else:
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
-                        # Main loop
                         for _ in range_(0xFFFFFFFF):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
 
         # To/from AIE-array data movement
         @runtime_sequence(
@@ -170,19 +169,29 @@ def my_benchmark(opts):
         )
         def sequence(Input_one, Input_two, Output):
             in_tasks = []
+            input_tile = TensorTiler2D.group_tiler(
+                (inout_size,), # Shape of the input tensor
+                (inout_size,),
+                (1,),
+                pattern_repeat=64,  # Repeat data
+            )
             in_tasks.append(shim_dma_single_bd_task(
                 obj_fifos[in_obj_fifo_id], 
                 Input_one, 
-                offset=0, 
-                sizes=[1, 1, 1, inout_size]
+                tap=input_tile[0],
             ))
             
             out_tasks = []
+            output_tile = TensorTiler2D.group_tiler(
+                (inout_size,), # Shape of the output tensor
+                (inout_size,),
+                (1,),
+                pattern_repeat=64,  # Repeat data
+            )
             out_tasks.append(shim_dma_single_bd_task(
                 obj_fifos[out_obj_fifo_id],
                 Output,
-                offset=0,
-                sizes=[1, 1, 1, inout_size],
+                tap=output_tile[0],
                 issue_token=True
             ))
 
@@ -190,23 +199,24 @@ def my_benchmark(opts):
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
 
-def accumulate(in_items, range, out_items, kernel):
+def accumulate(in_items, range, out_items, zero_kernel, accumulate_kernel):
     for out_item in out_items:
+        zero_kernel(out_item)
         for in_item in in_items:
-            kernel(in_item, range, out_item)
+            accumulate_kernel(in_item, range, out_item)
 
-def do_kernel(in_obj_fifo_ids, out_obj_fifo_ids, obj_fifos, kernel):
+def do_kernel(in_obj_fifo_ids, out_obj_fifo_ids, obj_fifos, zero_kernel, accumulate_kernel):
     in_items = []
     out_items = []
-    for input_fifo_id in in_obj_fifo_ids:
-        in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
     for output_fifo_id in out_obj_fifo_ids:
         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-    # accumulate(in_items, 1, out_items, kernel)
-    for output_fifo_id in out_obj_fifo_ids:
-        obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
+    for input_fifo_id in in_obj_fifo_ids:
+        in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
+    accumulate(in_items, 1, out_items, zero_kernel, accumulate_kernel)
     for input_fifo_id in in_obj_fifo_ids:
         obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
+    for output_fifo_id in out_obj_fifo_ids:
+        obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
 
 
 if __name__ == "__main__":
