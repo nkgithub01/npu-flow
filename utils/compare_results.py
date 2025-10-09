@@ -1,3 +1,5 @@
+import os
+import re
 import argparse
 import csv
 import numpy as np
@@ -40,10 +42,27 @@ def normalize_matching_rows(baseline_df, comparison_df):
     return normalized_df
 
 def main(args):
-    # Map files to labels
+    # Check if the number of files and labels match
     if len(args.files) != len(args.labels):
         args.labels = [file.split('.')[0] for file in args.files]
         print("Warning: The number of files and labels given do not match. Ignoring labels. Will use file names as labels.")
+    
+    # Check if all files exist, if not, remove them from the list
+    tmp_file_list = []
+    tmp_label_list = []
+    for idx, file in enumerate(args.files):
+        if not os.path.isfile(file):
+            print(f"Error: File {file} does not exist.")
+        else:
+            tmp_file_list.append(file)
+            tmp_label_list.append(args.labels[idx])
+    if len(tmp_file_list) == 0:
+        print("Error: No valid files to process. Exiting.")
+        return
+    
+    # Map files to labels
+    args.files = tmp_file_list
+    args.labels = tmp_label_list
     file_label_map = dict(zip(args.files, args.labels))
 
     # Define benchmark groups
@@ -93,9 +112,11 @@ def main(args):
             data = pd.read_csv(file)
             print(f"Successfully read {file} with shape {data.shape}")
             
-            # Strip extra space around the value and sort data by benchmark and task_name
+            # Strip extra space around the value and sort data by benchmark and task_name with natural sorting for task_name
             data.columns = data.columns.str.strip()
-            data.sort_values(by=['benchmark', 'task_name'], inplace=True, ignore_index=True)
+            def natural_sort_key(s):
+                return tuple([int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)])
+            data.sort_values(by=['benchmark', 'task_name'], key=lambda col: col.apply(natural_sort_key), inplace=True, ignore_index=True)
             dfs[file] = data
 
             # Remove failed test cases which contain 'N/A' in any column except 'benchmark' and 'task_name' or -1.0 for avg_runtime [us]
@@ -210,6 +231,7 @@ def main(args):
         # Color the cell base on the value in normalized sheets, green to red gradient from 0 to 10
         for file in args.files:
             file_name = file_label_map[file]
+            baseline_file_name = file_label_map[baseline_file]
             worksheet = writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]]
             for row in range(2, worksheet.max_row + 1):
                 for col in range(3, worksheet.max_column + 1):
@@ -245,6 +267,7 @@ def main(args):
         # Add border to the average and geometric_mean rows in each sheet with orange border
         for file in args.files:
             file_name = file_label_map[file]
+            baseline_file_name = file_label_map[baseline_file]
             worksheet = writer.sheets[f"common_success_{file_name}"[:31]]
             for row in range(2, worksheet.max_row + 1):
                 if any(item in worksheet.cell(row=row, column=2).value for item in ["average", "geometric_mean"]):
@@ -267,6 +290,16 @@ def main(args):
                             top=thick_border_side,
                             bottom=thick_border_side
                         )
+        
+        # Freeze the first row and the first 2 columns of the sheet
+        for file in args.files:
+            file_name = file_label_map[file]
+            baseline_file_name = file_label_map[baseline_file]
+            writer.sheets[f"{file_name}"[:31]].freeze_panes = "C2"
+            writer.sheets[f"success_{file_name}"[:31]].freeze_panes = "C2"
+            writer.sheets[f"common_success_{file_name}"[:31]].freeze_panes = "C2"
+            writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]].freeze_panes = "C2"
+        writer.sheets["Overall Statistics"].freeze_panes = "C2"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compare CSV files")
