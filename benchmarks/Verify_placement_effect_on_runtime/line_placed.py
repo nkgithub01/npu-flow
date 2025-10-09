@@ -54,16 +54,9 @@ def my_benchmark(opts):
         
         connection_order = []
         if opts.placement == "regular":
-            connection_order = [dict(row=y, col=x) for x in range(4) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
-        elif opts.placement == "1-hop":
-            connection_order = [dict(row=y, col=x) for x in range(0,8,2) for y in (range(2,6,2) if (x/2)%2==0 else range(4,1,-2))]
-            connection_order += ([dict(row=y, col=x) for x in range(1,8,2) for y in (range(2,6,2) if (x/2)%2==1 else range(4,1,-2))])[::-1]
-        elif opts.placement == "2-hop":
-            connection_order = [
-                dict(row=2, col=0), dict(row=5, col=0), dict(row=5, col=3), dict(row=5, col=6), dict(row=2, col=6), dict(row=2, col=3),
-                dict(row=2, col=1), dict(row=5, col=1), dict(row=5, col=4), dict(row=5, col=7), dict(row=2, col=7), dict(row=2, col=4),
-                dict(row=2, col=2), dict(row=5, col=2), dict(row=5, col=5), dict(row=2, col=5)
-            ]
+            node_id_lookup = [(2,0), (2,1), (3,0), (3,1), (4,0), (4,1), (5,0), (5,1), (5,2), (4,2), (5,3), (4,3), (5,4), (4,4), (5,5), (4,5), (5,6), (4,6), (5,7), (4,7), (3,7), (3,6), (2,7), (2,6), (2,5), (3,5), (2,4), (3,4), (2,3), (3,3), (2,2), (3,2)]
+            connection_order_idx = [0,2,4,6,7,8,10,12,14,16,18,19,20,22,23,24,26,28,30,31,29,27,25,21,17,15,13,11,9,5,3,1]
+            connection_order = [node_id_lookup[idx] for idx in connection_order_idx if idx < opts.length]
         elif opts.placement == "random":
             connection_order = [dict(row=y, col=x) for y in range(2,6) for x in range(8)]
             connection_order.remove(dict(row=2,col=0))

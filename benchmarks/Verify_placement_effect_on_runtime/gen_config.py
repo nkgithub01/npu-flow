@@ -46,17 +46,18 @@ for with_feedback in [0, 1]:
             })
             tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
-    for placement in ["regular", "1-hop", "2-hop"]:
-        taskname = f"placement_{placement}_with_feedback" if with_feedback else f"placement_{placement}"
+    for length in range(4, 33):
+        taskname = f"placement_regular_length_{length}_with_feedback" if with_feedback else f"placement_regular_length_{length}"
         data['tasks'].append({
             'name': taskname,
             'params': {
                 'num_rows': 6,
                 'num_cols': 8,
                 'inout_size': 256,
-                'expand_rate': 1000000,
-                'placement': placement,
+                'expand_rate': 100000,
+                'placement': 'regular',
                 'placement_seed': 0,
+                'length': length,
                 'enable_feedback': with_feedback
             },
             'output': "build/line.mlir"
@@ -75,8 +76,8 @@ for with_feedback in [0, 1]:
                     'expand_rate': 100000,
                     'placement': 'random',
                     'placement_seed': seed,
-                    'enable_feedback': with_feedback,
-                    'length': length
+                    'length': length,
+                    'enable_feedback': with_feedback
                 },
                 'output': "build/line.mlir"
             })
