@@ -159,6 +159,7 @@ def main(args):
     
     # Collect overall stats for each file and calculate stats for each group
     dfs["Overall Statistics"] = pd.DataFrame(columns=['Sheet', 'Benchmark Group', 'Total Number Test Cases', 'Successful Test Cases', 'Success Rate', 'Common Successful Test Cases Across All Files'])
+    empty_row_df = pd.DataFrame([[""]*len(dfs["Overall Statistics"].columns)], columns=dfs["Overall Statistics"].columns)
     for file in args.files:
         total_test_cases = dfs[file].shape[0]
         successful_test_cases = dfs["success_" + file].shape[0]
@@ -174,7 +175,8 @@ def main(args):
                 'Successful Test Cases': group_successful,
                 'Success Rate': float(group_successful) / float(group_total) if float(group_total) > 0.0 else 0.0,
                 'Common Successful Test Cases Across All Files': group_common_successful
-            }).to_frame().T], ignore_index=True)
+                }).to_frame().T
+            ], ignore_index=True)
         # Add ungrouped stats
         ungrouped_total = helper_get_ungrouped_df(dfs[file]).shape[0]
         ungrouped_successful = helper_get_ungrouped_df(dfs["success_" + file]).shape[0]
@@ -186,7 +188,8 @@ def main(args):
             'Successful Test Cases': ungrouped_successful,
             'Success Rate': float(ungrouped_successful) / float(ungrouped_total) if float(ungrouped_total) > 0.0 else 0.0,
             'Common Successful Test Cases Across All Files': ungrouped_common_successful
-        }).to_frame().T], ignore_index=True)    
+            }).to_frame().T
+        ], ignore_index=True)    
         # Add overall stats
         dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
             'Sheet': file_label_map[file],
@@ -195,13 +198,15 @@ def main(args):
             'Successful Test Cases': successful_test_cases,
             'Success Rate': float(successful_test_cases) / float(total_test_cases) if float(total_test_cases) > 0.0 else 0.0,
             'Common Successful Test Cases Across All Files': common_successful_test_cases
-        }).to_frame().T], ignore_index=True)
+            }).to_frame().T,
+            empty_row_df
+        ], ignore_index=True)
     
     with open('output.log', 'w') as output_log:
         output_log.write(str(dfs))
 
     # Save the results to Excel files
-    with pd.ExcelWriter('comparison_results.xlsx', engine='openpyxl') as writer:
+    with pd.ExcelWriter(args.output_file, engine='openpyxl') as writer:
         dfs["Overall Statistics"].to_excel(writer, sheet_name="Overall Statistics", index=False)
         for file in args.files:
             baseline_file_name = file_label_map[baseline_file]
@@ -317,6 +322,15 @@ if __name__ == "__main__":
         required=False,
         help='List of labels for the CSV files',
         default=[]
+    )
+    parser.add_argument(
+        '-o',
+        '--output',
+        type=str,
+        dest='output_file',
+        required=False,
+        help='Output file for the comparison results',
+        default='comparison_results.xlsx'
     )
     args = parser.parse_args()
     main(args)
