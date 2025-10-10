@@ -41,6 +41,13 @@ def my_benchmark(opts):
     else:
         raise AssertionError("Invalid device type: only NPU2 (Strix/Strix Halo/Krackan) is supported")
     
+    if opts.enable_feedback and opts.length < 4:
+        raise AssertionError("Invalid length: length should be at least 4 when feedback is enabled")
+    elif not opts.enable_feedback and opts.length < 2:
+        raise AssertionError("Invalid length: length should be at least 2 when feedback is disabled")
+    elif opts.length > 32:
+        raise AssertionError("Invalid length: length should be at most 32")
+    
     @device(dev_ty)
     def device_body():
         # parse the netlist file and get the tiles and object_fifos and link the object_fifos
@@ -49,15 +56,23 @@ def my_benchmark(opts):
         intermediate_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
 
         # kernal function declarations
+        zero_i32 = external_func(
+            "zero_int32_t_1", inputs=[intermediate_data_dtype]
+        )
         accumulate_i32 = external_func(
             "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
         )
+        def accumulate(in_items, range, out_items, zero_kernel, accumulate_kernel):
+            for out_item in out_items:
+                zero_kernel(out_item)
+                for in_item in in_items:
+                    accumulate_kernel(in_item, range, out_item)
         
         connection_order = []
         if opts.placement == "regular":
             node_id_lookup = [(2,0), (2,1), (3,0), (3,1), (4,0), (4,1), (5,0), (5,1), (5,2), (4,2), (5,3), (4,3), (5,4), (4,4), (5,5), (4,5), (5,6), (4,6), (5,7), (4,7), (3,7), (3,6), (2,7), (2,6), (2,5), (3,5), (2,4), (3,4), (2,3), (3,3), (2,2), (3,2)]
             connection_order_idx = [0,2,4,6,7,8,10,12,14,16,18,19,20,22,23,24,26,28,30,31,29,27,25,21,17,15,13,11,9,5,3,1]
-            connection_order = [node_id_lookup[idx] for idx in connection_order_idx if idx < opts.length]
+            connection_order = [dict(row=node_id_lookup[idx][0], col=node_id_lookup[idx][1]) for idx in connection_order_idx if idx < opts.length]
         elif opts.placement == "random":
             connection_order = [dict(row=y, col=x) for y in range(2,6) for x in range(8)]
             connection_order.remove(dict(row=2,col=0))
@@ -182,9 +197,10 @@ def my_benchmark(opts):
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for _ in range_(expand_rate):
+                        out_items = []
                         for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                             out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                        accumulate_i32(in_items[0], 1, out_items[0])
+                        accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                         for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                             obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -202,20 +218,22 @@ def my_benchmark(opts):
                     in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                 for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                     out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                accumulate_i32(in_items[0], 1, out_items[0])
+                accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                 for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                     obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                 for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                     obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
 
                 for _ in range_(sys.maxsize):
+                    in_items = []
+                    out_items = []
                     if opts.enable_feedback:
-                        tmp = obj_fifos[feedback_obj_fifo_id].acquire(ObjectFifoPort.Consume, 1)
+                        in_items.append(obj_fifos[feedback_obj_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                    accumulate_i32(in_items[0], 1, out_items[0])
+                    accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -236,7 +254,7 @@ def my_benchmark(opts):
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                    accumulate_i32(in_items[0], 1, out_items[0])
+                    accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -254,9 +272,10 @@ def my_benchmark(opts):
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
                     for _ in range_(contract_rate):
+                        in_items = []
                         for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                             in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-                        accumulate_i32(in_items[0], 1, out_items[0])
+                        accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                         for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                             obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:

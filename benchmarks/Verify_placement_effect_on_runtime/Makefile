@@ -11,8 +11,6 @@ length ?= 4 # length of the line in terms of number of AIE COMPUTE cores
 
 # options for placement: 
 # - regular
-# - 1-hop
-# - 2-hop
 # - random
 placement ?= regular
 placement_seed ?= 0
@@ -24,7 +22,7 @@ expand_rate ?= 100000
 # - mesh
 target_name ?= line
 aie_py_src := ${target_name}.py
-use_placed ?= 0
+use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${target_name}_unplaced.py
 else ifeq (${use_placed}, 1)
