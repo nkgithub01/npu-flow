@@ -7,7 +7,8 @@ AIE_KERNELS_DIR := ${srcdir}/kernels
 device_name := npu2
 dtype := i32
 inout_size ?= 1
-length ?= 16
+length ?= 4 # length of the line in terms of number of AIE COMPUTE cores
+
 # options for placement: 
 # - regular
 # - 1-hop
@@ -15,21 +16,24 @@ length ?= 16
 # - random
 placement ?= regular
 placement_seed ?= 0
-enable_feedback ?= 0
-expand_rate ?= 1000000
+enable_feedback ?= 1
+expand_rate ?= 100000
 
 # options for target:
 # - line
 # - mesh
 target_name ?= line
 aie_py_src := ${target_name}.py
-use_placed ?= 1
+use_placed ?= 0
 ifeq (${use_placed}, 0)
-aie_py_src=${target_name}.py
+aie_py_src=${target_name}_unplaced.py
 else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
+# options for placer:
+# - sequential_placer
+# - sa_placer
 placer ?= sequential_placer
 
 num_rows ?= 6
@@ -54,12 +58,16 @@ xclbin_target?=build/${target_name}.xclbin
 trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
+pnr_args ?= -n 1 -r
 aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} --placement=${placement} --placement_seed=${placement_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
 runargs+= -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION} --inout_size=${inout_size} --verify=""
 kernals := accumulate
 
 ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
+ifeq (${placer}, sa_placer)
+aieargs+=--pnr-args "${pnr_args}"
+endif
 endif
 
 build: ${mlir_target}

@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import argparse
 import random
@@ -175,7 +176,7 @@ def my_benchmark(opts):
             col = node["col"]
             @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -207,7 +208,7 @@ def my_benchmark(opts):
                 for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                     obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
 
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     if opts.enable_feedback:
                         tmp = obj_fifos[feedback_obj_fifo_id].acquire(ObjectFifoPort.Consume, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -228,7 +229,7 @@ def my_benchmark(opts):
             col = node["col"]
             @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -247,7 +248,7 @@ def my_benchmark(opts):
             col = node["col"]
             @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
