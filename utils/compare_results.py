@@ -69,11 +69,11 @@ def main(args):
     benchmark_groups = []
     benchmark_groups.append(dict(
         benchmark_group_name = "Synthetic-Mesh",
-        benchmark_group_patterns = [("microbenchmark", "mesh")]
+        benchmark_group_patterns = [("microbenchmark", "mesh"), ("Verify_placement_effect_on_runtime", "mesh")]
     ))
     benchmark_groups.append(dict(
         benchmark_group_name = "Synthetic-Line",
-        benchmark_group_patterns = [("microbenchmark", "line"), ("Verify_placement_effect_on_runtime", "")]
+        benchmark_group_patterns = [("microbenchmark", "line"), ("Verify_placement_effect_on_runtime", "line")]
     ))
     benchmark_groups.append(dict(
         benchmark_group_name = "Synthetic-Tree",

@@ -10,9 +10,9 @@ data = {
 }
 
 tasklist = []
-for with_feedback in [0, 1]:
+for enable_feedback in [0, 1]:
     for inout_size in [2**i for i in range(0, 21)]:
-        taskname = f"placement_single_node{'_with_feedback' if with_feedback else ''}_neighbour_inoutsize_{inout_size}_distance_1"
+        taskname = f"placement_line_single_node{'_with_feedback' if enable_feedback else ''}_neighbour_inoutsize_{inout_size}_distance_1"
         data['tasks'].append({
             'name': taskname,
             'params': {
@@ -23,7 +23,7 @@ for with_feedback in [0, 1]:
                 'expand_rate': 1000000,
                 'placement': f'single_node_neighbour_distance_1',
                 'placement_seed': 0,
-                'enable_feedback': with_feedback
+                'enable_feedback': enable_feedback
             },
             'output': "build/line.mlir"
         })
@@ -31,7 +31,7 @@ for with_feedback in [0, 1]:
 
     for inout_size in [2**i for i in range(0, 12)]:
         for distance in range(1, 32):
-            taskname = f"placement_single_node{'_with_feedback' if with_feedback else ''}_inoutsize_{inout_size}_distance_{distance}"
+            taskname = f"placement_line_single_node{'_with_feedback' if enable_feedback else ''}_inoutsize_{inout_size}_distance_{distance}"
             data['tasks'].append({
                 'name': taskname,
                 'params': {
@@ -42,14 +42,14 @@ for with_feedback in [0, 1]:
                     'expand_rate': 1000000,
                     'placement': f'single_node_distance_{distance}',
                     'placement_seed': 0,
-                    'enable_feedback': with_feedback
+                    'enable_feedback': enable_feedback
                 },
                 'output': "build/line.mlir"
             })
             tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
     for length in range(4, 33):
-        taskname = f"placement_regular_length_{length}_with_feedback" if with_feedback else f"placement_regular_length_{length}"
+        taskname = f"placement_line_regular_length_{length}{'_with_feedback' if enable_feedback else ''}"
         data['tasks'].append({
             'name': taskname,
             'params': {
@@ -61,7 +61,7 @@ for with_feedback in [0, 1]:
                 'placement': 'regular',
                 'placement_seed': 0,
                 'length': length,
-                'enable_feedback': with_feedback
+                'enable_feedback': enable_feedback
             },
             'output': "build/line.mlir"
         })
@@ -69,7 +69,7 @@ for with_feedback in [0, 1]:
     
     for seed in range(10):
         for length in range(4,33):
-            taskname = f"length_{length}_random_seed_{seed}_with_feedback" if with_feedback else f"length_{length}_random_seed_{seed}"
+            taskname = f"placement_line_random_length_{length}_seed_{seed}{'_with_feedback' if enable_feedback else ''}"
             data['tasks'].append({
                 'name': taskname,
                 'params': {
@@ -81,11 +81,30 @@ for with_feedback in [0, 1]:
                     'placement': 'random',
                     'placement_seed': seed,
                     'length': length,
-                    'enable_feedback': with_feedback
+                    'enable_feedback': enable_feedback
                 },
                 'output': "build/line.mlir"
             })
             tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+
+for enable_feedback in [0, 1]:
+    for inout_size in [2**i for i in range(0, 21)]:
+        taskname = f"placement_mesh{'_with_feedback' if enable_feedback else ''}_inoutsize_{inout_size}"
+        data['tasks'].append({
+            'name': taskname,
+            'params': {
+                'target_name':'mesh',
+                'num_rows': 6,
+                'num_cols': 8,
+                'inout_size': inout_size,
+                'expand_rate': 100000,
+                'placement': 'regular',
+                'placement_seed': 0,
+                'enable_feedback': enable_feedback
+            },
+            'output': "build/mesh.mlir"
+        })
+        tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
 
 with open('config.yml', 'w') as file:
     yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, indent=2)
