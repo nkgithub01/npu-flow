@@ -16,7 +16,7 @@ from aie.iron.controlflow import range_
 from aie.helpers.util import np_ndarray_type_get_shape
 from aie.helpers.taplib import TensorAccessPattern
 
-def main(opts, placer):
+def main(opts):
     if opts.dev == "npu":
         dev = NPU1Col3()
     elif opts.dev == "npu2":
@@ -594,7 +594,8 @@ def main(opts, placer):
         rt.drain(outOFL2L3.cons(), outputToL3, placement=Tile(1, 0), wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    module = Program(dev, rt).resolve_program(placer)
+    placer_function = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    module = Program(dev, rt).resolve_program(placer_function)
 
     # Print the generated MLIR
     print(module)
@@ -636,5 +637,4 @@ if __name__ == "__main__":
         help="PnR tool arguments (only used when placer is sa_placer)",
     )
     opts = argparser.parse_args()
-    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
-    main(opts, placer)
+    main(opts)
