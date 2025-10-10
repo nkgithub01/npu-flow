@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import argparse
 import random
@@ -14,13 +15,11 @@ import aie.utils.trace as trace_utils
 from aie.utils.trace import PortEvent
 from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent, MemTileEvent
 
-
 dtype_map = {
     "i8": np.int8,
     "i16": np.int16,
     "i32": np.int32,
 }
-
 
 def main(opts):
     random.seed(opts.placement_seed)
@@ -48,12 +47,31 @@ def my_benchmark(opts):
         intermediate_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
 
         # kernal function declarations
-        accumulate_i32 = external_func(
-            "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
-        )
         zero_i32 = external_func(
             "zero_int32_t_1", inputs=[intermediate_data_dtype]
         )
+        accumulate_i32 = external_func(
+            "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
+        )
+
+        def accumulate(in_items, range, out_items, zero_kernel, accumulate_kernel):
+            for out_item in out_items:
+                zero_kernel(out_item)
+                for in_item in in_items:
+                    accumulate_kernel(in_item, range, out_item)
+
+        def do_kernel(in_obj_fifo_ids, out_obj_fifo_ids, obj_fifos, zero_kernel, accumulate_kernel):
+            in_items = []
+            out_items = []
+            for output_fifo_id in out_obj_fifo_ids:
+                out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
+            for input_fifo_id in in_obj_fifo_ids:
+                in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
+            accumulate(in_items, 1, out_items, zero_kernel, accumulate_kernel)
+            for input_fifo_id in in_obj_fifo_ids:
+                obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
+            for output_fifo_id in out_obj_fifo_ids:
+                obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
 
         # Tile declarations as tile[row][col]
         tiles = [
@@ -134,16 +152,14 @@ def my_benchmark(opts):
                     def core_body():
                         # Initial accumulation to avoid deadlock
                         do_kernel([in_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
-                        for _ in range_(0xFFFFFFFF):
+                        for _ in range_(sys.maxsize):
                             do_kernel([in_obj_fifo_id] + obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
 
                 # Output core that takes input from the previous cores then repeatedly sends to outside AIE-array
                 elif (row == 2 and col == 7):
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
-                        # Initial accumulation to avoid deadlock
-                        do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
-                        for _ in range_(0xFFFFFFFF):
+                        for _ in range_(sys.maxsize):
                             do_kernel(obj_fifo_lookup[(row, col)]["in"], [out_obj_fifo_id] + obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 # Intermediate cores
@@ -152,13 +168,13 @@ def my_benchmark(opts):
                     def core_body():
                         # Initial accumulation to avoid deadlock
                         do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
-                        for _ in range_(0xFFFFFFFF):
+                        for _ in range_(sys.maxsize):
                             do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 else:
                     @core(tiles[row][col], "accumulate.o")
                     def core_body():
-                        for _ in range_(0xFFFFFFFF):
+                        for _ in range_(sys.maxsize):
                             do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
 
         # To/from AIE-array data movement
@@ -198,25 +214,6 @@ def my_benchmark(opts):
             dma_start_task(*in_tasks, *out_tasks)
             dma_await_task(*out_tasks)
             dma_free_task(*in_tasks)
-
-def accumulate(in_items, range, out_items, zero_kernel, accumulate_kernel):
-    for out_item in out_items:
-        zero_kernel(out_item)
-        for in_item in in_items:
-            accumulate_kernel(in_item, range, out_item)
-
-def do_kernel(in_obj_fifo_ids, out_obj_fifo_ids, obj_fifos, zero_kernel, accumulate_kernel):
-    in_items = []
-    out_items = []
-    for output_fifo_id in out_obj_fifo_ids:
-        out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-    for input_fifo_id in in_obj_fifo_ids:
-        in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-    accumulate(in_items, 1, out_items, zero_kernel, accumulate_kernel)
-    for input_fifo_id in in_obj_fifo_ids:
-        obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
-    for output_fifo_id in out_obj_fifo_ids:
-        obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
 
 
 if __name__ == "__main__":
