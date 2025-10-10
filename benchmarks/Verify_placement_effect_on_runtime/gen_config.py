@@ -16,6 +16,7 @@ for with_feedback in [0, 1]:
         data['tasks'].append({
             'name': taskname,
             'params': {
+                'target_name':'line',
                 'num_rows': 6,
                 'num_cols': 8,
                 'inout_size': inout_size,
@@ -34,6 +35,7 @@ for with_feedback in [0, 1]:
             data['tasks'].append({
                 'name': taskname,
                 'params': {
+                    'target_name':'line',
                     'num_rows': 6,
                     'num_cols': 8,
                     'inout_size': inout_size,
@@ -51,6 +53,7 @@ for with_feedback in [0, 1]:
         data['tasks'].append({
             'name': taskname,
             'params': {
+                'target_name':'line',
                 'num_rows': 6,
                 'num_cols': 8,
                 'inout_size': 256,
@@ -70,6 +73,7 @@ for with_feedback in [0, 1]:
             data['tasks'].append({
                 'name': taskname,
                 'params': {
+                    'target_name':'line',
                     'num_rows': 6,
                     'num_cols': 8,
                     'inout_size': 256,
