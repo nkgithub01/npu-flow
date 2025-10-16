@@ -6,14 +6,14 @@ AIE_KERNELS_DIR := ${srcdir}/kernels
 
 device_name := npu2
 dtype := i32
-inout_size ?= 10000
+inout_size ?= 1
 length ?= 4 # length of the line in terms of number of AIE COMPUTE cores
 
 # options for placement: 
 # - regular
 # - random
 placement ?= regular
-placement_seed ?= 0
+random_seed ?= 0
 enable_feedback ?= 1
 expand_rate ?= 100000
 
@@ -59,7 +59,7 @@ insts_target?=build/${target_name}_insts.bin
 pnr_args ?= -n 1 -r
 aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} 
 ifeq (${target_name}, line)
-aieargs+=--placement=${placement} --placement_seed=${placement_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
+aieargs+=--placement=${placement} --random_seed=${random_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
 else ifeq (${target_name}, mesh)
 aieargs+=--num_rows=${num_rows} --num_cols=${num_cols}
 endif

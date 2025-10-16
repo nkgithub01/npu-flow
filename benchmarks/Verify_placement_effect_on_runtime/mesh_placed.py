@@ -22,7 +22,7 @@ dtype_map = {
 }
 
 def main(opts):
-    random.seed(opts.placement_seed)
+    random.seed(opts.random_seed)
 
     with mlir_mod_ctx() as ctx:
         my_benchmark(opts)
@@ -34,8 +34,8 @@ def my_benchmark(opts):
     dtype_str = opts.dtype_str
     inout_size = opts.inout_size
     dtype = dtype_map[dtype_str]
-    num_rows = 6
-    num_cols = 8
+    num_rows = opts.num_rows
+    num_cols = opts.num_cols
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
     else:
@@ -258,9 +258,9 @@ if __name__ == "__main__":
         default="i32"
     )
     argparser.add_argument(
-        "--placement_seed", 
+        "--random_seed", 
         type=int, 
-        dest="placement_seed",
+        dest="random_seed",
         default=0,
     )
     argparser.add_argument(
