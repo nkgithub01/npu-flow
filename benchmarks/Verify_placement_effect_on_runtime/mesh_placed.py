@@ -34,6 +34,8 @@ def my_benchmark(opts):
     dtype_str = opts.dtype_str
     inout_size = opts.inout_size
     dtype = dtype_map[dtype_str]
+    num_rows = 6
+    num_cols = 8
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
     else:
@@ -44,7 +46,7 @@ def my_benchmark(opts):
         # parse the netlist file and get the tiles and object_fifos and link the object_fifos
         in_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
         out_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
-        intermediate_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
+        intermediate_data_dtype = np.ndarray[(1,), np.dtype[dtype]]
 
         # kernal function declarations
         zero_i32 = external_func(
@@ -67,7 +69,7 @@ def my_benchmark(opts):
                 out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
             for input_fifo_id in in_obj_fifo_ids:
                 in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-            accumulate(in_items, 1, out_items, zero_kernel, accumulate_kernel)
+            accumulate(in_items, 0, out_items, zero_kernel, accumulate_kernel)
             for input_fifo_id in in_obj_fifo_ids:
                 obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
             for output_fifo_id in out_obj_fifo_ids:
@@ -75,26 +77,23 @@ def my_benchmark(opts):
 
         # Tile declarations as tile[row][col]
         tiles = [
-            [tile(col, row) for col in range(0, 8)] for row in range(0, 6)
+            [tile(col, row) for col in range(0, num_cols)] for row in range(0, num_rows)
         ]
 
-        expand_rate = opts.expand_rate
-        contract_rate = expand_rate
         fifo_depth = 2
-
         obj_fifo_lookup = dict()
         obj_fifos = []
 
-        for row in range(2,6):
-            for col in range(0,8):
+        for row in range(2,num_rows):
+            for col in range(0,num_cols):
                 obj_fifo_lookup[(row,col)] = {"in":[], "out":[], "initial_in":[]}
 
         # object fifos between tiles all node connect to the top and right nodes
-        for row in range(2,6):
-            for col in range(0,8):
+        for row in range(2,num_rows):
+            for col in range(0,num_cols):
                 curr_node = (row, col)
-                top_node = (row+1, col) if row < 5 else (2, col)
-                right_node = (row, col+1) if col < 7 else (row, 0)
+                top_node = (row+1, col) if row < num_rows-1 else (2, col)
+                right_node = (row, col+1) if col < num_cols-1 else (row, 0)
 
                 # Create object fifos to top nodes
                 to_top_obj_fifo_id = len(obj_fifos)
@@ -123,48 +122,66 @@ def my_benchmark(opts):
                 obj_fifo_lookup[(curr_node[0], curr_node[1])]['out'].append(to_right_obj_fifo_id)
                 obj_fifo_lookup[(right_node[0], right_node[1])]['in'].append(to_right_obj_fifo_id)
                 # To avoid deadlock, we need to initialize some object fifos with data
-                if row == 3 and col < 7:
+                if row == 3 and col < num_cols-1:
                     obj_fifo_lookup[(right_node[0], right_node[1])]['initial_in'].append(to_right_obj_fifo_id)
 
-        in_obj_fifo_id = len(obj_fifos)
+        in_shim_to_mem_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
-            f"obj_fifo_0_0_to_3_0",
+            f"obj_fifo_0_0_to_1_0",
             tiles[0][0],
+            tiles[1][0],
+            fifo_depth,
+            intermediate_data_dtype,
+        ))
+        in_mem_to_core_obj_fifo_id = len(obj_fifos)
+        obj_fifos.append(object_fifo(
+            f"obj_fifo_1_0_to_3_0",
+            tiles[1][0],
             tiles[3][0],
             fifo_depth,
-            in_data_dtype,
+            intermediate_data_dtype,
         ))
-        out_obj_fifo_id = len(obj_fifos)
+        object_fifo_link(obj_fifos[in_shim_to_mem_obj_fifo_id], obj_fifos[in_mem_to_core_obj_fifo_id])
+        out_core_to_mem_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
-            f"obj_fifo_2_7_to_0_7",
-            tiles[2][7],
-            tiles[0][7],
+            f"obj_fifo_2_{num_cols-1}_to_1_{num_cols-1}",
+            tiles[2][num_cols-1],
+            tiles[1][num_cols-1],
             fifo_depth,
-            out_data_dtype,
+            intermediate_data_dtype,
         ))
+        out_mem_to_shim_obj_fifo_id = len(obj_fifos)
+        obj_fifos.append(object_fifo(
+            f"obj_fifo_1_{num_cols-1}_to_0_{num_cols-1}",
+            tiles[1][num_cols-1],
+            tiles[0][num_cols-1],
+            fifo_depth,
+            intermediate_data_dtype,
+        ))
+        object_fifo_link(obj_fifos[out_core_to_mem_obj_fifo_id], obj_fifos[out_mem_to_shim_obj_fifo_id])
 
         # Core function declarations
-        for row in range(2,6):
-            for col in range(0,8):
+        for row in range(2,num_rows):
+            for col in range(0,num_cols):
                 # Input core that takes input from outside AIE-array then repeatedly sends to the next cores
                 if (row == 3 and col == 0):
-                    @core(tiles[row][col], "accumulate.o")
+                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel([in_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                        do_kernel([in_mem_to_core_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(sys.maxsize):
-                            do_kernel([in_obj_fifo_id] + obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel([in_mem_to_core_obj_fifo_id] + obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
 
                 # Output core that takes input from the previous cores then repeatedly sends to outside AIE-array
-                elif (row == 2 and col == 7):
-                    @core(tiles[row][col], "accumulate.o")
+                elif (row == 2 and col == num_cols-1):
+                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         for _ in range_(sys.maxsize):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], [out_obj_fifo_id] + obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"] + [out_core_to_mem_obj_fifo_id], obj_fifos, zero_i32, accumulate_i32)
                             
                 # Intermediate cores
                 elif row == 3 or col == 0:
-                    @core(tiles[row][col], "accumulate.o")
+                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         # Initial accumulation to avoid deadlock
                         do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
@@ -172,7 +189,7 @@ def my_benchmark(opts):
                             do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 else:
-                    @core(tiles[row][col], "accumulate.o")
+                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         for _ in range_(sys.maxsize):
                             do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
@@ -185,29 +202,17 @@ def my_benchmark(opts):
         )
         def sequence(Input_one, Input_two, Output):
             in_tasks = []
-            input_tile = TensorTiler2D.group_tiler(
-                (inout_size,), # Shape of the input tensor
-                (inout_size,),
-                (1,),
-                pattern_repeat=64,  # Repeat data
-            )
             in_tasks.append(shim_dma_single_bd_task(
-                obj_fifos[in_obj_fifo_id], 
+                obj_fifos[in_shim_to_mem_obj_fifo_id], 
                 Input_one, 
-                tap=input_tile[0],
+                sizes=[1,1,1,inout_size],
             ))
             
             out_tasks = []
-            output_tile = TensorTiler2D.group_tiler(
-                (inout_size,), # Shape of the output tensor
-                (inout_size,),
-                (1,),
-                pattern_repeat=64,  # Repeat data
-            )
             out_tasks.append(shim_dma_single_bd_task(
-                obj_fifos[out_obj_fifo_id],
+                obj_fifos[out_mem_to_shim_obj_fifo_id],
                 Output,
-                tap=output_tile[0],
+                sizes=[1,1,1,inout_size],
                 issue_token=True
             ))
 
@@ -234,35 +239,16 @@ if __name__ == "__main__":
         default=1,
     )
     argparser.add_argument(
-        "--placement", 
-        type=str, 
-        dest="placement",
-        default="regular",
+        "--num_rows", 
+        type=int, 
+        dest="num_rows",
+        default=6
     )
     argparser.add_argument(
-        "--placement_seed", 
+        "--num_cols", 
         type=int, 
-        dest="placement_seed",
-        default=0,
-    )
-    argparser.add_argument(
-        "--enable_feedback", 
-        type=int, 
-        dest="enable_feedback",
-        choices=[0, 1], 
-        default=0,
-    )
-    argparser.add_argument(
-        "--expand_rate", 
-        type=int, 
-        dest="expand_rate",
-        default=10**6,
-    )
-    argparser.add_argument(
-        "--length", 
-        type=int, 
-        dest="length",
-        default=16,
+        dest="num_cols",
+        default=8
     )
     argparser.add_argument(
         "--dtype", 
@@ -270,6 +256,12 @@ if __name__ == "__main__":
         dest="dtype_str",
         choices=["i32"], 
         default="i32"
+    )
+    argparser.add_argument(
+        "--placement_seed", 
+        type=int, 
+        dest="placement_seed",
+        default=0,
     )
     argparser.add_argument(
         "--trace_size", 
