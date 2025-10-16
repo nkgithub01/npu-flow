@@ -24,7 +24,7 @@ dtype_map = {
 
 
 def main(opts):
-    random.seed(opts.placement_seed)
+    random.seed(opts.random_seed)
 
     with mlir_mod_ctx() as ctx:
         my_benchmark(opts)
@@ -334,9 +334,9 @@ if __name__ == "__main__":
         default="regular",
     )
     argparser.add_argument(
-        "--placement_seed", 
+        "--random_seed", 
         type=int, 
-        dest="placement_seed",
+        dest="random_seed",
         default=0,
     )
     argparser.add_argument(
