@@ -192,9 +192,9 @@ def my_matmul(opts):
                 obj_types=[A_l1_ty] * (stop_row - start_row),
                 names=[f"A_L2L1_{row}" for row in range(start_row, stop_row)],
                 dims_to_stream=dims_to_stream,
-                placement=Tile(
-                    2 * i if n_aie_cols == 8 else i, 1
-                ),  # alternate columns in full 4x8 NPU2 case
+                # placement=Tile(
+                #     2 * i if n_aie_cols == 8 else i, 1
+                # ),  # alternate columns in full 4x8 NPU2 case
             )
         )
 
@@ -215,7 +215,7 @@ def my_matmul(opts):
                 obj_type=B_l1_ty,
                 name=f"B_L2L1_{col}",
                 dims_to_stream=dims_to_stream,
-                placement=Tile(col, 1),
+                # placement=Tile(col, 1),
             )
         )
 
@@ -237,7 +237,7 @@ def my_matmul(opts):
                 obj_types=[C_l1_ty] * n_aie_rows,
                 names=[f"C_L1L2_{col}_{row}" for row in range(n_aie_rows)],
                 depths=[fifo_depth] * n_aie_rows,
-                placement=Tile(col, 1),
+                # placement=Tile(col, 1),
             )
         )
         for j in range(n_aie_rows):
@@ -275,7 +275,7 @@ def my_matmul(opts):
                         zero_kernel,
                         matmul_kernel,
                     ],
-                    placement=Tile(tile_col, tile_row),
+                    # placement=Tile(tile_col, tile_row),
                     stack_size=0xD00,
                 )
             )
@@ -371,7 +371,7 @@ def my_matmul(opts):
                         tap=C_tiles[c_index],
                         wait=True,
                         task_group=tg,
-                        placement=Tile(col, 0),
+                        # placement=Tile(col, 0),
                     )
                     c_index += 1
 
@@ -404,9 +404,9 @@ def my_matmul(opts):
                                 A,
                                 tap=A_tiles[tile_offset],
                                 task_group=tg,
-                                placement=Tile(
-                                    2 * col if n_aie_cols == 8 else col, 0
-                                ),  # alternate columns in full 4x8 NPU2 case
+                                # placement=Tile(
+                                #     2 * col if n_aie_cols == 8 else col, 0
+                                # ),  # alternate columns in full 4x8 NPU2 case
                             )
                         # Use the calculated sizes/strides/offsets to record the data movement
                         # caused by the above call to npu_dma_memcpy_nd.
@@ -435,7 +435,7 @@ def my_matmul(opts):
                             B,
                             tap=B_tiles[col],
                             task_group=tg,
-                            placement=Tile(col, 0),
+                            # placement=Tile(col, 0),
                         )
 
                         # These lines do not change MLIR output at all - they are just for recording data movement
