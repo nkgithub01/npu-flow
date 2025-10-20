@@ -1,7 +1,7 @@
 import yaml
 
 data = {
-    'name': "verify Runtime with different placement",
+    'name': "Microbenchmark with feedback loop - Verify placement effect on runtime",
     'clean': "make clean",
     'build': "make build",
     'compile': "make aiecc",
@@ -27,7 +27,7 @@ for enable_feedback in [0, 1]:
             },
             'output': "build/line.mlir"
         })
-        tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+        tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
     for inout_size in [2**i for i in range(0, 12)]:
         for distance in range(1, 32):
@@ -46,7 +46,7 @@ for enable_feedback in [0, 1]:
                 },
                 'output': "build/line.mlir"
             })
-            tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+            tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
     for length in range(4, 33):
         taskname = f"placement_line_regular_length_{length}{'_with_feedback' if enable_feedback else ''}"
@@ -65,7 +65,7 @@ for enable_feedback in [0, 1]:
             },
             'output': "build/line.mlir"
         })
-        tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+        tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
     
     for seed in range(10):
         for length in range(4,33):
@@ -85,7 +85,7 @@ for enable_feedback in [0, 1]:
                 },
                 'output': "build/line.mlir"
             })
-            tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+            tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
 for num_row in range(4, 7):
     for num_col in range(2, 9):
@@ -101,7 +101,7 @@ for num_row in range(4, 7):
             },
             'output': "build/mesh.mlir"
         })
-        tasklist.append(f"- Verify_placement_effect_on_runtime/{taskname}")
+        tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
 with open('config.yml', 'w') as file:
     yaml_content = yaml.dump(data, default_flow_style=False, sort_keys=False, indent=2)
