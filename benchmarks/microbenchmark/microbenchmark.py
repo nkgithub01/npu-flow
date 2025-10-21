@@ -135,17 +135,9 @@ def microbenchmark(opts):
     
     # parse the netlist file and get the tiles and object_fifos and link the object_fifos
     netlist_info = parse_netlist(dtype_str, netlist_file)
-    datatype = np.ndarray[(1,), np.dtype[dtype]]
-
-    zero_i32 = Kernel(
-        "zero_int32_t_1", "accumulate.o", [datatype]
-    )
-    accumulate_i32 = Kernel(
-        "accumulate_int32_t_int32_t_1", "accumulate.o", [datatype, np.int32, datatype]
-    )
 
     # Wrap the zeroing and adding functions in a way that they can be used in the Worker
-    def core_func(zeroFunc=None, accumulateFunc=None, num_inFIFO=2, num_outFIFO=2, *obj_FIFOs):
+    def core_func(num_inFIFO=2, num_outFIFO=2, *obj_FIFOs):
         in_items = []
         out_items = []
         for inFIFO in obj_FIFOs[:num_inFIFO]:
@@ -154,9 +146,9 @@ def microbenchmark(opts):
             out_items.append(outFIFO.acquire(1))
 
         for out_item in out_items:
-            zeroFunc(out_item)
-            for idx, in_item in enumerate(in_items):
-                accumulateFunc(in_item, 1 if idx == 0 else 0, out_item)
+            out_item[0] = 1
+            for in_item in in_items:
+                out_item[0] += in_item[0]
 
         for inFIFO in obj_FIFOs[:num_inFIFO]:
             inFIFO.release(1)
@@ -176,7 +168,7 @@ def microbenchmark(opts):
         workers.append(
             Worker(
                 core_func,
-                [zero_i32, accumulate_i32, len(in_items), len(out_items), *in_items, *out_items],
+                [len(in_items), len(out_items), *in_items, *out_items],
             )
         )
     random.shuffle(workers)

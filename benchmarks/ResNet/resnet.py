@@ -219,12 +219,10 @@ def main(opts):
                 )
             )
 
-    # Cores - we move in a snake-like pattern, that depends on
-    # shared memory between neighbors, so we'll explicitly place all cores
-    cores = [
-        [Tile(0, 2), Tile(0, 3), Tile(0, 4), Tile(0, 5)],
-        [Tile(1, 5), Tile(1, 4), Tile(1, 3), Tile(1, 2)],
-        [Tile(2, 2), Tile(2, 3), Tile(2, 4), Tile(2, 5)],
+    core_locs = [
+        [2, 3, 4, 5],
+        [5, 4, 3, 2],
+        [2, 3, 4, 5],
     ]
 
     # input tensor (with broadcast for skip connection)
@@ -234,7 +232,7 @@ def main(opts):
 
     act1_fifos.append(ObjectFifo(laye1_act_sizes[0], name=act1_fifo_names[0]))
     skip_fifos.append(
-        act1_fifos[0].cons(4).forward(placement=Tile(0, 1), depth=2, name="skip_0")
+        act1_fifos[0].cons(4).forward(depth=2, name="skip_0")
     )
 
     for i in range(1, repeat + 1):
@@ -244,7 +242,7 @@ def main(opts):
         else:
             placement = Tile(i, 1)
         skip_fifos.append(
-            act1_fifos[-1].cons(4).forward(placement=placement, depth=2, name=f"skip_{i}")
+            act1_fifos[-1].cons(4).forward(depth=2, name=f"skip_{i}")
         )
 
     act2_fifo_names = ["act2_02_03_05", "act2_15_12_14", "act2_22_23_25"]
@@ -282,7 +280,6 @@ def main(opts):
                 depths=[1, 1, 1],
                 obj_types=[layer1_wts_sizes[i], weightsLayer2_ty, layer3_wts_sizes[i]],
                 names=[f"wts_buf_{i}{j}" for j in range(3)],
-                placement=Tile(i, 1),
             )
         )
 
@@ -469,7 +466,6 @@ def main(opts):
     # Create workers and place each one on a particular compute core
     workers = []
     for i in range(n_cols):
-        placement = cores[i][0]
         w = Worker(
             conv1_fn,
             [
@@ -477,10 +473,9 @@ def main(opts):
                 act1_fifos[i].cons(),
                 act2_fifos[i].prod(),
                 conv1_kernels_call[i],
-                rtp[placement.col][placement.row - 2],
+                rtp[i][core_locs[i][0]-2],
                 i,
             ],
-            placement=placement,
         )
         workers.append(w)
         w = Worker(
@@ -492,14 +487,12 @@ def main(opts):
                 conv2dk3,
                 False,
             ],
-            placement=cores[i][1],
         )
         workers.append(w)
-        placement = cores[i][2]
         if i == 0:
             skip_rtp = rtp[0][3]
         else:
-            skip_rtp = rtp[placement.col][placement.row - 2]
+            skip_rtp = rtp[i][core_locs[i][2]-2]
         w = Worker(
             conv1_skip_fn,
             [
@@ -512,7 +505,6 @@ def main(opts):
                 skip_rtp,
                 i,
             ],
-            placement=placement,
             stack_size=0xA00,
         )
         workers.append(w)
@@ -525,7 +517,6 @@ def main(opts):
                 conv2dk3,
                 True,
             ],
-            placement=cores[i][3],
         )
         workers.append(w)
     random.shuffle(workers)
@@ -566,7 +557,7 @@ def main(opts):
         rt.start(*workers)
 
         # Fill/drain input/output object FIFOs
-        rt.fill(act1_fifos[0].prod(), inputFromL3, placement=Tile(0, 0))
+        rt.fill(act1_fifos[0].prod(), inputFromL3)
 
         tap = TensorAccessPattern(
             (totalWeights_complete,),
@@ -574,7 +565,7 @@ def main(opts):
             sizes=[1, 1, 1, totalWeights_init],
             strides=[0, 0, 0, 1],
         )
-        rt.fill(wts_fifos[0].prod(), weightsFromL3, tap, placement=Tile(0, 0))
+        rt.fill(wts_fifos[0].prod(), weightsFromL3, tap)
 
         tap = TensorAccessPattern(
             (totalWeights_complete,),
@@ -582,7 +573,7 @@ def main(opts):
             sizes=[1, 1, 1, totalWeights_rest],
             strides=[0, 0, 0, 1],
         )
-        rt.fill(wts_fifos[1].prod(), weightsFromL3, tap, placement=Tile(1, 0))
+        rt.fill(wts_fifos[1].prod(), weightsFromL3, tap)
 
         tap = TensorAccessPattern(
             (totalWeights_complete,),
@@ -590,8 +581,8 @@ def main(opts):
             sizes=[1, 1, 1, totalWeights_rest],
             strides=[0, 0, 0, 1],
         )
-        rt.fill(wts_fifos[2].prod(), weightsFromL3, tap, placement=Tile(2, 0))
-        rt.drain(outOFL2L3.cons(), outputToL3, placement=Tile(1, 0), wait=True)
+        rt.fill(wts_fifos[2].prod(), weightsFromL3, tap)
+        rt.drain(outOFL2L3.cons(), outputToL3, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
     placer_function = PLACER_CONVERSION[opts.placer](opts.pnr_args)

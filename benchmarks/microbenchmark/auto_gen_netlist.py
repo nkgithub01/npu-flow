@@ -1,5 +1,6 @@
 import json
 import argparse
+import copy
 
 def write_netlist_to_file(netlist, output_file):
     with open(output_file, 'w') as netlist_file:
@@ -331,9 +332,10 @@ def generate_tree_topology_netlist(args, netlist):
     # Define nets connections
     # Each compute node is connected to 2 other nodes to form a binary tree structure
     num_node = args.num_cols * (args.num_rows - 2)
+    branching_factor = args.branching_factor
     for idx in range(num_node):
         x = idx % args.num_cols
-        y = 2 + (idx // args.num_cols) % (args.num_rows - 2)
+        y = 2 + (idx // args.num_cols)
         node_id = nodes_loc2ID_lookup[(x, y)]
         
         if idx == 0:
@@ -346,23 +348,15 @@ def generate_tree_topology_netlist(args, netlist):
             helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
 
         has_no_children = True
-        # Connect to left child
-        left_child_idx = idx * 2 + 1
-        left_child_x = left_child_idx % args.num_cols
-        left_child_y = 2 + (left_child_idx // args.num_cols)
-        if left_child_x < args.num_cols and left_child_y < args.num_rows:
-            left_child_id = nodes_loc2ID_lookup[(left_child_x, left_child_y)]
-            helper_connect_nodes(args, netlist, node_id, [left_child_id])
-            has_no_children = False
-        
-        # Connect to right child
-        right_child_idx = idx * 2 + 2
-        right_child_x = right_child_idx % args.num_cols
-        right_child_y = 2 + (right_child_idx // args.num_cols)
-        if right_child_x < args.num_cols and right_child_y < args.num_rows:
-            right_child_id = nodes_loc2ID_lookup[(right_child_x, right_child_y)]
-            helper_connect_nodes(args, netlist, node_id, [right_child_id])
-            has_no_children = False
+        # Connect to multiple children based on branching factor
+        for child_idx in range(branching_factor):
+            child_node_idx = idx * branching_factor + child_idx + 1
+            child_x = child_node_idx % args.num_cols
+            child_y = 2 + (child_node_idx // args.num_cols)
+            if child_x < args.num_cols and child_y < args.num_rows:
+                child_id = nodes_loc2ID_lookup[(child_x, child_y)]
+                helper_connect_nodes(args, netlist, node_id, [child_id])
+                has_no_children = False
         
         if has_no_children:
             # If the node has no children, connect it to the MEM node in the same column
@@ -435,6 +429,17 @@ def generate_cnn_topology_netlist(args, netlist):
             third_col_COMP_id = nodes_loc2ID_lookup[(2, 5)]
         helper_connect_nodes(args, netlist, second_col_COMP_id, [third_col_COMP_id])
 
+    # The weight for second convolutional layer is sent in from SHIM node 4 to MEM node 4 to COMP nodes in the third column odd rows
+    for idx in range(1):
+        # Connect SHIM node to MEM node in column 4
+        SHIM_id = nodes_loc2ID_lookup[(4, 0)]
+        MEM_id = nodes_loc2ID_lookup[(4, 1)]
+        link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+
+        # Link this net to the COMP nodes in the third column odd rows
+        COMP_ids = [nodes_loc2ID_lookup[(2, y)] for y in range(3, 6, 2)]
+        link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+        helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
     # The third column compute nodes are connected in a way that row_5 to row_4, row_3 to row_2. row_4 and row_2 are connected to the MEM node in the same column
     # The connection to the MEM is forwarded to the COMP node in column 3, 4, 5, 6
     linked_src_net_ids = []
@@ -448,17 +453,19 @@ def generate_cnn_topology_netlist(args, netlist):
             helper_connect_nodes(args, netlist, third_col_COMP_id, [below_COMP_id])
 
         elif y == 4 or y == 2:
-            # Connect to the MEM node in the same column
-            same_col_MEM_id = nodes_loc2ID_lookup[(2, 1)]
-            net_id = helper_connect_nodes(args, netlist, third_col_COMP_id, [same_col_MEM_id])
+            # Connect to the MEM node in the second column (mem 1)
+            MEM_id = nodes_loc2ID_lookup[(1, 1)]
+            net_id = helper_connect_nodes(args, netlist, third_col_COMP_id, [MEM_id])
             linked_src_net_ids.append(net_id)
     # Link this net to the net to the COMP nodes in columns 3, 4, 5, 6
     for idx in range(1):
         # Get the node ID for the compute nodes in columns 3, 4, 5, 6
         COMP_ids = [nodes_loc2ID_lookup[(x, y)] for x in range(3, 7) for y in range(2, 6)]
         # Connect the net from MEM nodes in column 1 to the COMP nodes in columns 3, 4, 5, 6
-        MEM_id = nodes_loc2ID_lookup[(2, 1)]
-        link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+        MEM_id = nodes_loc2ID_lookup[(1, 1)]
+        temp_args = copy.deepcopy(args)
+        temp_args.obj_fifo_byte_size_per_depth *=2  # Double the size for weight transfer because of the linking of 2 object FIFOs
+        link_dst_net_id = helper_connect_nodes(temp_args, netlist, MEM_id, COMP_ids)
         helper_link_nets(netlist, linked_src_net_ids, [link_dst_net_id])
 
     # The weight for Fully connected layers is sent in from SHIM nodes 2, 3, 4, 5 to MEM nodes 2, 3, 4, 5 to COMP nodes in columns 3, 4, 5, 6
@@ -497,7 +504,7 @@ def generate_cnn_topology_netlist(args, netlist):
     # Link this net to the net that sends data from the MEM node in column 6 to the COMP node in column 7
     for idx in range(1):
         # Get the node ID for the compute nodes in column 7
-        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(3, 6)]
         # Connect the net from MEM node in column 6 to the COMP node in column 7
         MEM_id = nodes_loc2ID_lookup[(6, 1)]
         link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
@@ -511,12 +518,12 @@ def generate_cnn_topology_netlist(args, netlist):
         link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
 
         # Link this net to the Comp nodes in column 7
-        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(3, 6)]
         link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
         helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
 
     # The output of the COMP nodes in column 7 are sent to the COMP node below it. The output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
-    for y in range(2, 5):
+    for y in range(2, 6):
         # the output of the top 3 COMP nodes in column 7 are sent to the COMP node below it
         if y > 2:
             # Get the node ID for the compute nodes in column 7
@@ -623,6 +630,12 @@ if __name__ == "__main__":
         type=int, 
         dest="num_cols",
         default=8
+    )
+    argparser.add_argument(
+        "--branching_factor", 
+        type=int, 
+        dest="branching_factor",
+        default=2
     )
 
     opts = argparser.parse_args()
