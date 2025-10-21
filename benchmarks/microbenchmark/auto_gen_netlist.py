@@ -436,6 +436,17 @@ def generate_cnn_topology_netlist(args, netlist):
             third_col_COMP_id = nodes_loc2ID_lookup[(2, 5)]
         helper_connect_nodes(args, netlist, second_col_COMP_id, [third_col_COMP_id])
 
+    # The weight for second convolutional layer is sent in from SHIM node 4 to MEM node 4 to COMP nodes in the third column odd rows
+    for idx in range(1):
+        # Connect SHIM node to MEM node in column 4
+        SHIM_id = nodes_loc2ID_lookup[(4, 0)]
+        MEM_id = nodes_loc2ID_lookup[(4, 1)]
+        link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
+
+        # Link this net to the COMP nodes in the third column odd rows
+        COMP_ids = [nodes_loc2ID_lookup[(2, y)] for y in range(3, 6, 2)]
+        link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+        helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
     # The third column compute nodes are connected in a way that row_5 to row_4, row_3 to row_2. row_4 and row_2 are connected to the MEM node in the same column
     # The connection to the MEM is forwarded to the COMP node in column 3, 4, 5, 6
     linked_src_net_ids = []
