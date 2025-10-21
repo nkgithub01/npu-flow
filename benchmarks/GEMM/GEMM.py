@@ -6,7 +6,7 @@ import numpy as np
 import random
 
 from aie.iron import Kernel, ObjectFifo, Program, Runtime, Worker
-from aie.iron.placers import SequentialPlacer, NullPlacer
+from aie.iron.placers import SequentialPlacer, SAPlacer
 from aie.iron.device import NPU2, Tile
 from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessSequence, TensorTiler2D
@@ -18,54 +18,8 @@ dtype_map = {
 }
 
 
-def main():
-    argparser = argparse.ArgumentParser(
-        prog="AIE Matrix Multiplication MLIR Design (Whole Array)",
-        description="Emits MLIR code for a matrix multiplication design of the given input size",
-    )
-    argparser.add_argument("--dev", type=str, choices=["npu", "npu2"], default="npu")
-    argparser.add_argument("-M", type=int, default=512)
-    argparser.add_argument("-K", type=int, default=512)
-    argparser.add_argument("-N", type=int, default=512)
-    argparser.add_argument("-m", type=int, default=64)
-    argparser.add_argument("-k", type=int, default=64)
-    argparser.add_argument("-n", type=int, default=32)
-    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=4)
-    argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
-    argparser.add_argument("--dtype_in", type=str, choices=["i8", "i16"], default="i8")
-    argparser.add_argument("--dtype_out", type=str, choices=["i8", "i16", "i32"], default="i16")
-    argparser.add_argument(
-        "--generate-taps",
-        action="store_true",
-        help="Generate TensorAccessPatterns, a Python object to represent each data transfer"
-        "of the input/output matrices. These objects can be used for visualization.",
-    )
-    argparser.add_argument(
-        "-p", 
-        "--placer", 
-        type=str,
-        required=False,
-        dest="placer",
-        default="null_placer",
-        choices=PLACER_CONVERSION.keys(),
-        help="Placement strategy to use",
-    )
-    args = argparser.parse_args()
-    maybe_module = my_matmul(
-        args,
-        args.dev,
-        args.M,
-        args.K,
-        args.N,
-        args.m,
-        args.k,
-        args.n,
-        args.n_aie_cols,
-        args.dtype_in,
-        args.dtype_out,
-        args.b_col_maj,
-        args.generate_taps,
-    )
+def main(args):
+    maybe_module = my_matmul(args)
     if args.generate_taps:
         return maybe_module
     else:
@@ -76,21 +30,19 @@ def ceildiv(a, b):
     return (a + b - 1) // b
 
 
-def my_matmul(
-    opts,
-    dev,
-    M,
-    K,
-    N,
-    m,
-    k,
-    n,
-    n_aie_cols,
-    dtype_in_str,
-    dtype_out_str,
-    b_col_maj,
-    generate_taps=False,
-):
+def my_matmul(opts):
+    dev = opts.dev
+    M = opts.M
+    K = opts.K
+    N = opts.N
+    m = opts.m
+    k = opts.k
+    n = opts.n
+    n_aie_cols = opts.n_aie_cols
+    dtype_in_str = opts.dtype_in
+    dtype_out_str = opts.dtype_out
+    b_col_maj = opts.b_col_maj
+    generate_taps = opts.generate_taps
     n_aie_rows = 4
     n_aie_cores = n_aie_rows * n_aie_cols
 
@@ -216,9 +168,7 @@ def my_matmul(
 
     # Input A
     for i in range(n_shim_mem_A):
-        A_l3l2_fifos[i] = ObjectFifo(
-            A_l2_ty, name=f"A_L3L2_{i}", default_depth=fifo_depth
-        )
+        A_l3l2_fifos[i] = ObjectFifo(A_l2_ty, name=f"A_L3L2_{i}", default_depth=fifo_depth)
         # If n_shim_mem_A == n_rows, n_A_tiles_per_shim is 1 and
         # this simply links a_l3l2_fifos[i] to a_l2l1_fifos[i] directly,
         # If n_shim_mem_A < n_rows, each column receives multiple rows of
@@ -242,9 +192,9 @@ def my_matmul(
                 obj_types=[A_l1_ty] * (stop_row - start_row),
                 names=[f"A_L2L1_{row}" for row in range(start_row, stop_row)],
                 dims_to_stream=dims_to_stream,
-                placement=Tile(
-                    2 * i if n_aie_cols == 8 else i, 1
-                ),  # alternate columns in full 4x8 NPU2 case
+                # placement=Tile(
+                #     2 * i if n_aie_cols == 8 else i, 1
+                # ),  # alternate columns in full 4x8 NPU2 case
             )
         )
 
@@ -253,9 +203,7 @@ def my_matmul(
 
     # Input B
     for col in range(n_aie_cols):
-        B_l3l2_fifos[col] = ObjectFifo(
-            B_l2_ty, name=f"B_L3L2_{col}", default_depth=fifo_depth
-        )
+        B_l3l2_fifos[col] = ObjectFifo(B_l2_ty, name=f"B_L3L2_{col}", default_depth=fifo_depth)
         if b_col_maj:
             dims_to_stream = [(n // t, t * k), (k // s, s), (t, k), (s, 1)]
         else:
@@ -267,7 +215,7 @@ def my_matmul(
                 obj_type=B_l1_ty,
                 name=f"B_L2L1_{col}",
                 dims_to_stream=dims_to_stream,
-                placement=Tile(col, 1),
+                # placement=Tile(col, 1),
             )
         )
 
@@ -289,7 +237,7 @@ def my_matmul(
                 obj_types=[C_l1_ty] * n_aie_rows,
                 names=[f"C_L1L2_{col}_{row}" for row in range(n_aie_rows)],
                 depths=[fifo_depth] * n_aie_rows,
-                placement=Tile(col, 1),
+                # placement=Tile(col, 1),
             )
         )
         for j in range(n_aie_rows):
@@ -327,10 +275,11 @@ def my_matmul(
                         zero_kernel,
                         matmul_kernel,
                     ],
-                    placement=Tile(tile_col, tile_row),
+                    # placement=Tile(tile_col, tile_row),
+                    stack_size=0xD00,
                 )
             )
-    random.shuffle(workers)
+
     # We are limited in the number of BDs. After synchronizing, we can reuse BDs.
     # We only transfer 6 rows of tiles at once before starting a new transfer block.
     # tb = transfer block; block of transfers before sync call
@@ -347,10 +296,10 @@ def my_matmul(
     )
     if b_col_maj:
         B_tiles = TensorTiler2D.step_tiler(
-            (K, N),  # Size of B matrix
-            (k, n),  # Size of B tile
+            (N, K),  # Size of B matrix
+            (n, k),  # Size of B tile
             # Number of tiles per transfer in each dimension (whole col, partial row)
-            tile_group_repeats=(K // k // n_aie_cols, N // n),
+            tile_group_repeats=(N // n // n_aie_cols, K // k),
             # Contiguous tile group in col, but send every n_aie_cols-th tile in the row
             tile_group_steps=(n_aie_cols, 1),
         )
@@ -422,7 +371,7 @@ def my_matmul(
                         tap=C_tiles[c_index],
                         wait=True,
                         task_group=tg,
-                        placement=Tile(col, 0),
+                        # placement=Tile(col, 0),
                     )
                     c_index += 1
 
@@ -455,9 +404,9 @@ def my_matmul(
                                 A,
                                 tap=A_tiles[tile_offset],
                                 task_group=tg,
-                                placement=Tile(
-                                    2 * col if n_aie_cols == 8 else col, 0
-                                ),  # alternate columns in full 4x8 NPU2 case
+                                # placement=Tile(
+                                #     2 * col if n_aie_cols == 8 else col, 0
+                                # ),  # alternate columns in full 4x8 NPU2 case
                             )
                         # Use the calculated sizes/strides/offsets to record the data movement
                         # caused by the above call to npu_dma_memcpy_nd.
@@ -486,7 +435,7 @@ def my_matmul(
                             B,
                             tap=B_tiles[col],
                             task_group=tg,
-                            placement=Tile(col, 0),
+                            # placement=Tile(col, 0),
                         )
 
                         # These lines do not change MLIR output at all - they are just for recording data movement
@@ -506,20 +455,58 @@ def my_matmul(
             TensorAccessSequence.from_taps(C_taps),
         )
 
-    # Create the program from the device type and runtime
-    my_program = Program(dev_ty, rt)
-
     # Place components (assign them resources on the device) and generate an MLIR module
-    placer_func = PLACER_CONVERSION[opts.placer]
-    module = my_program.resolve_program(placer_func())
-    return module
+    placer_function = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    return Program(dev_ty, rt).resolve_program(placer_function)
 
 
 PLACER_CONVERSION = {
-    "null_placer": NullPlacer,
-    "sequential_placer": SequentialPlacer,
+    "sa_placer": lambda args: SAPlacer(args),
+    "sequential_placer": lambda _: SequentialPlacer(),
 }
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser(
+        prog="AIE Matrix Multiplication MLIR Design (Whole Array)",
+        description="Emits MLIR code for a matrix multiplication design of the given input size",
+    )
+    argparser.add_argument("--dev", type=str, choices=["npu", "npu2"], default="npu2")
+    argparser.add_argument("-M", type=int, default=512)
+    argparser.add_argument("-K", type=int, default=512)
+    argparser.add_argument("-N", type=int, default=512)
+    argparser.add_argument("-m", type=int, default=64)
+    argparser.add_argument("-k", type=int, default=64)
+    argparser.add_argument("-n", type=int, default=32)
+    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=4)
+    argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
+    argparser.add_argument("--dtype_in", type=str, choices=["i8", "i16"], default="i8")
+    argparser.add_argument("--dtype_out", type=str, choices=["i8", "i16", "i32"], default="i16")
+    argparser.add_argument(
+        "--generate-taps",
+        action="store_true",
+        default=False,
+        help="Generate TensorAccessPatterns, a Python object to represent each data transfer"
+        "of the input/output matrices. These objects can be used for visualization.",
+    )
+    argparser.add_argument(
+        "-p", 
+        "--placer", 
+        type=str,
+        required=False,
+        dest="placer",
+        default="sequential_placer",
+        choices=PLACER_CONVERSION.keys(),
+        help="Placement strategy to use",
+    )
+    argparser.add_argument(
+        "-pnr",
+        "--pnr-args",
+        type=str,
+        required=False,
+        dest="pnr_args",
+        default="-n 1",
+        help="PnR tool arguments (only used when placer is sa_placer)",
+    )
+    opts = argparser.parse_args()
+    main(opts)

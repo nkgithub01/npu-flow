@@ -1,3 +1,5 @@
+import os
+import sys
 import json
 import argparse
 import random
@@ -22,28 +24,29 @@ dtype_map = {
 
 
 def main(opts):
-    random.seed(opts.placement_seed)
+    random.seed(opts.random_seed)
 
     with mlir_mod_ctx() as ctx:
-        my_benchmark(
-            opts.dev,
-            opts.dtype_str,
-            opts.inout_size
-        )
-
+        my_benchmark(opts)
         # Print the python-to-mlir conversion to stdout
         print(ctx.module)
 
-def my_benchmark(
-    dev,
-    dtype_str,
-    inout_size
-):
+def my_benchmark(opts):
+    dev = opts.dev
+    dtype_str = opts.dtype_str
+    inout_size = opts.inout_size
     dtype = dtype_map[dtype_str]
     if dev == "npu2":
         dev_ty = AIEDevice.npu2
     else:
         raise AssertionError("Invalid device type: only NPU2 (Strix/Strix Halo/Krackan) is supported")
+    
+    if opts.enable_feedback and opts.length < 4:
+        raise AssertionError("Invalid length: length should be at least 4 when feedback is enabled")
+    elif not opts.enable_feedback and opts.length < 2:
+        raise AssertionError("Invalid length: length should be at least 2 when feedback is disabled")
+    elif opts.length > 32:
+        raise AssertionError("Invalid length: length should be at most 32")
     
     @device(dev_ty)
     def device_body():
@@ -53,32 +56,29 @@ def my_benchmark(
         intermediate_data_dtype = np.ndarray[(inout_size,), np.dtype[dtype]]
 
         # kernal function declarations
+        zero_i32 = external_func(
+            "zero_int32_t_1", inputs=[intermediate_data_dtype]
+        )
         accumulate_i32 = external_func(
             "accumulate_int32_t_int32_t_1", inputs=[intermediate_data_dtype, np.int32, intermediate_data_dtype]
-    )
+        )
+        def accumulate(in_items, range, out_items, zero_kernel, accumulate_kernel):
+            for out_item in out_items:
+                zero_kernel(out_item)
+                for in_item in in_items:
+                    accumulate_kernel(in_item, range, out_item)
         
-        # Tile declarations as tile[row][col]
-        tiles = [
-            [tile(col, row) for col in range(0, 8)] for row in range(0, 6)
-        ]
         connection_order = []
         if opts.placement == "regular":
-            connection_order = [dict(row=y, col=x) for x in range(4) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
-        elif opts.placement == "1-hop":
-            connection_order = [dict(row=y, col=x) for x in range(0,8,2) for y in (range(2,6,2) if (x/2)%2==0 else range(4,1,-2))]
-            connection_order += ([dict(row=y, col=x) for x in range(1,8,2) for y in (range(2,6,2) if (x/2)%2==1 else range(4,1,-2))])[::-1]
-        elif opts.placement == "2-hop":
-            connection_order = [
-                dict(row=2, col=0), dict(row=5, col=0), dict(row=5, col=3), dict(row=5, col=6), dict(row=2, col=6), dict(row=2, col=3),
-                dict(row=2, col=1), dict(row=5, col=1), dict(row=5, col=4), dict(row=5, col=7), dict(row=2, col=7), dict(row=2, col=4),
-                dict(row=2, col=2), dict(row=5, col=2), dict(row=5, col=5), dict(row=2, col=5)
-            ]
+            node_id_lookup = [(2,0), (2,1), (3,0), (3,1), (4,0), (4,1), (5,0), (5,1), (5,2), (4,2), (5,3), (4,3), (5,4), (4,4), (5,5), (4,5), (5,6), (4,6), (5,7), (4,7), (3,7), (3,6), (2,7), (2,6), (2,5), (3,5), (2,4), (3,4), (2,3), (3,3), (2,2), (3,2)]
+            connection_order_idx = [0,2,4,6,7,8,10,12,14,16,18,19,20,22,23,24,26,28,30,31,29,27,25,21,17,15,13,11,9,5,3,1]
+            connection_order = [dict(row=node_id_lookup[idx][0], col=node_id_lookup[idx][1]) for idx in connection_order_idx if idx < opts.length]
         elif opts.placement == "random":
             connection_order = [dict(row=y, col=x) for y in range(2,6) for x in range(8)]
             connection_order.remove(dict(row=2,col=0))
             connection_order.remove(dict(row=2,col=7))
             random.shuffle(connection_order)
-            connection_order = [dict(row=2,col=0)] + connection_order[:14] + [dict(row=2,col=7)]
+            connection_order = [dict(row=2,col=0)] + connection_order[:opts.length-2] + [dict(row=2,col=7)]
         elif "single_node" in opts.placement:
             temp = [dict(row=y, col=x) for x in range(8) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
             distance = int(opts.placement.split("_")[-1])
@@ -109,7 +109,8 @@ def my_benchmark(
 
             if 'neighbour' in opts.placement:
                 route = dict()
-            json.dump(route, open("./custom_route.json", "w"), indent=4)
+            os.makedirs(os.path.dirname("./build"), exist_ok=True)
+            json.dump(route, open("./build/custom_route.json", "w"), indent=4)
         else:
             connection_order = [dict(row=y, col=x) for x in range(4) for y in (range(2,6) if x%2==0 else range(5,1,-1))]
         
@@ -129,6 +130,15 @@ def my_benchmark(
         obj_fifo_lookup = dict()
         obj_fifos = []
 
+        # Tile declarations as tile[row][col]
+        tiles = { '0':dict(), '1':dict(), '2':dict(), '3':dict(), '4':dict(), '5':dict() }
+        for node in connection_order:
+            row = str(node["row"])
+            col = str(node["col"])
+            if col not in tiles[row]:
+                tiles[row][col] = tile(col, row)
+
+
         for node in connection_order:
             obj_fifo_lookup[(node['row'],node['col'])] = {"in":[], "out":[]}
 
@@ -140,8 +150,8 @@ def my_benchmark(
             obj_fifo_id = len(obj_fifos)
             obj_fifos.append(object_fifo(
                 f"obj_fifo_{connection_order[cur_idx]['row']}_{connection_order[cur_idx]['col']}_to_{connection_order[next_idx]['row']}_{connection_order[next_idx]['col']}",
-                tiles[connection_order[cur_idx]['row']][connection_order[cur_idx]['col']],
-                tiles[connection_order[next_idx]['row']][connection_order[next_idx]['col']],
+                tiles[str(connection_order[cur_idx]['row'])][str(connection_order[cur_idx]['col'])],
+                tiles[str(connection_order[next_idx]['row'])][str(connection_order[next_idx]['col'])],
                 fifo_depth,
                 intermediate_data_dtype,
             ))
@@ -167,8 +177,8 @@ def my_benchmark(
             feedback_obj_fifo_id = len(obj_fifos)
             obj_fifos.append(object_fifo(
                 f"obj_fifo_{connection_order[contracting_from_node-1]['row']}_{connection_order[contracting_from_node-1]['col']}_to_{connection_order[expanding_till_node]['row']}_{connection_order[expanding_till_node]['col']}",
-                tiles[connection_order[contracting_from_node-1]['row']][connection_order[contracting_from_node-1]['col']],
-                tiles[connection_order[expanding_till_node]['row']][connection_order[expanding_till_node]['col']],
+                tiles[str(connection_order[contracting_from_node-1]['row'])][str(connection_order[contracting_from_node-1]['col'])],
+                tiles[str(connection_order[expanding_till_node]['row'])][str(connection_order[expanding_till_node]['col'])],
                 fifo_depth,
                 intermediate_data_dtype,
             ))
@@ -179,17 +189,18 @@ def my_benchmark(
         for node in connection_order[compute_core_start_idx:expanding_till_node]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for _ in range_(expand_rate):
+                        out_items = []
                         for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                             out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                        accumulate_i32(in_items[0], 1, out_items[0])
+                        accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                         for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                             obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -199,7 +210,7 @@ def my_benchmark(
         if expanding_till_node < len(connection_order) + contracting_from_node:
             row = connection_order[expanding_till_node]['row']
             col = connection_order[expanding_till_node]['col']
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
                 in_items = []
                 out_items = []
@@ -207,20 +218,22 @@ def my_benchmark(
                     in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                 for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                     out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                accumulate_i32(in_items[0], 1, out_items[0])
+                accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                 for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                     obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                 for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                     obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
 
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
+                    in_items = []
+                    out_items = []
                     if opts.enable_feedback:
-                        tmp = obj_fifos[feedback_obj_fifo_id].acquire(ObjectFifoPort.Consume, 1)
+                        in_items.append(obj_fifos[feedback_obj_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                    accumulate_i32(in_items[0], 1, out_items[0])
+                    accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -232,16 +245,16 @@ def my_benchmark(
         for node in connection_order[expanding_till_node+1:contracting_from_node]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                         in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
-                    accumulate_i32(in_items[0], 1, out_items[0])
+                    accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
                     for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
@@ -251,17 +264,18 @@ def my_benchmark(
         for node in connection_order[contracting_from_node:compute_core_end_idx]:
             row = node["row"]
             col = node["col"]
-            @core(tiles[row][col], "accumulate.o")
+            @core(tiles[str(row)][str(col)], "accumulate.o")
             def core_body():
-                for _ in range_(0xFFFFFFFF):
+                for _ in range_(sys.maxsize):
                     in_items = []
                     out_items = []
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
                         out_items.append(obj_fifos[output_fifo_id].acquire(ObjectFifoPort.Produce, 1))
                     for _ in range_(contract_rate):
+                        in_items = []
                         for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                             in_items.append(obj_fifos[input_fifo_id].acquire(ObjectFifoPort.Consume, 1))
-                        accumulate_i32(in_items[0], 1, out_items[0])
+                        accumulate(in_items, 1, out_items, zero_i32, accumulate_i32)
                         for input_fifo_id in obj_fifo_lookup[(row, col)]["in"]:
                             obj_fifos[input_fifo_id].release(ObjectFifoPort.Consume, 1)
                     for output_fifo_id in obj_fifo_lookup[(row, col)]["out"]:
@@ -296,22 +310,6 @@ def my_benchmark(
             dma_free_task(*in_tasks)
 
 
-# zeroing the values of the items
-def zero_func(items):
-    for data in items:
-        for i in range_(data.shape[0]):
-            data[i] = 0
-
-
-# Accumulate the input and adding a constant for each element one by one (simple function to prevent optimization)
-def add_func(in_items, out_items, increment=1):
-    for data_out in out_items:
-        for i in range_(data_out.shape[0]):
-            data_out[i] = increment
-            for data_in in in_items:
-                data_out[i] += data_in[i]
-
-
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
         prog="Microbenchmark",
@@ -336,9 +334,9 @@ if __name__ == "__main__":
         default="regular",
     )
     argparser.add_argument(
-        "--placement_seed", 
+        "--random_seed", 
         type=int, 
-        dest="placement_seed",
+        dest="random_seed",
         default=0,
     )
     argparser.add_argument(
@@ -353,6 +351,12 @@ if __name__ == "__main__":
         type=int, 
         dest="expand_rate",
         default=10**6,
+    )
+    argparser.add_argument(
+        "--length", 
+        type=int, 
+        dest="length",
+        default=16,
     )
     argparser.add_argument(
         "--dtype", 

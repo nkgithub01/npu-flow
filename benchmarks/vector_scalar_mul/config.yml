@@ -7,4 +7,4 @@ tasks:
   - name: default
     params:
       TODO: TODO
-    output: build/aie_in1_size.mlir # TODO: filename in Makefile should be fixed
+    output: build/vector_scalar_mul.mlir

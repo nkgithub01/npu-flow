@@ -17,7 +17,7 @@ from aie.iron.controlflow import range_
 from aie.helpers.taplib import TensorAccessPattern
 
 # Edge Detection using AIE array
-def edge_detect(opts, placer):
+def edge_detect(opts):
 
     image_width = opts.image_width
     image_height = opts.image_height
@@ -278,7 +278,8 @@ def edge_detect(opts, placer):
             rt.drain(outOF_L2L3s[col_idx].cons(), O, tap=tap, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(NPU2(), rt).resolve_program(placer)
+    placer_function = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    return Program(NPU2(), rt).resolve_program(placer_function)
 
 
 PLACER_CONVERSION = {
@@ -336,6 +337,5 @@ if __name__ == "__main__":
         help="PnR tool arguments (only used when placer is sa_placer)",
     )
     opts = p.parse_args()
-    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
-    module = edge_detect(opts, placer)
+    module = edge_detect(opts)
     print(module)

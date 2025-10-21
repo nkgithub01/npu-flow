@@ -199,7 +199,7 @@ class Benchmark:
             pnr.check()
         
         if self.inject_routing:
-            route = json.loads(read_text_file(self.__get_local_file("custom_route.json")))
+            route = json.loads(read_text_file(self.__get_local_file("build/custom_route.json")))
             if route != {}:
                 netlist_file = json.loads(read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")))
                 src_id = 0

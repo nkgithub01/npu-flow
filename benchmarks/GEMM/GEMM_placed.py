@@ -23,47 +23,9 @@ dtype_map = {
 }
 
 
-def main():
-    argparser = argparse.ArgumentParser(
-        prog="AIE Matrix Multiplication MLIR Design (Whole Array)",
-        description="Emits MLIR code for a matrix multiplication design of the given input size",
-    )
-    argparser.add_argument("--dev", type=str, choices=["npu2"], default="npu2")
-    argparser.add_argument("-M", type=int, default=512)
-    argparser.add_argument("-K", type=int, default=512)
-    argparser.add_argument("-N", type=int, default=512)
-    argparser.add_argument("-m", type=int, default=64)
-    argparser.add_argument("-k", type=int, default=64)
-    argparser.add_argument("-n", type=int, default=64)
-    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=8)
-    argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
-    argparser.add_argument("--dtype_in", type=str, choices=["i8", "i16"], default="i8")
-    argparser.add_argument("--dtype_out", type=str, choices=["i8", "i16", "i32"], default="i16")
-    argparser.add_argument("--trace_size", type=int, default=0)
-    argparser.add_argument(
-        "--generate-taps",
-        action="store_true",
-        help="Generate TensorAccessPatterns, a Python object to represent each data transfer"
-        "of the input/output matrices. These objects can be used for visualization.",
-    )
-    args = argparser.parse_args()
+def main(args):
     with mlir_mod_ctx() as ctx:
-        maybe_taps = matrix_multiply(
-            args.dev,
-            args.M,
-            args.K,
-            args.N,
-            args.m,
-            args.k,
-            args.n,
-            args.n_aie_cols,
-            args.dtype_in,
-            args.dtype_out,
-            args.b_col_maj,
-            args.trace_size,
-            args.generate_taps,
-        )
-        # print(ctx.module.operation.verify())
+        maybe_taps = matrix_multiply(args)
         print(ctx.module)
 
     if args.generate_taps:
@@ -74,21 +36,20 @@ def ceildiv(a, b):
     return (a + b - 1) // b
 
 
-def matrix_multiply(
-    dev,
-    M,
-    K,
-    N,
-    m,
-    k,
-    n,
-    n_aie_cols,
-    dtype_in_str,
-    dtype_out_str,
-    b_col_maj,
-    trace_size,
-    generate_taps=False,
-):
+def matrix_multiply(args):
+    dev = args.dev
+    M = args.M
+    K = args.K
+    N = args.N
+    m = args.m
+    k = args.k
+    n = args.n
+    n_aie_cols = args.n_aie_cols
+    dtype_in_str = args.dtype_in
+    dtype_out_str = args.dtype_out
+    b_col_maj = args.b_col_maj
+    trace_size = args.trace_size
+    generate_taps = args.generate_taps
     n_aie_rows = 4
     n_aie_cores = n_aie_rows * n_aie_cols
 
@@ -579,4 +540,27 @@ def matrix_multiply(
 
 
 if __name__ == "__main__":
-    main()
+    argparser = argparse.ArgumentParser(
+        prog="AIE Matrix Multiplication MLIR Design (Whole Array)",
+        description="Emits MLIR code for a matrix multiplication design of the given input size",
+    )
+    argparser.add_argument("--dev", type=str, choices=["npu2"], default="npu2")
+    argparser.add_argument("-M", type=int, default=512)
+    argparser.add_argument("-K", type=int, default=512)
+    argparser.add_argument("-N", type=int, default=512)
+    argparser.add_argument("-m", type=int, default=64)
+    argparser.add_argument("-k", type=int, default=64)
+    argparser.add_argument("-n", type=int, default=64)
+    argparser.add_argument("--n_aie_cols", type=int, choices=[1, 2, 4, 8], default=8)
+    argparser.add_argument("--b_col_maj", type=int, choices=[0, 1], default=0)
+    argparser.add_argument("--dtype_in", type=str, choices=["i8", "i16"], default="i8")
+    argparser.add_argument("--dtype_out", type=str, choices=["i8", "i16", "i32"], default="i16")
+    argparser.add_argument("--trace_size", type=int, default=0)
+    argparser.add_argument(
+        "--generate-taps",
+        action="store_true",
+        help="Generate TensorAccessPatterns, a Python object to represent each data transfer"
+        "of the input/output matrices. These objects can be used for visualization.",
+    )
+    args = argparser.parse_args()
+    main(args)

@@ -16,6 +16,9 @@ else ifeq (${use_placed}, 1)
 aie_py_src=${target_name}_placed.py
 endif
 
+# options for placer:
+# - sequential_placer
+# - sa_placer
 placer ?= sequential_placer
 
 # available auto gen topologies (default output netlist file: netlist.json)
@@ -49,16 +52,16 @@ xclbin_target?=build/${target_name}.xclbin
 trace_xclbin_target?=build/${target_name}_trace.xclbin
 insts_target?=build/${target_name}_insts.bin
 
+pnr_args ?= -n 1 -r
 aieargs+=--dev ${device_name} -nl ${netlist_file} --dtype=${dtype}
 runargs+=-nl ${netlist_file} -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
 kernals := accumulate
 
 ifeq (${use_placed}, 0)
 aieargs+=--placer ${placer}
-endif
-
 ifeq (${placer}, sa_placer)
 aieargs+=--pnr-args "${pnr_args}"
+endif
 endif
 
 build: ${mlir_target} ${kernals:%=build/%.o}

@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import numpy as np
+import argparse
 
 from aie.utils.xrt import setup_aie, write_out_trace, execute
 import aie.utils.test as test_utils

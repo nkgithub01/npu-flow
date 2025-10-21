@@ -17,14 +17,8 @@ dtype_map = {
 }
 
 
-def main(opts, placer):
-    module = microbenchmark(
-        opts,
-        opts.dev,
-        opts.dtype_str,
-        opts.input_netlist_file,
-        placer
-    )
+def main(opts):
+    module = microbenchmark(opts)
 
     # Print the python-to-mlir conversion to stdout
     print(module)
@@ -129,13 +123,10 @@ def parse_netlist(dtype_str, netlist_file):
     return netlist_info
 
 
-def microbenchmark(
-    opts,
-    dev,
-    dtype_str,
-    netlist_file,
-    placer,
-):
+def microbenchmark(opts):
+    dev = opts.dev
+    dtype_str = opts.dtype_str
+    netlist_file = opts.input_netlist_file
     dtype = dtype_map[dtype_str]
     if dev == "npu2":
         dev_ty = NPU2()
@@ -226,7 +217,8 @@ def microbenchmark(
             rt.drain(netlist_info["obj_fifos"][fifo_id].cons(), Output, tap=tap, wait=True)
 
     # Place components (assign them resources on the device) and generate an MLIR module
-    return Program(dev_ty, rt).resolve_program(placer)
+    placer_function = PLACER_CONVERSION[opts.placer](opts.pnr_args)
+    return Program(dev_ty, rt).resolve_program(placer_function)
 
 
 PLACER_CONVERSION = {
@@ -279,5 +271,5 @@ if __name__ == "__main__":
         default="-n 1",
         help="PnR tool arguments (only used when placer is sa_placer)",
     )
-    placer = PLACER_CONVERSION[opts.placer](opts.pnr_args)
-    main(opts, placer)
+    opts = argparser.parse_args()
+    main(opts)

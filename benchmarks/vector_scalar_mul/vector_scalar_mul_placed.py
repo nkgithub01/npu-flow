@@ -1,3 +1,4 @@
+# Borrowed and adapted from MLIR-AIE example: https://github.com/Xilinx/mlir-aie/blob/main/programming_examples/basic/vector_scalar_mul
 import numpy as np
 import argparse
 import sys
@@ -12,8 +13,16 @@ import aie.utils.test as test_utils
 from aie.utils.trace import PortEvent
 from aie.utils.trace_events_enum import CoreEvent, ShimTileEvent
 
-def my_vector_scalar_mul(in1_size, in2_size, out_size, int_bit_width, trace_size):
+def my_vector_scalar_mul(opts):
+    in1_size = int(opts.in1_size)
+    in2_size = int(opts.in2_size)
+    out_size = int(opts.out_size)
+    int_bit_width = int(opts.int_bit_width)
+    trace_size = int(opts.trace_size)
 
+    if in1_size % 128 != 0 or in1_size < 1024:
+        raise ValueError("In1 buffer size must be a multiple of 128 and >= 1024")
+    
     if int_bit_width == 16:
         in1_dtype = np.int16
         out_dtype = np.int16
@@ -108,22 +117,22 @@ def my_vector_scalar_mul(in1_size, in2_size, out_size, int_bit_width, trace_size
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument(
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
         "-i1s", "--in1_size", required=True, dest="in1_size", help="Input 1 size"
     )
-    p.add_argument(
+    argparser.add_argument(
         "-i2s", "--in2_size", required=True, dest="in2_size", help="Input 2 size"
     )
-    p.add_argument("-os", "--out_size", required=True, dest="out_size", help="Output size")
-    p.add_argument(
+    argparser.add_argument("-os", "--out_size", required=True, dest="out_size", help="Output size")
+    argparser.add_argument(
         "-bw",
         "--int_bit_width",
         required=True,
         dest="int_bit_width",
         help="Integer Bit Width",
     )
-    p.add_argument(
+    argparser.add_argument(
         "-t",
         "--trace_size",
         required=False,
@@ -131,19 +140,10 @@ if __name__ == "__main__":
         default=0,
         help="Trace buffer size",
     )
-    opts = p.parse_args(sys.argv[1:])
-
-    in1_size = int(opts.in1_size)
-    in2_size = int(opts.in2_size)
-    out_size = int(opts.out_size)
-    int_bit_width = int(opts.int_bit_width)
-    trace_size = int(opts.trace_size)
-
-    if in1_size % 128 != 0 or in1_size < 1024:
-        raise ValueError("In1 buffer size must be a multiple of 128 and >= 1024")
+    opts = argparser.parse_args(sys.argv[1:])
 
     with mlir_mod_ctx() as ctx:
-        my_vector_scalar_mul(in1_size, in2_size, out_size, int_bit_width, trace_size)
+        my_vector_scalar_mul(opts)
         res = ctx.module.operation.verify()
         if res == True:
             print(ctx.module)
