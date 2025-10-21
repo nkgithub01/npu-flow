@@ -109,10 +109,11 @@ def parse_netlist(dtype_str, netlist_file):
                 )
         for link_dst in netlist_info["fifo_links"]["many2one"]:
             if len(netlist_info["fifo_links"]["many2one"][link_dst]) != 0:
+                obj_FIFO_sizes = [netlist_info["obj_fifos_data_shape"][id][0] for id in netlist_info["fifo_links"]["many2one"][link_dst]]
                 object_fifo_link(
                     [netlist_info["obj_fifos"][src] for src in netlist_info["fifo_links"]["many2one"][link_dst]],
                     netlist_info["obj_fifos"][link_dst],
-                    [0 for _ in netlist_info["fifo_links"]["many2one"][link_dst]],  # all srcs are one-to-one
+                    [sum(obj_FIFO_sizes[:idx]) for idx in range(len(netlist_info["fifo_links"]["many2one"][link_dst]))]  # all srcs are one-to-one
                 )
 
         in_data_shape = 0

@@ -1,5 +1,6 @@
 import json
 import argparse
+import copy
 
 def write_netlist_to_file(netlist, output_file):
     with open(output_file, 'w') as netlist_file:
@@ -448,17 +449,19 @@ def generate_cnn_topology_netlist(args, netlist):
             helper_connect_nodes(args, netlist, third_col_COMP_id, [below_COMP_id])
 
         elif y == 4 or y == 2:
-            # Connect to the MEM node in the same column
-            same_col_MEM_id = nodes_loc2ID_lookup[(2, 1)]
-            net_id = helper_connect_nodes(args, netlist, third_col_COMP_id, [same_col_MEM_id])
+            # Connect to the MEM node in the second column (mem 1)
+            MEM_id = nodes_loc2ID_lookup[(1, 1)]
+            net_id = helper_connect_nodes(args, netlist, third_col_COMP_id, [MEM_id])
             linked_src_net_ids.append(net_id)
     # Link this net to the net to the COMP nodes in columns 3, 4, 5, 6
     for idx in range(1):
         # Get the node ID for the compute nodes in columns 3, 4, 5, 6
         COMP_ids = [nodes_loc2ID_lookup[(x, y)] for x in range(3, 7) for y in range(2, 6)]
         # Connect the net from MEM nodes in column 1 to the COMP nodes in columns 3, 4, 5, 6
-        MEM_id = nodes_loc2ID_lookup[(2, 1)]
-        link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
+        MEM_id = nodes_loc2ID_lookup[(1, 1)]
+        temp_args = copy.deepcopy(args)
+        temp_args.obj_fifo_byte_size_per_depth *=2  # Double the size for weight transfer because of the linking of 2 object FIFOs
+        link_dst_net_id = helper_connect_nodes(temp_args, netlist, MEM_id, COMP_ids)
         helper_link_nets(netlist, linked_src_net_ids, [link_dst_net_id])
 
     # The weight for Fully connected layers is sent in from SHIM nodes 2, 3, 4, 5 to MEM nodes 2, 3, 4, 5 to COMP nodes in columns 3, 4, 5, 6
@@ -497,7 +500,7 @@ def generate_cnn_topology_netlist(args, netlist):
     # Link this net to the net that sends data from the MEM node in column 6 to the COMP node in column 7
     for idx in range(1):
         # Get the node ID for the compute nodes in column 7
-        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(3, 6)]
         # Connect the net from MEM node in column 6 to the COMP node in column 7
         MEM_id = nodes_loc2ID_lookup[(6, 1)]
         link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
@@ -511,12 +514,12 @@ def generate_cnn_topology_netlist(args, netlist):
         link_src_net_id = helper_connect_nodes(args, netlist, SHIM_id, [MEM_id])
 
         # Link this net to the Comp nodes in column 7
-        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(2, 6)]
+        COMP_ids = [nodes_loc2ID_lookup[(7, y)] for y in range(3, 6)]
         link_dst_net_id = helper_connect_nodes(args, netlist, MEM_id, COMP_ids)
         helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
 
     # The output of the COMP nodes in column 7 are sent to the COMP node below it. The output of COMP node at row 2 is sent to the MEM node then SHIM node in column 7
-    for y in range(2, 5):
+    for y in range(2, 6):
         # the output of the top 3 COMP nodes in column 7 are sent to the COMP node below it
         if y > 2:
             # Get the node ID for the compute nodes in column 7
