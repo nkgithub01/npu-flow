@@ -22,8 +22,8 @@ def topologicalSortUtil(net_id, netlist_info, stack):
     # Mark the current net as visited
     netlist_info["netlist"][net_id]["visited"] = True
 
-    # Recur for all downstream neighbor nets
-    for id in netlist_info["netlist"][net_id]["downstream_neighbor_net_ids"]:
+    # Recur for all upstream neighbor nets
+    for id in netlist_info["netlist"][net_id]["upstream_neighbor_net_ids"]:
         if not netlist_info["netlist"][id]["visited"]:
             topologicalSortUtil(id, netlist_info, stack)
 
@@ -72,7 +72,7 @@ def parse_netlist(dtype_str, netlist_file):
                 need_linking=False,
                 carry_value_from_net_id=None,
                 visited=False,
-                downstream_neighbor_net_ids=[],
+                upstream_neighbor_net_ids=[],
             )
 
             # Track input and output object FIFOs for each tile
@@ -92,17 +92,17 @@ def parse_netlist(dtype_str, netlist_file):
                 netlist_info["netlist"][dst_net_id]["need_linking"] = True
                 netlist_info["netlist"][dst_net_id]["carry_value_from_net_id"] = link["src_net_ids"][-1]
 
-        # tracking downstream neighbor net IDs
+        # tracking upstream neighbor net IDs
         for net in netlist['nets']:
-            for dst_tile_id in net["dst_id"]:
-                netlist_info["netlist"][net["net_id"]]["downstream_neighbor_net_ids"].extend(
-                    netlist_info["core_tile_input_output_fifo_ids"][dst_tile_id]["output"]
+            src_tile_id = net["src_id"]
+            if src_tile_id not in netlist_info["shim_tile_ids"]:
+                netlist_info["netlist"][net["net_id"]]["upstream_neighbor_net_ids"].extend(
+                    netlist_info["core_tile_input_output_fifo_ids"][src_tile_id]["input"]
                 )
 
         # Topological order of net IDs
-        for net_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
-            topologicalSortUtil(net_id, netlist_info, netlist_info["topological_order_of_net_ids"])  
-        netlist_info["topological_order_of_net_ids"].reverse()
+        for net_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
+            topologicalSortUtil(net_id, netlist_info, netlist_info["topological_order_of_net_ids"])
 
         in_data_shape = 0
         for input_fifo_id in netlist_info["shim_tile_in_out_fifo_ids"]["input"]:
