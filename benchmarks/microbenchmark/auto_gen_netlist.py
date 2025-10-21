@@ -332,9 +332,10 @@ def generate_tree_topology_netlist(args, netlist):
     # Define nets connections
     # Each compute node is connected to 2 other nodes to form a binary tree structure
     num_node = args.num_cols * (args.num_rows - 2)
+    branching_factor = args.branching_factor
     for idx in range(num_node):
         x = idx % args.num_cols
-        y = 2 + (idx // args.num_cols) % (args.num_rows - 2)
+        y = 2 + (idx // args.num_cols)
         node_id = nodes_loc2ID_lookup[(x, y)]
         
         if idx == 0:
@@ -347,23 +348,15 @@ def generate_tree_topology_netlist(args, netlist):
             helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
 
         has_no_children = True
-        # Connect to left child
-        left_child_idx = idx * 2 + 1
-        left_child_x = left_child_idx % args.num_cols
-        left_child_y = 2 + (left_child_idx // args.num_cols)
-        if left_child_x < args.num_cols and left_child_y < args.num_rows:
-            left_child_id = nodes_loc2ID_lookup[(left_child_x, left_child_y)]
-            helper_connect_nodes(args, netlist, node_id, [left_child_id])
-            has_no_children = False
-        
-        # Connect to right child
-        right_child_idx = idx * 2 + 2
-        right_child_x = right_child_idx % args.num_cols
-        right_child_y = 2 + (right_child_idx // args.num_cols)
-        if right_child_x < args.num_cols and right_child_y < args.num_rows:
-            right_child_id = nodes_loc2ID_lookup[(right_child_x, right_child_y)]
-            helper_connect_nodes(args, netlist, node_id, [right_child_id])
-            has_no_children = False
+        # Connect to multiple children based on branching factor
+        for child_idx in range(branching_factor):
+            child_node_idx = idx * branching_factor + child_idx + 1
+            child_x = child_node_idx % args.num_cols
+            child_y = 2 + (child_node_idx // args.num_cols)
+            if child_x < args.num_cols and child_y < args.num_rows:
+                child_id = nodes_loc2ID_lookup[(child_x, child_y)]
+                helper_connect_nodes(args, netlist, node_id, [child_id])
+                has_no_children = False
         
         if has_no_children:
             # If the node has no children, connect it to the MEM node in the same column
@@ -637,6 +630,12 @@ if __name__ == "__main__":
         type=int, 
         dest="num_cols",
         default=8
+    )
+    argparser.add_argument(
+        "--branching_factor", 
+        type=int, 
+        dest="branching_factor",
+        default=2
     )
 
     opts = argparser.parse_args()
