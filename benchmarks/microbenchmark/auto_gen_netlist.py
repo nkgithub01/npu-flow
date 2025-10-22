@@ -330,7 +330,7 @@ def generate_tree_topology_netlist(args, netlist):
             nodes_loc2ID_lookup[(x, y)] = node_id
 
     # Define nets connections
-    # Each compute node is connected to 2 other nodes to form a binary tree structure
+    # Each compute node is connected to k other nodes to form a k-nary tree structure
     num_node = args.num_cols * (args.num_rows - 2)
     branching_factor = args.branching_factor
     for idx in range(num_node):
