@@ -87,19 +87,54 @@ for enable_feedback in [0, 1]:
             })
             tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
+# Generate line placement tasks
+for length in range(4, 33):
+    taskname = f"feedback_loop_line_length_{length}"
+    data['tasks'].append({
+        'name': taskname,
+        'params': {
+            'target_name':'line',
+            'inout_size': 256,
+            'expand_rate': 100000,
+            'placement': 'regular',
+            'length': length,
+            'enable_feedback': 1
+        },
+        'output': "build/line.mlir"
+    })
+    tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
+
+# Generate mesh placement tasks
 for num_row in range(4, 7):
     for num_col in range(2, 9):
-        taskname = f"placement_mesh_R{num_row}_C{num_col}"
+        taskname = f"feedback_loop_mesh_R{num_row}_C{num_col}"
         data['tasks'].append({
             'name': taskname,
             'params': {
                 'target_name':'mesh',
                 'num_rows': num_row,
                 'num_cols': num_col,
-                'inout_size': 10000,
+                'inout_size': 100000,
                 'random_seed': 0,
             },
             'output': "build/mesh.mlir"
+        })
+        tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
+
+# Generate tree placement tasks
+for num_row in range(3, 7):
+    for num_col in range(1, 9):
+        taskname = f"feedback_loop_tree_R{num_row}_C{num_col}"
+        data['tasks'].append({
+            'name': taskname,
+            'params': {
+                'target_name':'tree',
+                'num_rows': num_row,
+                'num_cols': num_col,
+                'inout_size': 100000,
+                'random_seed': 0,
+            },
+            'output': "build/tree.mlir"
         })
         tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
