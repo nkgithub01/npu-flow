@@ -223,7 +223,11 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
         if os.path.isdir(benchmark_dir):
             benchmark_name = os.path.basename(benchmark_dir)
             task_files = glob.glob(benchmark_dir + "/*.build.mlir")
-            task_names = [os.path.basename(f).split('.')[0] for f in task_files]
+            task_names = set([os.path.basename(f).split('.')[0] for f in task_files])
+            error_files = glob.glob(benchmark_dir + "/*.error.log")
+            failed_task_names = set([os.path.basename(f).split('.')[0] for f in error_files])
+            task_names.update(failed_task_names)
+            task_names = list(task_names)
             # Sort task names in natural order (e.g., 1, 2, 10, 20)
             def natural_key(s):
                 return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
