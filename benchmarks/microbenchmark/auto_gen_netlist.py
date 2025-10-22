@@ -348,16 +348,23 @@ def generate_tree_topology_netlist(args, netlist):
             helper_link_nets(netlist, [link_src_net_id], [link_dst_net_id])
 
         has_no_children = True
+        children_ids = []
         # Connect to multiple children based on branching factor
         for child_idx in range(branching_factor):
             child_node_idx = idx * branching_factor + child_idx + 1
             child_x = child_node_idx % args.num_cols
             child_y = 2 + (child_node_idx // args.num_cols)
             if child_x < args.num_cols and child_y < args.num_rows:
-                child_id = nodes_loc2ID_lookup[(child_x, child_y)]
-                helper_connect_nodes(args, netlist, node_id, [child_id])
+                children_ids.append(nodes_loc2ID_lookup[(child_x, child_y)])
                 has_no_children = False
-        
+                
+        if len(children_ids) > 0:
+            if args.tree_use_multicast:
+                helper_connect_nodes(args, netlist, node_id, children_ids)
+            else:
+                for child_id in children_ids:
+                    helper_connect_nodes(args, netlist, node_id, [child_id])
+
         if has_no_children:
             # If the node has no children, connect it to the MEM node in the same column
             same_col_MEM_id = nodes_loc2ID_lookup[(x, 1)]
@@ -636,6 +643,12 @@ if __name__ == "__main__":
         type=int, 
         dest="branching_factor",
         default=2
+    )
+    argparser.add_argument(
+        "--tree_use_multicast", 
+        type=int, 
+        dest="tree_use_multicast",
+        default=1
     )
 
     opts = argparser.parse_args()

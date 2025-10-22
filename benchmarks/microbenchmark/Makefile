@@ -34,6 +34,7 @@ netlist_topology ?= tree
 num_rows ?= 6
 num_cols ?= 8
 tree_branching_factor ?= 2
+tree_use_multicast ?= 0
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
@@ -79,7 +80,7 @@ ifeq (${use_auto_gen_netlist}, 0)
 else
 	@echo "Generating netlist file: ${netlist_file} with topology: ${netlist_topology}"
 	python3 ${src_dir}/auto_gen_netlist.py --netlist ${netlist_file} --topology ${netlist_topology} --num_rows ${num_rows} --num_cols ${num_cols} \
-		--branching_factor ${tree_branching_factor}
+		--branching_factor ${tree_branching_factor} --tree_use_multicast ${tree_use_multicast}
 endif
 
 ${build_dir}/%.o: ${AIE_KERNELS_DIR}/%.cc

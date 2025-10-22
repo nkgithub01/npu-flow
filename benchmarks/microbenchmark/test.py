@@ -96,9 +96,15 @@ def parse_netlist(dtype_str, netlist_file):
         for net in netlist['nets']:
             src_tile_id = net["src_id"]
             if src_tile_id not in netlist_info["shim_tile_ids"]:
-                netlist_info["netlist"][net["net_id"]]["upstream_neighbor_net_ids"].extend(
-                    netlist_info["core_tile_input_output_fifo_ids"][src_tile_id]["input"]
-                )
+                # If the source tile is not a shim tile, check if this net is linked from another net
+                if netlist_info["netlist"][net["net_id"]]["need_linking"]:
+                    link_src_net_id = netlist_info["netlist"][net["net_id"]]["carry_value_from_net_id"]
+                    netlist_info["netlist"][net["net_id"]]["upstream_neighbor_net_ids"].append(link_src_net_id)
+                # If the net is not linked, the upstream neighbor nets are the input FIFOs of the source tile
+                else:
+                    netlist_info["netlist"][net["net_id"]]["upstream_neighbor_net_ids"].extend(
+                        netlist_info["core_tile_input_output_fifo_ids"][src_tile_id]["input"]
+                    )
 
         # Topological order of net IDs
         for net_id in netlist_info["shim_tile_in_out_fifo_ids"]["output"]:
