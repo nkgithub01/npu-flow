@@ -126,16 +126,36 @@ class Benchmark:
         subprocess_run_cmd(cmd=self.clean_cmd, cwd=self.root_dir).check()
         self.last_built_task = None
 
-    def build_task(self, task_name):
+    def build_task(self, task_name, imported_pnr_files):
         param_envs, output_mlir = self.__get_task(task_name)
+        pnr = ""
         if param_envs.get("placer") == "sa_placer":
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
             assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
+            if all(f is not None for f in imported_pnr_files):
+                imported_pnr_file, imported_route_summary, imported_pnr_log = imported_pnr_files
+                os.makedirs(os.path.join(self.root_dir, "build"), exist_ok=True)
+                shutil.copyfile(
+                    imported_pnr_file, os.path.join(self.root_dir, "build/pnr_placed_netlist.json")
+                )
+                shutil.copyfile(
+                    imported_route_summary,
+                    os.path.join(self.root_dir, "build/pnr_route_summary.json"),
+                )
+                pnr = (
+                    f"Imported PnR results:\n"
+                    f"    - Placed file:   {imported_pnr_file}\n"
+                    f"    - Route summary: {imported_route_summary}\n"
+                    f"    - PnR log file:  {imported_pnr_log}\n\n"
+                    f"--- Start of Original PnR Log Content ---\n"
+                    f"{read_text_file(imported_pnr_log)}\n"
+                    f"--- End of Original PnR Log Content ---\n\n"
+                )
         build = subprocess_run_cmd(
             cmd=self.build_cmd, cwd=self.root_dir, env=param_envs
         )
         build.check()
-
+        build_log = f"{pnr}\n{build}"
         output_mlir = self.__get_local_file(output_mlir)
         if param_envs.get("placer") != "sa_placer":
             route_summary = None
@@ -153,7 +173,7 @@ class Benchmark:
             None if placed_netlist is None else read_text_file(placed_netlist),
             None if route_summary is None else read_text_file(route_summary),
             # TODO: merge pnr format file and route summary file
-            f"{build}",  # for debugging
+            build_log,  # for debugging
         )
 
     def place_and_route_task(
@@ -181,8 +201,9 @@ class Benchmark:
                 f"    - Placed file:   {imported_pnr_file}\n"
                 f"    - Route summary: {imported_route_summary}\n"
                 f"    - PnR log file:  {imported_pnr_log}\n\n"
-                f" Original PnR log content:\n"
-                f"{read_text_file(imported_pnr_log)}"
+                f"--- Start of Original PnR Log Content ---\n"
+                f"{read_text_file(imported_pnr_log)}\n"
+                f"--- End of Original PnR Log Content ---\n\n"
             )
         else:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
@@ -354,6 +375,24 @@ def main_routine(
                 f"Only in AIECC: {[json.loads(x) for x in missing_in_1]}"
             )
         return True
+    def get_imported_file_list(imported_dir, task_name):
+        if imported_dir is None:
+            return [None, None, None]
+        else:
+            log("Importing precomputed PnR files ...")
+            imported_pnr_file_list = [
+                os.path.join(imported_dir, f)
+                for f in [
+                    f"{task_name}.placed_netlist.pnr.json",
+                    f"{task_name}.route_summary.pnr.json",
+                    f"{task_name}.pnr.log",
+                ]
+            ]
+            for i in range(len(imported_pnr_file_list)):
+                if not os.path.exists(imported_pnr_file_list[i]):
+                    print(f"Warning: imported PnR file {imported_pnr_file_list[i]} does not exist")
+                    imported_pnr_file_list[i] = None
+            return imported_pnr_file_list
 
     output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
     os.makedirs(output_dir, exist_ok=True)
@@ -378,7 +417,13 @@ def main_routine(
         log("Building ...")
         if not use_placed and iron_placer == "sa_placer":
             log("Placing and routing ...")
-        mlir, netlist, early_placed_netlist, early_route_summary, build_log = benchmark.build_task(task_name)
+            imported_pnr_file_list = get_imported_file_list(imported_dir, task_name)
+        else:
+            imported_pnr_file_list = [None, None, None]
+        mlir, netlist, early_placed_netlist, early_route_summary, build_log = benchmark.build_task(
+            task_name,
+            imported_pnr_file_list
+        )
 
         write_text_file(
             os.path.join(output_dir, f"{task_name}.build.mlir"),
@@ -394,13 +439,19 @@ def main_routine(
             os.path.join(output_dir, f"{task_name}.build.log"),
             build_log,
         )
-        # sa_placer returns placed netlist and route summary during build.
-        # these are named .pnr. to be consistent with running pnr stage
-        # since it runs pnr as part of the build
+        # sa_placer runs PnR as part of the build process. We save the early placed
+        # netlist and route summary using the '.pnr.' suffix for consistency with
+        # place_and_route_task outputs because sa_placer skips the separate PnR stage.
         if early_placed_netlist is not None:
             write_text_file(
                 os.path.join(output_dir, f"{task_name}.placed_netlist.pnr.json"),
                 early_placed_netlist,
+            )
+            # The build log contains PnR output as well because the PnR step was executed
+            # during this build stage (e.g., by sa_placer). We save it with the '.pnr.' suffix too.
+            write_text_file(
+                os.path.join(output_dir, f"{task_name}.pnr.log"),
+                build_log,
             )
         if early_route_summary is not None:
             write_text_file(
@@ -409,21 +460,7 @@ def main_routine(
             )
 
     if pnr_after_build and iron_placer != "sa_placer":
-        if imported_dir is not None:
-            imported_pnr_file_list = [
-                os.path.join(imported_dir, f)
-                for f in [
-                    f"{task_name}.placed_netlist.pnr.json",
-                    f"{task_name}.route_summary.pnr.json",
-                    f"{task_name}.pnr.log",
-                ]
-            ]
-            for i in range(len(imported_pnr_file_list)):
-                if not os.path.exists(imported_pnr_file_list[i]):
-                    print(f"Warning: imported PnR file {imported_pnr_file_list[i]} does not exist")
-                    imported_pnr_file_list[i] = None
-        else:
-            imported_pnr_file_list = [None, None, None]
+        imported_pnr_file_list = get_imported_file_list(imported_dir, task_name)
 
         suffix = (
             f" (import from {imported_dir})"
