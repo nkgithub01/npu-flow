@@ -63,9 +63,9 @@ aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size}
 ifeq (${target_name}, line)
 aieargs+=--placement=${placement} --random_seed=${random_seed} --enable_feedback=${enable_feedback} --expand_rate=${expand_rate} --length=${length}
 else ifeq (${target_name}, mesh)
-aieargs+=--num_rows=${num_rows} --num_cols=${num_cols} --branching_factor=${tree_branching_factor}
-else ifeq (${target_name}, tree)
 aieargs+=--num_rows=${num_rows} --num_cols=${num_cols}
+else ifeq (${target_name}, tree)
+aieargs+=--num_rows=${num_rows} --num_cols=${num_cols} --branching_factor=${tree_branching_factor}
 endif
 runargs+= -v ${VERBOSITY} --dtype=${dtype} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION} --inout_size=${inout_size} --verify=""
 kernals := accumulate
