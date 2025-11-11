@@ -29,25 +29,24 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-ir
 python3 utils/parse_results.py --variant=pnr --output-csv="./Results/milpplacer_with_packing_results_${TIMESTAMP}.csv"
 mv ./build ./Results/build_milpplacer_with_packing_${TIMESTAMP}
 
-for n in 0 1 10 100 1000
-do
-    # SAPlacer with pre-packed memory, varying n
-    rm -rf ./build
-    rm -rf ./tmp-parallel-pnr
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --placed-iron --no-compile --pnr --pnr-args="-n 0 -r -u sa --enable-packing" --output-dir=./build -j 1 --verbose
-    python3 utils/parallel_pnr.py ./build -o ./tmp-parallel-pnr --pnr-args="-n $n" -j 20
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --pnr --import-pnr-results ./tmp-parallel-pnr --run -j 1 --verbose --output-dir=./build
-    python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_pre_pack_n${n}_results_${TIMESTAMP}.csv"
-    mv ./build ./Results/build_saplacer_with_pre_pack_n${n}_${TIMESTAMP}
-    mv ./tmp-parallel-pnr ./Results/tmp_parallel_pnr_saplacer_with_pre_pack_n${n}_${TIMESTAMP}
+n=1000
+# SAPlacer with pre-packed memory, varying n
+rm -rf ./build
+rm -rf ./tmp-parallel-pnr
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --placed-iron --no-compile --pnr --pnr-args="-n 0 -r -u sa" --output-dir=./build -j 1 --verbose
+python3 utils/parallel_pnr.py ./build -o ./tmp-parallel-pnr --pnr-args="-n $n -u sa -T 1000 10 0.0001 -c 0.95 0.99 0 --log-interval=1 --write-interval 100" -j 20
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --pnr --import-pnr-results ./tmp-parallel-pnr --run -j 1 --verbose --output-dir=./build
+python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_pre_pack_n${n}_T_${T1}_${T2}_${T3}_results_${TIMESTAMP}.csv"
+mv ./build ./Results/build_saplacer_with_pre_pack_n${n}_pure_greedy_${TIMESTAMP}
+mv ./tmp-parallel-pnr ./Results/tmp_parallel_pnr_saplacer_with_pre_pack_n${n}_pure_greedy_${TIMESTAMP}
+rm -rf ./routing.*.dot
 
-    # SAPlacer with packing, varying n
-    rm -rf ./build
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sa_placer --compile --run --pnr --pnr-args="-n $n -r -u sa --enable-packing" --output-dir=./build -j 1 --verbose
-    python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_packing_n${n}_results_${TIMESTAMP}.csv"
-    mv ./build ./Results/build_saplacer_with_packing_n${n}_${TIMESTAMP}
+# SAPlacer with packing, varying n
+rm -rf ./build
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sa_placer --compile --run --pnr --pnr-args="-n $n -r -u sa --enable-packing" --output-dir=./build -j 1 --verbose
+python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_packing_n${n}_results_${TIMESTAMP}.csv"
+mv ./build ./Results/build_saplacer_with_packing_n${n}_${TIMESTAMP}
 
-done
 
 python3 utils/compare_results.py \
     -f  Results/hand_placed_results_${TIMESTAMP}.csv \
