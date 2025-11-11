@@ -8,8 +8,8 @@
 - edge_detection/col_7
 - edge_detection/col_8
 
-# LLaMA MHA
-- llama_mha/default
+# LLaMA MHA (Placed only, don't run these tests by default)
+# - llama_mha/default
 
 # General Matrix Multiplication (GEMM)
 - GEMM/GEMM_R6_C8
@@ -17,9 +17,10 @@
 - GEMM/GEMM_R6_C2
 - GEMM/GEMM_R6_C1
 
-# Cascade GEMM
-- cascade_GEMM/cascade_GEMM_R6_C8
-- cascade_GEMM/cascade_GEMM_R6_C4
+# # Cascade GEMM (Placed only, don't run these tests by default)
+# TODO: Remove cascade GEMM because out of scope
+# - cascade_GEMM/cascade_GEMM_R6_C8
+# - cascade_GEMM/cascade_GEMM_R6_C4
 
 # Microbenchmark
 - microbenchmark/2d_mesh_R3_C1
@@ -123,7 +124,8 @@
 - microbenchmark/3d_mesh
 
 
-# ResNet
+# ResNet 
+# (sequential_placer fails because it relied on partially-hinted placement, which we removed)
 - ResNet/default
 
 # Vector Scalar Multiplication

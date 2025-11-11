@@ -1,4 +1,4 @@
-name: Microbenchmark Suite
+name: microbenchmark
 clean: make clean
 build: make build
 compile: make aiecc

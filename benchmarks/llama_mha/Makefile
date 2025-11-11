@@ -1,6 +1,7 @@
-srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+src_dir ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+build_dir ?= $(src_dir)/build
 
-include ${srcdir}/../makefile-common	
+include ${src_dir}/../makefile-common	
 
 target_name := mha
 aie_py_src := ${target_name}.py
@@ -26,25 +27,25 @@ ARGS := --embed-dim $(embed_dim) \
         --tile-dim $(tile_dim) \
         --seq-len $(seq_len) \
 
-build: build/mha.mlir
-aiecc: build/mha.xclbin
+build: ${build_dir}/mha.mlir
+aiecc: ${build_dir}/mha.xclbin
 
-build/%.cc.o: %.cc 
+${build_dir}/%.cc.o: %.cc 
 	mkdir -p ${@D}
 	${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DBIT_WIDTH=8 -c $< -o $@
 
-build/mha.mlir: ${srcdir}/${aie_py_src} build/mha.cc.o 
+${build_dir}/mha.mlir: ${src_dir}/${aie_py_src} ${build_dir}/mha.cc.o 
 	mkdir -p ${@D}
 	python3 $< $(ARGS) > $@
 
-build/mha.xclbin: build/mha.mlir 
+${build_dir}/mha.xclbin: ${build_dir}/mha.mlir 
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
 				--no-xchesscc --no-xbridge -v --get-routing-summary ${aiecc_extra_args} \
-				--xclbin-name=${@F} --npu-insts-name=insts.bin $(<:%=../%)
+				--xclbin-name=${@F} --npu-insts-name=insts.bin $(notdir $(<))
 
-run: build/mha.xclbin
-	python3 ${srcdir}/test.py $(ARGS) -x build/mha.xclbin -i build/insts.bin -k MLIR_AIE ${runargs}
+run: ${build_dir}/mha.xclbin
+	python3 ${src_dir}/test.py $(ARGS) -x ${build_dir}/mha.xclbin -i ${build_dir}/insts.bin -k MLIR_AIE ${runargs}
 
 clean: 
-	rm -rf build 
+	rm -rf ${build_dir} 

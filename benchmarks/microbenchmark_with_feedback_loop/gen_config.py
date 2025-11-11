@@ -1,7 +1,7 @@
 import yaml
 
 data = {
-    'name': "Microbenchmark with feedback loop - Verify placement effect on runtime",
+    'name': "Microbenchmark with feedback loop",
     'clean': "make clean",
     'build': "make build",
     'compile': "make aiecc",

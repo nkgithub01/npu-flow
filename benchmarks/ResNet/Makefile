@@ -8,9 +8,10 @@
 # 
 ##===----------------------------------------------------------------------===##
 
-srcdir := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+src_dir ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+build_dir ?= ${src_dir}/build
 
-include ${srcdir}/../makefile-common
+include ${src_dir}/../makefile-common
 
 device_name := npu2
 target_name := resnet
@@ -32,12 +33,11 @@ VERBOSITY := 2
 TRACE_SIZE := 16384
 NUM_ITERATION := 100
 WARMUP_ITERATION := 50
-mlir_target?=build/${target_name}.mlir
-trace_mlir_target?=build/${target_name}_trace.mlir
-xclbin_target?=build/${target_name}.xclbin
-trace_xclbin_target?=build/${target_name}_trace.xclbin
-insts_target?=build/${target_name}_insts.bin
-
+mlir_target?=${build_dir}/${target_name}.mlir
+trace_mlir_target?=${build_dir}/${target_name}_trace.mlir
+xclbin_target?=${build_dir}/${target_name}.xclbin
+trace_xclbin_target?=${build_dir}/${target_name}_trace.xclbin
+insts_target?=${build_dir}/${target_name}_insts.bin
 pnr_args ?= -n 1 -r
 aieargs := --dev ${device_name}
 runargs := --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
@@ -50,16 +50,16 @@ endif
 endif
 
 
-build: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o
+build: ${mlir_target} ${build_dir}/conv2dk1_i8.o ${build_dir}/conv2dk1_skip_init.o ${build_dir}/conv2dk3.o ${build_dir}/conv2dk1_skip.o ${build_dir}/conv2dk1_ui8.o
 aiecc: ${xclbin_target}
 
 all: ${xclbin_target}
 
-${mlir_target}: ${srcdir}/${aie_py_src}
+${mlir_target}: ${src_dir}/${aie_py_src}
 	mkdir -p ${@D}
 	python3 $< ${aieargs} > $@
 
-build/conv2dk1_i8.o: ${AIE_KERNELS_DIR}/conv2dk1.cc
+${build_dir}/conv2dk1_i8.o: ${AIE_KERNELS_DIR}/conv2dk1.cc
 	mkdir -p ${@D}
 ifeq (${device_name}, npu)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DINT8_ACT -c $< -o ${@F}
@@ -67,7 +67,7 @@ else ifeq (${device_name}, npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DINT8_ACT -c $< -o ${@F}
 endif
 
-build/conv2dk3.o: ${AIE_KERNELS_DIR}/conv2dk3.cc
+${build_dir}/conv2dk3.o: ${AIE_KERNELS_DIR}/conv2dk3.cc
 	mkdir -p ${@D}
 ifeq (${device_name}, npu)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DUINT8_ACT -c $< -o ${@F}
@@ -75,7 +75,7 @@ else ifeq (${device_name}, npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DUINT8_ACT -c $< -o ${@F}
 endif
 
-build/conv2dk1_skip_init.o: ${AIE_KERNELS_DIR}/conv2dk1_skip_init.cc
+${build_dir}/conv2dk1_skip_init.o: ${AIE_KERNELS_DIR}/conv2dk1_skip_init.cc
 	mkdir -p ${@D}
 ifeq (${device_name}, npu)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DINT8_ACT -c $< -o ${@F}
@@ -83,7 +83,7 @@ else ifeq (${device_name}, npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DINT8_ACT -c $< -o ${@F}
 endif
 
-build/conv2dk1_ui8.o: ${AIE_KERNELS_DIR}/conv2dk1.cc
+${build_dir}/conv2dk1_ui8.o: ${AIE_KERNELS_DIR}/conv2dk1.cc
 	mkdir -p ${@D}
 ifeq (${device_name}, npu)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DUINT8_ACT -c $< -o ${@F}
@@ -91,7 +91,7 @@ else ifeq (${device_name}, npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DUINT8_ACT -c $< -o ${@F}
 endif
 
-build/conv2dk1_skip.o: ${AIE_KERNELS_DIR}/conv2dk1_skip.cc
+${build_dir}/conv2dk1_skip.o: ${AIE_KERNELS_DIR}/conv2dk1_skip.cc
 	mkdir -p ${@D}
 ifeq (${device_name}, npu)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2_FLAGS} -DUINT8_ACT -c $< -o ${@F}
@@ -99,15 +99,15 @@ else ifeq (${device_name}, npu2)
 	cd ${@D} && ${PEANO_INSTALL_DIR}/bin/clang++ ${PEANOWRAP2P_FLAGS} -DUINT8_ACT -c $< -o ${@F}
 endif
 
-${xclbin_target}: ${mlir_target} build/conv2dk1_i8.o build/conv2dk1_skip_init.o build/conv2dk3.o build/conv2dk1_skip.o build/conv2dk1_ui8.o
+${xclbin_target}: ${mlir_target} ${build_dir}/conv2dk1_i8.o ${build_dir}/conv2dk1_skip_init.o ${build_dir}/conv2dk3.o ${build_dir}/conv2dk1_skip.o ${build_dir}/conv2dk1_ui8.o
 	mkdir -p ${@D}
 	cd ${@D} && aiecc.py --aie-generate-xclbin --aie-generate-npu-insts --no-compile-host --alloc-scheme=basic-sequential \
 				--no-xchesscc --no-xbridge --peano ${PEANO_INSTALL_DIR} --get-routing-summary ${aiecc_extra_args} \
-				--xclbin-name=${@F} --npu-insts-name=${insts_target:build/%=%} $(<:%=../%)
+				--xclbin-name=${@F} --npu-insts-name=$(notdir $(insts_target)) $(notdir $(<))
 
 .PHONY: run
 run: ${xclbin_target}
-	python3 ${srcdir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs} 
+	python3 ${src_dir}/test.py -x ${xclbin_target} -i ${insts_target} -k MLIR_AIE ${runargs} 
 
 .PHONY: clean_trace
 clean_trace:
@@ -115,4 +115,4 @@ clean_trace:
 
 .PHONY: clean
 clean: clean_trace
-	rm -rf build output log
+	rm -rf ${build_dir}

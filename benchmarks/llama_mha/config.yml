@@ -1,4 +1,4 @@
-name: LLaMA Multi-Head Attention
+name: llama_mha
 clean: make clean
 build: make build
 compile: make aiecc

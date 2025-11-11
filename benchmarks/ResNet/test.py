@@ -26,8 +26,8 @@ def main(opts):
     design = "resnet_conv2_x_int8"
     xclbin_path = opts.xclbin
     insts_path = opts.instr
-
-    log_folder = "output/"
+    build_dir = os.environ.get("build_dir", "build")
+    log_folder = os.path.join(build_dir, "output")
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
 

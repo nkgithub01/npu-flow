@@ -1,13 +1,28 @@
+#!/usr/bin/env python3
 import yaml
 import os
 import shutil
 import argparse
 import json
+import traceback
+from enum import Enum
 from multiprocessing import Pool
 from subprocess import Popen, PIPE, TimeoutExpired
 from dataclasses import dataclass
-import traceback
 
+# ==============================================================================
+# Utility functions
+# ==============================================================================
+
+def read_text_file(file_path: str) -> str:
+    with open(file_path, "r") as f:
+        return f.read()
+
+
+def write_text_file(file_path: str, content: str) -> None:
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as f:
+        f.write(content)
 
 @dataclass
 class CommandResult:
@@ -19,15 +34,14 @@ class CommandResult:
     returncode: int
     is_timed_out: bool
 
-    def ok(self):
+    def ok(self) -> bool:
         return self.returncode == 0 and not self.is_timed_out
 
-    def check(self):
+    def check(self) -> None:
         if not self.ok():
             raise RuntimeError(
-                f"Command '{self.cmd}' (on directory '{self.cwd}' with env '{self.env}') "
-                f"failed with return code {self.returncode}.\n\n"
-                f"Stdout:\n{self.stdout}\n\nStderr:\n{self.stderr}"
+                f"Command '{self.cmd}' (in '{self.cwd}') failed with code {self.returncode}\n\n"
+                f"--- STDOUT ---\n{self.stdout}\n\n--- STDERR ---\n{self.stderr}"
             )
 
     def __repr__(self):
@@ -36,21 +50,8 @@ class CommandResult:
             f"is_timed_out={self.is_timed_out},\nstdout={self.stdout},\nstderr={self.stderr},\nenv={self.env})"
         )
 
-
-def read_text_file(file_path):
-    with open(file_path, "r") as f:
-        return f.read()
-
-
-def write_text_file(file_path, content):
-    with open(file_path, "w") as f:
-        f.write(content)
-
-
-def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
-    assert isinstance(cmd, str), "Command must be a string"
+def synch_run_cmd(cmd: str, cwd: str=None, env: dict=None, timeout_sec: int=36000) -> CommandResult:
     process = Popen(cmd, cwd=cwd, shell=True, stdout=PIPE, stderr=PIPE, env=env)
-
     is_timed_out = False
 
     try:
@@ -71,739 +72,324 @@ def subprocess_run_cmd(cmd, cwd=None, env=None, timeout_sec=36000):
         is_timed_out=is_timed_out,
     )
 
+class BuildStage(Enum):
+    NONE = 0
+    CLEAN = 1
+    BUILD = 2
+    COMPILE = 3
+    RUN = 4
 
-class Benchmark:
-    def __init__(self, config_path, use_placed, iron_placer, pnr_args=None, inject_routing=False):
+class BenchmarkTask:
+    """
+    Represents a single benchmark task defined in a YAML config.
+    """
+
+    def __init__(
+        self,
+        config_path: str,
+        task_name: str,
+        placer: str,
+        output_dir: str,
+        pnr_args: str = None,
+        aie_pkt_routing: bool = False,
+        run_only: bool = False
+    ):
+        # --- Load and validate configuration ---
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
-        self.root_dir = os.path.dirname(os.path.abspath(config_path))
-        self.name = config.get("name", "undefined")
-        self.clean_cmd = config.get("clean", None)
-        self.build_cmd = config.get("build", None)
-        self.compile_cmd = config.get("compile", None)
-        self.run_cmd = config.get("run", None)
+        self.src_dir = os.path.dirname(os.path.abspath(config_path))
+        self.output_dir = os.path.abspath(output_dir)
+        os.makedirs(self.output_dir, exist_ok=True)
+
+        # --- Basic metadata ---
+        self.benchmark_name = config.get("name", "undefined")
+        self.task_name = task_name
+        self.placer = placer
+        self.last_built_stage = BuildStage.NONE if not run_only else BuildStage.COMPILE
+
+        # --- Command definitions ---
+        self.clean_cmd = config.get("clean")
+        self.build_cmd = config.get("build")
+        self.compile_cmd = config.get("compile")
+        self.run_cmd = config.get("run")
         self.tasks = config.get("tasks", [])
-        self.last_built_task = None
-        self.use_placed = use_placed
-        self.iron_placer = iron_placer
-        self.pnr_args = pnr_args if pnr_args is not None else "-n 1"
-        self.inject_routing = inject_routing
 
-        assert self.clean_cmd, "No clean command specified"
-        assert self.build_cmd, "No build command specified"
-        assert self.compile_cmd, "No compile command specified"
-        assert self.run_cmd, "No run command specified"
+        # Validate required commands from yaml
+        for cmd_name, cmd_value in {
+            "clean": self.clean_cmd,
+            "build": self.build_cmd,
+            "compile": self.compile_cmd,
+            "run": self.run_cmd,
+        }.items():
+            assert cmd_value, f"No {cmd_name} command specified in {config_path}"
 
-    def __get_local_file(self, filename):
-        path = os.path.abspath(os.path.join(self.root_dir, filename))
-        assert os.path.exists(
-            path
-        ), f"File {filename} not found in benchmark {self.name}"
-        return path
+        # --- Task-specific setup ---
+        self.env_vars, self.output_mlir = self._prepare_env(self.tasks, pnr_args, aie_pkt_routing)
 
-    def __get_task(self, task_name):
-        for task in self.tasks:
-            if task.get("name") == task_name:
-                params = task.get("params", {})
-                env_vars = os.environ.copy()
-                for key, value in params.items():
-                    env_vars[key] = str(value)
-                if self.use_placed:
-                    env_vars["use_placed"] = "1"
-                else:
-                    env_vars["use_placed"] = "0"
-                    if self.iron_placer == "sa_placer":
-                        env_vars["pnr_args"] = self.pnr_args
-                    env_vars["placer"] = self.iron_placer
-                output_mlir = task.get("output", None)
-                assert output_mlir, f"No output MLIR specified for task {task_name}"
-                return env_vars, output_mlir
-        assert False, f"Task {task_name} not found in benchmark {self.name}"
+    # -------------------------------------------------------------------------
+    # Internal setup helpers
+    # -------------------------------------------------------------------------
 
-    def clean_task_build(self):
-        subprocess_run_cmd(cmd=self.clean_cmd, cwd=self.root_dir).check()
-        self.last_built_task = None
+    def _prepare_env(self, tasks, pnr_args, aie_pkt_routing):
+        for task in tasks:
+            if task.get("name") == self.task_name:
+                env = os.environ.copy()
 
-    def build_task(self, task_name, imported_pnr_files):
-        param_envs, output_mlir = self.__get_task(task_name)
-        pnr = ""
-        if param_envs.get("placer") == "sa_placer":
+                for k, v in task.get("params", {}).items():
+                    env[k] = str(v)
+
+                env["placer"] = self.placer
+                env["use_placed"] = "1" if self.placer == "hand_placed" else "0"
+                if self.placer == "sa_placer":
+                    env["pnr_args"] = pnr_args or ""
+
+                env["aiecc_extra_args"] = (
+                    "--use-pnr-routing" if self.placer == "sa_placer" else
+                    "--packet-sw-objFifos" if aie_pkt_routing else ""
+                )
+
+                env["src_dir"] = self.src_dir
+                env["build_dir"] = os.path.join(self.output_dir, "build")
+                output_mlir = task.get("output")
+                assert output_mlir, f"No output MLIR specified for task {self.task_name}"
+                return env, output_mlir
+
+        raise ValueError(f"Task {self.task_name} not found in benchmark {self.benchmark_name}")
+
+    def _get_output_file(self, filename: str) -> str:
+        path = os.path.join(self.output_dir, filename)
+        assert os.path.exists(path), f"Expected file '{filename}' not found in {self.output_dir}"
+        return os.path.abspath(path)
+
+    def log(self, msg: str) -> None:
+        print(f"[{self.benchmark_name}/{self.task_name}] {msg}")
+      
+    # -------------------------------------------------------------------------
+    # Build pipeline methods
+    # -------------------------------------------------------------------------
+
+    def clean_build_task(self) -> None:
+        synch_run_cmd(self.clean_cmd, cwd=self.src_dir).check()
+        self.last_built_stage = BuildStage.CLEAN
+
+    def build_task(self, import_log: str = ""):
+        if self.placer == "sa_placer":
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
             assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
-            if all(f is not None for f in imported_pnr_files):
-                imported_pnr_file, imported_route_summary, imported_pnr_log = imported_pnr_files
-                os.makedirs(os.path.join(self.root_dir, "build"), exist_ok=True)
-                shutil.copyfile(
-                    imported_pnr_file, os.path.join(self.root_dir, "build/pnr_placed_netlist.json")
-                )
-                shutil.copyfile(
-                    imported_route_summary,
-                    os.path.join(self.root_dir, "build/pnr_route_summary.json"),
-                )
-                pnr = (
-                    f"Imported PnR results:\n"
-                    f"    - Placed file:   {imported_pnr_file}\n"
-                    f"    - Route summary: {imported_route_summary}\n"
-                    f"    - PnR log file:  {imported_pnr_log}\n\n"
-                    f"--- Start of Original PnR Log Content ---\n"
-                    f"{read_text_file(imported_pnr_log)}\n"
-                    f"--- End of Original PnR Log Content ---\n\n"
-                )
-        build = subprocess_run_cmd(
-            cmd=self.build_cmd, cwd=self.root_dir, env=param_envs
-        )
-        build.check()
-        build_log = f"{pnr}\n{build}"
-        output_mlir = self.__get_local_file(output_mlir)
-        if param_envs.get("placer") != "sa_placer":
-            route_summary = None
-            placed_netlist = None
-            extract_fifo_cmd = f"aie-opt {output_mlir} --aie-extract-fifo --output-netlist-file=build/netlist.json"
-            extract_fifo = subprocess_run_cmd(cmd=extract_fifo_cmd, cwd=self.root_dir)
-            extract_fifo.check()
-        else:
-            route_summary = self.__get_local_file("build/pnr_route_summary.json")
-            placed_netlist = self.__get_local_file("build/pnr_placed_netlist.json")
-        self.last_built_task = task_name
-        return (
-            read_text_file(output_mlir),
-            read_text_file(self.__get_local_file("build/netlist.json")),
-            None if placed_netlist is None else read_text_file(placed_netlist),
-            None if route_summary is None else read_text_file(route_summary),
-            # TODO: merge pnr format file and route summary file
-            build_log,  # for debugging
-        )
 
-    def place_and_route_task(
-        self, task_name, pnr_args, imported_pnr_files
-    ):
-        _, output_mlir = self.__get_task(task_name)
-        output_mlir = self.__get_local_file(output_mlir)
-
-        assert self.last_built_task == task_name, (
-            f"Task {task_name} has not been built yet. "
-            f"Current built task: {self.last_built_task}"
-        )
-
-        if all(f is not None for f in imported_pnr_files):
-            imported_pnr_file, imported_route_summary, imported_pnr_log = imported_pnr_files
-            shutil.copyfile(
-                imported_pnr_file, os.path.join(self.root_dir, "build/pnr_placed_netlist.json")
-            )
-            shutil.copyfile(
-                imported_route_summary,
-                os.path.join(self.root_dir, "build/pnr_route_summary.json"),
-            )
-            pnr = (
-                f"Imported PnR results:\n"
-                f"    - Placed file:   {imported_pnr_file}\n"
-                f"    - Route summary: {imported_route_summary}\n"
-                f"    - PnR log file:  {imported_pnr_log}\n\n"
-                f"--- Start of Original PnR Log Content ---\n"
-                f"{read_text_file(imported_pnr_log)}\n"
-                f"--- End of Original PnR Log Content ---\n\n"
-            )
-        else:
-            pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
-            assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
-            pnr_cmd = str(
-                f"{pnr_bin} build/netlist.json "
-                "--output=build/pnr_placed_netlist.json "
-                "--route-summary=build/pnr_route_summary.json"
-            )
-            if pnr_args is not None:
-                pnr_cmd += f" {pnr_args}"
-
-            pnr = subprocess_run_cmd(cmd=pnr_cmd, cwd=self.root_dir)
-            pnr.check()
-        
-        if self.inject_routing:
-            route = json.loads(read_text_file(self.__get_local_file("build/custom_route.json")))
-            if route != {}:
-                netlist_file = json.loads(read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")))
-                src_id = 0
-                dst_id = 0
-                for node in netlist_file["nodes"]:
-                    if node['type'] == 'COMP' and node['col_x'] == route['src_col_x'] and node['row_y'] == route['src_row_y']:
-                        src_id = node['id']
-                    if node['type'] == 'COMP' and node['col_x'] == route['dst_col_x'] and node['row_y'] == route['dst_row_y']:
-                        dst_id = node['id']
-
-                for net in netlist_file["nets"]:
-                    if net['src_id'] == src_id and net['dst_ids'][0] == dst_id:
-                        net['routing_info']['connection_type'] = 'circuit_switch'
-                        net['routing_info']['src_channel'] = 2
-                        net['routing_info']['dst_channels'] = [2]
-                        net['routing_info']['intermediates'] = route['intermediates']
-                    if net['src_id'] == dst_id and net['dst_ids'][0] == src_id:
-                        net['routing_info']['connection_type'] = 'circuit_switch'
-                        net['routing_info']['src_channel'] = 3
-                        net['routing_info']['dst_channels'] = [3]
-                        net['routing_info']['intermediates'] = [route['intermediates'][0][::-1]]
-                netlist_file = json.dumps(netlist_file, indent=4)
-                write_text_file(
-                    self.__get_local_file("build/pnr_placed_netlist.json"),
-                    netlist_file,
-                )
-
-        place_fifo_cmd = f"aie-opt {output_mlir} --aie-place-tiles --input-netlist-file=build/pnr_placed_netlist.json"
-        place_fifo = subprocess_run_cmd(cmd=place_fifo_cmd, cwd=self.root_dir)
-        place_fifo.check()
-        write_text_file(output_mlir, place_fifo.stdout)
-
-        return (
-            place_fifo.stdout,
-            read_text_file(self.__get_local_file("build/pnr_placed_netlist.json")),
-            # Use PnR generated route summary
-            # TODO: consider switching to standard flow generated route summary
-            read_text_file(self.__get_local_file("build/pnr_route_summary.json")),
-            str(pnr),
-        )
-
-    def compile_task(self, task_name, use_pnr_routing, aie_pkt_routing):
-        assert self.last_built_task == task_name, (
-            f"Task {task_name} has not been built yet. "
-            f"Current built task: {self.last_built_task}"
-        )
-        param_envs, _ = self.__get_task(task_name)
-        param_envs["aiecc_extra_args"] = (
-            "--use-pnr-routing"
-            if use_pnr_routing
-            else "--packet-sw-objFifos"
-            if aie_pkt_routing
-            else ""
-        )
-        result = subprocess_run_cmd(cmd=self.compile_cmd, cwd=self.root_dir, env=param_envs)
+        result = synch_run_cmd(self.build_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
+        self.last_built_stage = BuildStage.BUILD
 
-        return (
-            result.stdout,
-            result.stderr,
-            read_text_file(self.__get_local_file("build/post_compile_routing_summary.json")),
-            read_text_file(self.__get_local_file("build/input_physical.mlir")),
-            str(result)
-        )
+        output_mlir = self._get_output_file(self.output_mlir)
+        summary_files = {}
 
-    def run_task(self, task_name):
-        assert self.last_built_task == task_name, (
-            f"Task {task_name} has not been built yet. "
-            f"Current built task: {self.last_built_task}"
-        )
-        param_envs, _ = self.__get_task(task_name)
-        result = subprocess_run_cmd(cmd=self.run_cmd, cwd=self.root_dir, env=param_envs)
+        return f"{import_log}\n{result}"
+
+    def compile_task(self):
+        assert self.last_built_stage == BuildStage.BUILD, "Build before compile"
+
+        result = synch_run_cmd(self.compile_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
-        return result.stdout, result.stderr, str(result)
+        self.last_built_stage = BuildStage.COMPILE
 
-    def custom_task(self, task_name, custom_cmd):
-        param_envs, _ = self.__get_task(task_name)
-        custom = subprocess_run_cmd(cmd=custom_cmd, cwd=self.root_dir, env=param_envs)
-        custom.check()
-        return str(custom)
+        return str(result)
 
-    def __repr__(self):
+    def run_task(self):
+        assert self.last_built_stage == BuildStage.COMPILE, "Compile before run"
+
+        result = synch_run_cmd(self.run_cmd, cwd=self.src_dir, env=self.env_vars)
+        result.check()
+        self.last_built_stage = BuildStage.RUN
+
+        return str(result)
+
+    def custom_task(self, custom_cmd: str):
+        """Run an arbitrary custom command with the configured environment."""
+        result = synch_run_cmd(custom_cmd, cwd=self.src_dir, env=self.env_vars)
+        result.check()
+        return str(result)
+
+    def __repr__(self) -> str:
+        return f"BenchmarkTask({self.benchmark_name}/{self.task_name})"
+
+def import_pnr_results(task: BenchmarkTask, import_dir: str) -> str:
+    if not import_dir:
+        return ""
+    import_dir = os.path.join(import_dir, task.benchmark_name, task.task_name)
+    task.log("Importing precomputed PnR results ...")
+    required = [
+        f"build/pnr_placed_netlist.json",
+        f"build/pnr_route_summary.json",
+    ]
+    for f in required:
+        assert os.path.exists(os.path.join(import_dir, f)), f"Missing PnR file: {os.path.join(import_dir, f)}"
+    os.makedirs(os.path.join(task.output_dir, "build"), exist_ok=True)
+    dest_placed = os.path.join(task.output_dir, "build/pnr_placed_netlist.json")
+    dest_summary = os.path.join(task.output_dir, "build/pnr_route_summary.json")
+    shutil.copyfile(os.path.join(import_dir, required[0]), dest_placed)
+    shutil.copyfile(os.path.join(import_dir, required[1]), dest_summary)
+
+    if args.debug:
+        log_path = os.path.join(import_dir, f"{task.task_name}.build.log")
+        log_text = read_text_file(log_path) if os.path.exists(log_path) else "(no log found)"
         return (
-            f"Benchmark(name={self.name}, tasks={[x.get("name") for x in self.tasks]})"
+            f"Imported PnR results:\n"
+            f"  - Placed: {dest_placed}\n"
+            f"  - Route summary: {dest_summary}\n"
+            f"  - Log: {log_path}\n\n"
+            f"--- Start of Original PnR Log ---\n{log_text}\n"
+            f"--- End of Original PnR Log ---\n\n"
         )
+    return ""
 
+def build_and_compile(task: BenchmarkTask, args) -> (BenchmarkTask, bool):
+    try:
+        task.log("Cleaning ...")
+        task.clean_build_task()
 
-def main_routine(
-    benchmark_root,
-    benchmark_name,
-    task_name,
-    build,
-    use_placed,
-    iron_placer,
-    aie_pkt_routing,
-    pnr_after_build,
-    pnr_args,
-    inject_routing,
-    imported_pnr_result_dir,
-    aiecc_compile,
-    run_after_compile,
-    hook_script,
-    output_dir,
-    verbose,
-):
-    def log(msg):
-        print(f"[{benchmark_name}/{task_name}] {msg}", flush=True)
+        task.log("Building ...")
+        import_log = import_pnr_results(task, args.import_pnr_results)
+        build_res = task.build_task(import_log) 
 
-    # If PnR was run, compare PnR's routing with compiled physical routing
-    def load_json(path):
-        with open(path, 'r') as f:
-            return json.load(f)
+        compile_res = None
+        if args.compile:
+            task.log("Compiling ...")
+            compile_res = task.compile_task()
 
-    # TODO: make buffer reporting consistent between PnR and MLIR
-    # Current workaround:
-    # - Remove "sizes_bytes" from each buffer object
-    # - Drop shim buffers (row_y == 0), since MLIR does not allocate them
-    def normalize_buffers(buffers):
-        return [
-            {k: v for k, v in buf.items() if k != "sizes_bytes"}
-            for buf in buffers
-            if buf.get("row_y", None) != 0
-        ]
-    def normalize_cct_routes(entry):
-        return {
-            "src": entry["src"],
-            # sort dsts so order doesn't matter
-            "dsts": sorted(entry["dsts"], key=lambda d: (d["col_x"], d["row_y"])),
-            # reorder intermediates to match sorted dsts
-            "intermediates": [
-                path for _, path in sorted(
-                    zip(entry["dsts"], entry["intermediates"]),
-                    key=lambda p: (p[0]["col_x"], p[0]["row_y"])
-                )
-            ],
-        }
-    #TODO: make comparison fail a ValueError failure. For now just print difference.
-    def compare_unordered_list(list1, list2, label):
-        if label == "CCT route":
-            set1 = {json.dumps(normalize_cct_routes(x), sort_keys=True) for x in list1}
-            set2 = {json.dumps(normalize_cct_routes(x), sort_keys=True) for x in list2}
-        else:
-            set1 = {json.dumps(x, sort_keys=True) for x in list1}
-            set2 = {json.dumps(x, sort_keys=True) for x in list2}
+        if args.debug:
+            write_text_file(os.path.join(task.output_dir, f"{task.task_name}.build.log"), build_res)
+            if compile_res:
+                write_text_file(os.path.join(task.output_dir, f"{task.task_name}.compile.log"), compile_res)
+        return task, True
+    except Exception as e:
+        err_path = os.path.join(task.output_dir, f"{task.task_name}.error.log")
+        write_text_file(err_path, traceback.format_exc())
+        task.log(f" Error: {e}")
+        if args.verbose:
+            traceback.print_exc()
+        return task, False
 
-        if set1 != set2:
-            missing_in_2 = set1 - set2
-            missing_in_1 = set2 - set1
-            log(
-                f"{label} comparison failed!\n"
-                f"Only in PnR: {[json.loads(x) for x in missing_in_2]}\n"
-                f"Only in AIECC: {[json.loads(x) for x in missing_in_1]}"
+def run_benchmark_tasks(tasks: BenchmarkTask, args) -> None:
+    tasks_to_run = []
+    if not args.run_only:
+        for task, ok in tasks:
+            if not ok:
+                task.log("Skipping run due to previous errors.")
+                continue
+            tasks_to_run.append(task)
+    else:
+        for task in tasks:
+            err_path = os.path.join(task.output_dir, f"{task.task_name}.error.log")
+            if os.path.exists(err_path):
+                task.log("Skipping run due to previous errors.")
+            else:
+                tasks_to_run.append(task)
+
+    for task in tasks_to_run:
+        try:
+            task.log("Running ...")
+            run_res = task.run_task()
+            if args.debug:
+                write_text_file(os.path.join(task.output_dir, f"{task.task_name}.run.log"), run_res)
+        except Exception as e:
+            task.log(f" Error: {e}")
+            write_text_file(
+                os.path.join(task.output_dir, f"{task.task_name}.run.error.log"),
+                traceback.format_exc(),
             )
-        return True
-    def get_imported_file_list(imported_dir, task_name):
-        if imported_dir is None:
-            return [None, None, None]
-        else:
-            log("Importing precomputed PnR files ...")
-            imported_pnr_file_list = [
-                os.path.join(imported_dir, f)
-                for f in [
-                    f"{task_name}.placed_netlist.pnr.json",
-                    f"{task_name}.route_summary.pnr.json",
-                    f"{task_name}.pnr.log",
-                ]
-            ]
-            for i in range(len(imported_pnr_file_list)):
-                if not os.path.exists(imported_pnr_file_list[i]):
-                    print(f"Warning: imported PnR file {imported_pnr_file_list[i]} does not exist")
-                    imported_pnr_file_list[i] = None
-            return imported_pnr_file_list
+            if args.verbose:
+                traceback.print_exc()
 
-    output_dir = os.path.join(os.path.abspath(output_dir), benchmark_name)
-    os.makedirs(output_dir, exist_ok=True)
+def parse_tasklist_entry(entry, placer, output_dir, pnr_args, aie_pkt_routing, run_only) -> BenchmarkTask:
+    parts = entry.split("/")
+    assert len(parts) == 2, f"Invalid task entry '{entry}'. Expected format: benchmark/task"
 
-    imported_dir = None
-    if imported_pnr_result_dir is not None:
-        imported_dir = os.path.join(
-            os.path.abspath(imported_pnr_result_dir), benchmark_name
-        )
+    benchmark_name, task_name = parts
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    config_path = os.path.join(project_root, "benchmarks", benchmark_name, "config.yml")
+    output_dir = os.path.join(output_dir, benchmark_name, task_name)
 
-    config_path = os.path.join(benchmark_root, benchmark_name, "config.yml")
-    assert os.path.exists(config_path)
-
-    benchmark = Benchmark(
-        config_path=config_path, use_placed=use_placed, iron_placer=iron_placer, pnr_args=pnr_args , inject_routing=inject_routing
+    return BenchmarkTask(
+        config_path=config_path,
+        task_name=task_name,
+        placer=placer,
+        output_dir=output_dir,
+        pnr_args=pnr_args,
+        aie_pkt_routing=aie_pkt_routing,
+        run_only=run_only
     )
-
-    log("Cleaning ...")
-    benchmark.clean_task_build()
-
-    if build:
-        log("Building ...")
-        if not use_placed and iron_placer == "sa_placer":
-            log("Placing and routing ...")
-            imported_pnr_file_list = get_imported_file_list(imported_dir, task_name)
-        else:
-            imported_pnr_file_list = [None, None, None]
-        mlir, netlist, early_placed_netlist, early_route_summary, build_log = benchmark.build_task(
-            task_name,
-            imported_pnr_file_list
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.build.mlir"),
-            mlir,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.build.json"),
-            netlist,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.build.log"),
-            build_log,
-        )
-        # sa_placer runs PnR as part of the build process. We save the early placed
-        # netlist and route summary using the '.pnr.' suffix for consistency with
-        # place_and_route_task outputs because sa_placer skips the separate PnR stage.
-        if early_placed_netlist is not None:
-            write_text_file(
-                os.path.join(output_dir, f"{task_name}.placed_netlist.pnr.json"),
-                early_placed_netlist,
-            )
-            # The build log contains PnR output as well because the PnR step was executed
-            # during this build stage (e.g., by sa_placer). We save it with the '.pnr.' suffix too.
-            write_text_file(
-                os.path.join(output_dir, f"{task_name}.pnr.log"),
-                build_log,
-            )
-        if early_route_summary is not None:
-            write_text_file(
-                os.path.join(output_dir, f"{task_name}.route_summary.pnr.json"),
-                early_route_summary,
-            )
-
-    if pnr_after_build and iron_placer != "sa_placer":
-        imported_pnr_file_list = get_imported_file_list(imported_dir, task_name)
-
-        suffix = (
-            f" (import from {imported_dir})"
-            if all(f is not None for f in imported_pnr_file_list)
-            else ""
-        )
-        log("Placing and routing ..." + suffix)
-
-        pnr_mlir, pnr_netlist, pnr_route, pnr_log = benchmark.place_and_route_task(
-            task_name, pnr_args, imported_pnr_file_list
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.pnr.mlir"),
-            pnr_mlir,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.placed_netlist.pnr.json"),
-            pnr_netlist,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.route_summary.pnr.json"),
-            pnr_route,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.pnr.log"),
-            pnr_log,
-        )
-
-    if aiecc_compile:
-        log("Compiling binaries ...")
-        use_pnr_routing = pnr_after_build
-        if not use_placed and iron_placer == "sa_placer":
-            use_pnr_routing = True
-        if use_pnr_routing and aie_pkt_routing:
-            raise ValueError("Cannot set packet routing for AIE routing when using PnR routing")
-        aiecc_stdout, aiecc_stderr, aiecc_route, input_physical, aiecc_log = benchmark.compile_task(task_name, use_pnr_routing, aie_pkt_routing)
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.stdout.compile.log"),
-            aiecc_stdout,
-        )
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.stderr.compile.log"),
-            aiecc_stderr,
-        )
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json"),
-            aiecc_route,
-        )
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.compile.log"),
-            aiecc_log,
-        )
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.input_physical.compile.mlir"),
-            input_physical,
-        )
-
-        if pnr_after_build:
-            log("Verifying PnR routing against physical compiled routing ...")
-            pnr_route_summary_path = os.path.join(output_dir, f"{task_name}.route_summary.pnr.json")
-            aiecc_route_summary_path = os.path.join(output_dir, f"{task_name}.post_compile_routing_summary.compile.json")
-            if os.path.exists(pnr_route_summary_path):
-                pnr_route_summary = load_json(pnr_route_summary_path)
-            else:
-                raise ValueError(f"PnR route summary file {pnr_route_summary_path} does not exist")
-            if os.path.exists(aiecc_route_summary_path):
-                aiecc_route_summary = load_json(aiecc_route_summary_path)
-            else:
-                raise ValueError(f"AIECC route summary file {aiecc_route_summary_path} does not exist")
-
-            # Compare buffers (ignoring individual size reporting)
-            pnr_no_size_bufs = normalize_buffers(pnr_route_summary.get("buffers", []))
-            aiecc_no_size_bufs = normalize_buffers(aiecc_route_summary.get("buffers", []))
-            compare_unordered_list(pnr_no_size_bufs, aiecc_no_size_bufs, "Buffer")
-
-            # Compare cct_routes
-            pnr_cct = pnr_route_summary.get("cct_routes", [])
-            aiecc_cct = aiecc_route_summary.get("cct_routes", [])
-            compare_unordered_list(pnr_cct, aiecc_cct, "CCT route")
-
-            # Compare nbr_routes
-            pnr_nbr = pnr_route_summary.get("nbr_routes", [])
-            aiecc_nbr = aiecc_route_summary.get("nbr_routes", [])
-            compare_unordered_list(pnr_nbr, aiecc_nbr, "NBR route")
-
-            log("PnR routing applied to physical routing successfully ...")
-
-    if run_after_compile:
-        log("Running ...")
-        run_stdout, run_stderr, run_log = benchmark.run_task(task_name)
-        if verbose:
-            log(f"Run stdout: {run_stdout}")
-            log(f"Run stderr: {run_stderr}")
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.stdout.run.log"),
-            run_stdout,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.stderr.run.log"),
-            run_stderr,
-        )
-
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.run.log"),
-            run_log,
-        )
-
-    if hook_script is not None:
-        log(f"Executing hook `{hook_script}` ...")
-
-        hook_script = hook_script.split(" ")
-        if os.path.exists(hook_script[0]):
-            # First argument is a file path
-            hook_script[0] = os.path.abspath(hook_script[0])
-        else:
-            # First argument is a command, try to find it in PATH
-            resolved_path = shutil.which(hook_script[0])
-            assert (
-                resolved_path is not None
-            ), f"Hook command or hook script file {hook_script[0]} does not exist"
-            hook_script[0] = resolved_path
-        hook_script = " ".join(hook_script)
-
-        exec_log = benchmark.custom_task(task_name, hook_script)
-        write_text_file(
-            os.path.join(output_dir, f"{task_name}.hook.log"),
-            exec_log,
-        )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Build and optionally run benchmarks")
-    parser.add_argument(
-        "tasklists",
-        type=str,
-        nargs="*",
-        help="Path to the task list file or strings of benchmark and task name pairs (e.g., `vector_scalar_add/default`)",
-    )
-    parser.add_argument(
-        "--benchmark-root",
-        type=str,
-        default=f"{os.path.dirname(os.path.abspath(__file__))}/../benchmarks",
-        help="Root directory of benchmarks (default: /path/to/npu-flow/benchmarks)",
-        required=False,
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="build",
-        help="Directory to store build outputs (default: ./build)",
-        required=False,
-    )
-    parser.add_argument(
-        "--clean-all",
-        action="store_true",
-        default=False,
-        help="Clean all benchmarks builds (default: False)",
-        required=False,
-    )
-    parser.add_argument(
-        "--build",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Build the benchmark (default: True)",
-        required=False,
-    )
-    parser.add_argument(
-        "--placed-iron",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Use the placed version of the IRON benchmark (default: Placed IRON)",
-        required=False,
-    )
-    parser.add_argument(
-        "--iron-placer",
-        type=str,
-        default="sequential_placer",
-        choices=["sequential_placer", "sa_placer"],
-        help="Placer to use for the benchmark (default: sequential_placer)",
-        required=False,
-    )
-    parser.add_argument(
-        "--aie-pkt-routing",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Use packet routing for standard AIE routing (default: False)",
-        required=False,
-    )
-    parser.add_argument(
-        "--pnr",
-        action="store_true",
-        default=False,
-        help="Run place-and-route after building (default: False)",
-        required=False,
-    )
-    parser.add_argument(
-        "--pnr-args",
-        type=str,
-        default=None,
-        help="Additional arguments to pass to the place-and-route tool (default: None)",
-        required=False,
-    )
-    parser.add_argument(
-        "--inject-routing",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help="Enable injection of external routing information (default: False)",
-        required=False,
-    )
-    parser.add_argument(
-        "--import-pnr-results",
-        type=str,
-        default=None,
-        help="""Path to an existing directory with PnR results to import
-        instead of running PnR as part of the stage in this script.\nThe
-        directory structure should be the same as the output directory of
-        this script, with files named <task_name>.placed_netlist.pnr.json
-        located in each benchmark subdirectory (Default: None)""",
-        required=False,
-    )
-    parser.add_argument(
-        "--compile",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Compile binaries and instructions using aiecc.py (default: True)",
-        required=False,
-    )
-    parser.add_argument(
-        "--run",
-        action="store_true",
-        default=False,
-        help="Run the benchmark host program (default: False)",
-        required=False,
-    )
-    parser.add_argument(
-        "--hook",
-        type=str,
-        default=None,
-        help="""Custom processing command, or path to a custom processing
-        script (python/bash/etc.) to be executed for each task (default: None)""",
-        required=False,
-    )
-    parser.add_argument(
-        "-j",
-        type=int,
-        default=None,  # multiprocessing.Pool uses number of cores if not specified
-        help="""Number of parallel benchmarks to process (default: 1); within the same
-        benchmark, tasks are processed sequentially due to the task clean method""",
-        required=False,
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Enable verbose logging (default: False)",
-        required=False,
-    )
+    parser.add_argument("tasklists", type=str, nargs="*",
+                        help="Path to the task list file or benchmark/task pairs (e.g. vector_scalar_add/default)")
+    parser.add_argument("--output-dir", type=str, default="build",
+                        help="Directory to store build outputs")
+    parser.add_argument("--clean-all", action="store_true", default=False)
+    parser.add_argument("--build", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--placer", type=str, default="sequential_placer",
+                        choices=["sequential_placer", "sa_placer", "hand_placed"])
+    parser.add_argument("--aie-pkt-routing", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--pnr-args", type=str, default=None)
+    parser.add_argument("--import-pnr-results", type=str, default=None)
+    parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--run", action="store_true", default=False)
+    parser.add_argument("--run-only", action="store_true", default=False,
+                        help="Run task without building/compiling (assumes --output-dir was previously built/compiled, skips tasks with built/compile error log)")
+    parser.add_argument("--hook", type=str, default=None)
+    parser.add_argument("-j", type=int, default=None)
+    parser.add_argument("--verbose", action="store_true", default=False)
+    parser.add_argument("--debug", action="store_true", default=True)
 
     args = parser.parse_args()
 
-    if args.j is None or args.j > 1:
-        assert args.run is False, str(
-            "Cannot do device run in parallel mode; "
-            "only build and pnr can be done in parallel\n"
-            "Please set `-j 1` to run sequentially"
-        )
+    if args.placer == "sa_placer" and args.pnr_args is None:
+        args.pnr_args = "-n 10"
+    if args.placer == "sa_placer" and args.aie_pkt_routing:
+        raise ValueError("Cannot use AIE packet routing when using PnR placer+router")
+    if args.run_only:
+        args.build = False
+        args.compile = False
+        args.run = True
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    task_entries = []
+    for arg_item in args.tasklists:
+        if os.path.isfile(arg_item):
+            with open(arg_item, "r") as f:
+                for task in yaml.safe_load(f):
+                    task_entries.append(task)
+        else:
+            task_entries.append(arg_item)
+    benchmark_tasks = [
+      parse_tasklist_entry(entry, args.placer, args.output_dir, 
+                           args.pnr_args, args.aie_pkt_routing, args.run_only)
+      for entry in task_entries
+    ]
 
     if args.clean_all:
-        args.build = False
-        args.pnr = False
-        args.compile = False
-        args.run = False
+        for bt in benchmark_tasks:
+            bt.clean_build_task()
+        print("Cleaned all benchmarks.")
+        exit(0)
+    
+    results = []
+    # --- Parallel build and compile ---
+    if args.build:
+        n_parallel = args.j or os.cpu_count()
+        if n_parallel > 1:
+            print(f"Building benchmarks in parallel with {n_parallel} processes ...")
+            with Pool(processes=n_parallel) as pool:
+                results = pool.starmap(build_and_compile, [(bt, args) for bt in benchmark_tasks])
+        else:
+            results = [build_and_compile(bt, args) for bt in benchmark_tasks]
+    
+    # --- Serial run ---
+    if args.run:
+        tasks_to_run = results if args.build else benchmark_tasks
+        run_benchmark_tasks(tasks_to_run, args)
+    
 
-    if args.tasklists:
-        os.makedirs(args.output_dir, exist_ok=True)
-
-        def handle_task(task_entry):
-            benchmark_name, task_name_list = task_entry
-            for task_name in task_name_list:
-                try:
-                    main_routine(
-                        benchmark_root=args.benchmark_root,
-                        benchmark_name=benchmark_name,
-                        task_name=task_name,
-                        build=args.build,
-                        use_placed=args.placed_iron,
-                        iron_placer=args.iron_placer,
-                        aie_pkt_routing=args.aie_pkt_routing,
-                        pnr_after_build=args.pnr,
-                        pnr_args=args.pnr_args,
-                        inject_routing=args.inject_routing,
-                        imported_pnr_result_dir=args.import_pnr_results,
-                        aiecc_compile=args.compile,
-                        run_after_compile=args.run,
-                        hook_script=args.hook,
-                        output_dir=args.output_dir,
-                        verbose=args.verbose,
-                    )
-                except Exception as e:
-                    print(f"[{benchmark_name}/{task_name}] Error: {e}", flush=True)
-                    exception = str(
-                        f"Error type: {type(e).__name__}\n\n"
-                        f"Error message:\n{str(e)}\n\n"
-                        f"Full traceback:\n{traceback.format_exc()}"
-                    )
-                    write_text_file(
-                        os.path.join(
-                            args.output_dir, benchmark_name, f"{task_name}.error.log"
-                        ),
-                        exception,
-                    )
-                    if args.verbose:
-                        traceback.print_exc()
-
-        parallel_benchmarks = {}
-
-        def store_task_entry(entry):
-            if "/" in entry:
-                benchmark_name, task_name = entry.split("/", 1)
-                if benchmark_name not in parallel_benchmarks:
-                    parallel_benchmarks[benchmark_name] = []
-                parallel_benchmarks[benchmark_name].append(task_name)
-            else:
-                raise ValueError(
-                    f"Invalid task entry '{entry}'. Expected format: 'benchmark_name/task_name'"
-                )
-
-        for arg_item in args.tasklists:
-            if os.path.isfile(arg_item):
-                with open(arg_item, "r") as f:
-                    for task in yaml.safe_load(f):
-                        store_task_entry(task)
-            else:
-                store_task_entry(arg_item)
-
-        with Pool(processes=args.j) as pool:
-            job_list = []
-            for benchmark_name, task_name_list in parallel_benchmarks.items():
-                job_list.append((benchmark_name, task_name_list))
-            pool.map(handle_task, job_list)

@@ -1,4 +1,4 @@
-name: General Matrix Multiplication (GEMM)
+name: GEMM
 clean: make clean
 build: make build
 compile: make aiecc

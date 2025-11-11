@@ -38,7 +38,8 @@ def main(opts):
     
     npu_time_total = 0
 
-    output_folder = "output/"
+    build_dir = os.environ.get("build_dir", "build")
+    output_folder = os.path.join(build_dir, "output/")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 

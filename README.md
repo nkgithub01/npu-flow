@@ -1,6 +1,5 @@
-# NPU Flow
-
-## Setup
+# NPU-Flow
+## 1. Initial Setup
 
 ```bash
 git clone https://github.com/ueqri/npu-flow.git
@@ -8,7 +7,7 @@ cd npu-flow
 git submodule update --init --recursive
 ```
 
-### MLIR-AIE
+### 1.1 Setup MLIR-AIE
 
 #### Setup Virtual Environment
 
@@ -64,7 +63,7 @@ cd npu-flow/benchmarks/vector_scalar_mul
 ./run.sh
 ```
 
-### NPU-PnR
+### 1.2 Setup NPU-PnR
 
 Prerequisite: [Google OR-Tools for C++](https://developers.google.com/optimization/install/cpp)
 
@@ -74,10 +73,7 @@ mkdir build && cd build
 cmake ..
 make -j
 ```
-
-## Build Benchmarks
-
-### Activate Environment
+### 2. Activate Environment
 
 ```bash
 cd npu-flow
@@ -86,53 +82,55 @@ source mlir-aie/ironenv/bin/activate
 export NPU_PNR_BIN_DIR=$PWD/npu-pnr/build/apps
 ```
 
-### Build Placed IRON with MLIR-AIE Routing
-```bash
-# Build benchmarks with standard MLIR-AIE routing
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build --placed-iron \
---output-dir=./build/placed --verbose
-
-# Parse results and generate CSV table with standard results
-python3 utils/parse_results.py --variant=std \
---input-dir=./build/placed --output-csv=placed_std_results.csv
+### 3. Running Benchmark Tests
 ```
-### Packet switched routing with MLIR-AIE Routing
-```bash
-# Add this parser option to utils/build_benchmarks.py
---aie-pkt-routing
+Usage: utils/build_benchmarks.py tasklist
 ```
-### Build Placed IRON and Re-Place-and-Route with PnR
+#### Positional Arguments
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `tasklist` |  Path to task list yaml or specific benchmark_name/task_name pairs | `benchmarks/tasklist.yml` or  `vector_scalar_add/default`
 
-```bash
-# Build benchmarks and run PnR (set -n <num_sa_iters> to determine # SA iters to run; 0 means doing only routing on the initial placement)
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build --placed-iron \
---pnr --pnr-args="-n 0" \
---output-dir=./build/placed --verbose
+#### Optional Arguments
+| Flag | Type | Default | Description
+|----------|-------------|---------|---------|
+| `--output-dir` | `str` | `build` | Directory to store all build and run outputs. |
+| `--clean-all` | `store_true` | `False` | Cleans the entire output directory before starting. |
+| `--placer` | `str` | `sequential_placer` | See choices below. |
+| `--pnr-args` | `str` | `None` | Arguments to pass directly to the Placement and Routing (PnR) tool. |
+| `--run` | `store_true` | `False` | Run after build/compile. |
+| `--run-only` | `store_true` | `False` | Run task without building or compiling. Assumes the `--output-dir` was previously built/compiled. Skips tasks with build/compile errors. |
+| `--import-pnr-results` | `str`| `None`| Path to import pre-existing PnR results from. |
+| `--j` | `int` | `None` | Number of parallel jobs to run. Defaults to system CPU count. |
+
+#### Placer Choices (`--placer`)
+| Value | Description |
+| --- | --- |
+| `sequential_placer`| MLIR-AIE's sequential placement.
+| `sa_placer`| PnR Placer.
+|`hand_placed`| Manual placement.
+
+#### Example Usage
+This command runs all tasks defined in `benchmarks/tasklist.yml`, using `sa_placer` with 100 sa iterations.
+```
+utils/build_benchmarks.py benchmarks/tasklist.yml --placer="sa_placer" --pnr-args="-n 100" --run --output-dir=./build
+```
+ The output directory will look as follows:
+```
+output_dir/
+└── benchmark_name/
+    └── task_name/
+        ├── build/
+        │   ├── netlist.json
+        │   ├── pnr_placed_netlist.json
+        │   ├── pnr_route_summary.json
+        │   └── post_compile_routing_summary.json
+        ├── task_name.build.log
+        ├── task_name.compile.log
+        └── task_name.run.log
 ```
 
-### Build Unplaced IRON w/ MLIR-AIE Sequential Placer and Routing 
-
-```bash
-# Build benchmarks and run PnR
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build --no-placed-iron --iron-placer="sequential_placer" \
---pnr --pnr-args="-n 0" \
---output-dir=./build/unplaced_seq --verbose
-```
-
-### Build Unplaced IRON w/ PnR SA Placer and PnR Routing
-
-```bash
-# Build benchmarks and run PnR
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build --no-placed-iron --iron-placer="sa_placer" \
---pnr --pnr-args="-n 0" \
---output-dir=./build/unplaced_sa --verbose
-```
-
-### Parse Results and Generate CSV Table
+### 4.0 [TODO: Update Parsing Instructions] Parse Results and Generate CSV Table
 ```bash
 # If PnR placement and routing was used
 python3 utils/parse_results.py --variant=pnr \
@@ -155,37 +153,6 @@ The script will add an overall summary sheet as well.
 python3 utils/python utils/compare_results.py \
 -f path/to/csv1 path/to/csv2 path/to/csv3 \
 -l sheet_name_for_csv1 sheet_name_for_csv2 sheet_name_for_csv3
-```
-
-## Run Benchmarks
-
-Simply adding `--run -j 1` to the build commands in the "Build Placed IRON" sections is enough. For example:
-
-```bash
-# Run benchmarks with standard flow
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build <--placed-iron or --no-placed-iron> \
---run -j 1\
---output-dir=/path/to/build --verbose
-```
-
-```bash
-# Run benchmarks with PnR flow
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
---build <--placed-iron or --no-placed-iron> \
---pnr --pnr-args="-n 0" \
---run \
---output-dir=/path/to/build --verbose
-```
-
-The same parser script can be used to process device run metrics. For example:
-
-```bash
-# Parse results and generate CSV table
-python3 utils/parse_results.py --variant=std \
---input-dir=/path/to/build --output-csv=std_result.csv
-python3 utils/parse_results.py --variant=pnr \
---input-dir=/path/to/build --output-csv=pnr_result.csv
 ```
 
 ## PnR
@@ -223,17 +190,3 @@ Example schedule `--start-temperatures 1000.0 0.5 0.001 --cooling-factors 0.95 0
 - Last stage (after 0.001): greedy (factor=0,T=0)
 
 Note: The SA process will stop when either the maximum number of iterations set by `--max-iterations` is reached, or when all stages scheduled (including the last greedy stage) are completed.
-
-### Parallel Run PnR Tool
-
-```bash
-# Generate "./build/<some benchmark>/<some task>.pnr.*" files
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --pnr --pnr-args="-n 0" --verbose --output-dir=./build
-
-# Load "./build/<some benchmark>/<some task>.pnr.*" files and run PnR in parallel
-python3 utils/parallel_pnr.py ./build -o ./tmp-parallel-pnr --pnr-args="-n 100000"
-
-# Run PnR-ed benchmarks on device with "./tmp-parallel-pnr" imported
-# Note: --output-dir directory can be changed
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --pnr --import-pnr-results ./tmp-parallel-pnr --run -j 1 --verbose --output-dir=./build
-```

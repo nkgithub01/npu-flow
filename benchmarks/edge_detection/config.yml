@@ -1,4 +1,4 @@
-name: Edge Detection
+name: edge_detection
 clean: make clean
 build: make build
 compile: make aiecc
