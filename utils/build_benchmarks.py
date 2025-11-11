@@ -241,7 +241,7 @@ def import_pnr_results(task: BenchmarkTask, import_dir: str) -> str:
         )
     return ""
 
-def build_and_compile(task: BenchmarkTask, args) -> (BenchmarkTask, bool):
+def build_and_compile(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
     try:
         task.log("Cleaning ...")
         task.clean_build_task()
