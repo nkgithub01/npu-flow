@@ -3,7 +3,7 @@ import yaml
 import os
 import shutil
 import argparse
-import json
+import time
 import traceback
 import tarfile
 
@@ -175,23 +175,29 @@ class BenchmarkTask:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
             assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
 
+        start_time = time.perf_counter()
         result = synch_run_cmd(self.build_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
+        end_time = time.perf_counter()
+        build_time = end_time - start_time
         self.last_built_stage = BuildStage.BUILD
 
         output_mlir = self._get_output_file(self.output_mlir)
         summary_files = {}
 
-        return f"{import_log}\n{result}"
+        return f"{import_log}\n{result}\nBuild took: {build_time:.2f} seconds"
 
     def compile_task(self):
         assert self.last_built_stage == BuildStage.BUILD, "Build before compile"
 
+        start_time = time.perf_counter()
         result = synch_run_cmd(self.compile_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
+        end_time = time.perf_counter()
+        compile_time = end_time - start_time
         self.last_built_stage = BuildStage.COMPILE
 
-        return str(result)
+        return f"{result}\nCompile took: {compile_time:.2f} seconds"
 
     def run_task(self):
         assert self.last_built_stage == BuildStage.COMPILE, "Compile before run"
