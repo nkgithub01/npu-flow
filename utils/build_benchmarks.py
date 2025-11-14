@@ -151,6 +151,7 @@ class BenchmarkTask:
                 )
 
                 env["src_dir"] = self.src_dir
+                env["output_dir"] = self.output_dir
                 env["build_dir"] = os.path.join(self.output_dir, "build")
                 output_mlir = task.get("output")
                 assert output_mlir, f"No output MLIR specified for task {self.task_name}"
