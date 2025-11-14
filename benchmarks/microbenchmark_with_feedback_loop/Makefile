@@ -19,6 +19,7 @@ enable_feedback ?= 1
 expand_rate ?= 100000
 tree_branching_factor ?= 2
 
+mlir_output_name := microbenchmark_with_feedback_loop
 # options for target:
 # - line
 # - mesh
@@ -53,11 +54,11 @@ VERBOSITY := 2
 TRACE_SIZE := 16384
 NUM_ITERATION := 100
 WARMUP_ITERATION := 100
-mlir_target?=${build_dir}/${target_name}.mlir
-trace_mlir_target?=${build_dir}/${target_name}_trace.mlir
-xclbin_target?=${build_dir}/${target_name}.xclbin
-trace_xclbin_target?=${build_dir}/${target_name}_trace.xclbin
-insts_target?=${build_dir}/${target_name}_insts.bin
+mlir_target?=${build_dir}/${mlir_output_name}.mlir
+trace_mlir_target?=${build_dir}/trace_${mlir_output_name}.mlir
+xclbin_target?=${build_dir}/${mlir_output_name}.xclbin
+trace_xclbin_target?=${build_dir}/trace_${mlir_output_name}.xclbin
+insts_target?=${build_dir}/insts_${mlir_output_name}.bin
 pnr_args ?= -n 1 -r
 aieargs+=--dev ${device_name} --dtype=${dtype} --inout_size=${inout_size} 
 ifeq (${target_name}, line)

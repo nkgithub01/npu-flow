@@ -235,7 +235,7 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', verb
             # Parse each task within the task directory
             for task_output_path, task_name in zip(task_output_dir, task_names):
                 mlir_file_path, build_log_file_path, pnr_log_file_path, aiecc_compile_log_file_path, npu_run_log_file_path, routing_summary_json_file_path = "", "", "", "", "", ""
-                mlir_file_path = os.path.join(task_output_path, "build", f"{task_name}.mlir")
+                mlir_file_path = os.path.join(task_output_path, "build", f"{benchmark_name}.mlir")
                 build_log_file_path = os.path.join(task_output_path, f"{task_name}.build.log")
                 pnr_log_file_path = os.path.join(task_output_path, f"pnr.log")
                 aiecc_compile_log_file_path = os.path.join(task_output_path, f"{task_name}.compile.log")

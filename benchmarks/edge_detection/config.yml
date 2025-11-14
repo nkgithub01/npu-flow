@@ -7,32 +7,32 @@ tasks:
   - name: col_1
     params:
       NUM_COMPUTE_COLUMNS: 1
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_2
     params:
       NUM_COMPUTE_COLUMNS: 2
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_3
     params:
       NUM_COMPUTE_COLUMNS: 3
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_4
     params:
       NUM_COMPUTE_COLUMNS: 4
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_5
     params:
       NUM_COMPUTE_COLUMNS: 5
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_6
     params:
       NUM_COMPUTE_COLUMNS: 6
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_7
     params:
       NUM_COMPUTE_COLUMNS: 7
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir
   - name: col_8
     params:
       NUM_COMPUTE_COLUMNS: 8
-    output: build/edge_detect.mlir
+    output: build/edge_detection.mlir

@@ -25,7 +25,7 @@ for enable_feedback in [0, 1]:
                 'random_seed': 0,
                 'enable_feedback': enable_feedback
             },
-            'output': "build/line.mlir"
+            'output': "build/microbenchmark_with_feedback_loop.mlir"
         })
         tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
@@ -44,7 +44,7 @@ for enable_feedback in [0, 1]:
                     'random_seed': 0,
                     'enable_feedback': enable_feedback
                 },
-                'output': "build/line.mlir"
+                'output': "build/microbenchmark_with_feedback_loop.mlir"
             })
             tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
@@ -63,7 +63,7 @@ for enable_feedback in [0, 1]:
                 'length': length,
                 'enable_feedback': enable_feedback
             },
-            'output': "build/line.mlir"
+            'output': "build/microbenchmark_with_feedback_loop.mlir"
         })
         tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
     
@@ -83,7 +83,7 @@ for enable_feedback in [0, 1]:
                     'length': length,
                     'enable_feedback': enable_feedback
                 },
-                'output': "build/line.mlir"
+                'output': "build/microbenchmark_with_feedback_loop.mlir"
             })
             tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
@@ -100,7 +100,7 @@ for length in range(4, 33):
             'length': length,
             'enable_feedback': 1
         },
-        'output': "build/line.mlir"
+        'output': "build/microbenchmark_with_feedback_loop.mlir"
     })
     tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
@@ -117,7 +117,7 @@ for num_row in range(4, 7):
                 'inout_size': 100000,
                 'random_seed': 0,
             },
-            'output': "build/mesh.mlir"
+            'output': "build/microbenchmark_with_feedback_loop.mlir"
         })
         tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
@@ -134,7 +134,7 @@ for num_row in range(3, 7):
                 'inout_size': 100000,
                 'random_seed': 0,
             },
-            'output': "build/tree.mlir"
+            'output': "build/microbenchmark_with_feedback_loop.mlir"
         })
         tasklist.append(f"- microbenchmark_with_feedback_loop/{taskname}")
 
