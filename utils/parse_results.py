@@ -45,7 +45,7 @@ def parse_mlir_file(mlir_file_path, result_file, verbose=False):
 
 
 def parse_output_log_file(log_file_path, result_file, regex, prefix="", verbose=False):
-    runtime = -1.0
+    runtime = 0.0
     with open(log_file_path, 'r') as f:
         for line in f:
             match = re.search(regex, line)
@@ -206,7 +206,7 @@ def parse_routing_summary_json_file(json_file_path, result_file, verbose=False):
     result_file.write(f", {total_buffer_size}, {total_buffer_on_mem}, {avg_buffer_size_on_mem:.2f}, {total_buffer_on_compute}, {avg_buffer_size_on_compute:.2f}")
 
 
-def collect_results(output_dir = "build", result_file_path = 'results.csv', variant = 'std', verbose=False):
+def collect_results(output_dir = "build", result_file_path = 'results.csv', verbose=False):
     # Create the results file and write the header
     result_file = open(result_file_path, 'w')
     result_file.write("benchmark, task_name, num_objectFIFO, num_unicast_objectFIFO, num_multicast_objectFIFO, num_objectFIFO_link")
@@ -223,67 +223,64 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
     for benchmark_dir in benchmark_output_dir:
         if os.path.isdir(benchmark_dir):
             benchmark_name = os.path.basename(benchmark_dir)
-            task_files = glob.glob(benchmark_dir + "/*.build.mlir")
-            task_names = set([os.path.basename(f).split('.')[0] for f in task_files])
-            error_files = glob.glob(benchmark_dir + "/*.error.log")
-            failed_task_names = set([os.path.basename(f).split('.')[0] for f in error_files])
-            task_names.update(failed_task_names)
-            task_names = list(task_names)
+            task_output_dir = glob.glob(benchmark_dir + "/*")
+            task_names = [os.path.basename(task_path) for task_path in task_output_dir if os.path.isdir(task_path)]
+            assert len(task_names) == len(task_output_dir), f"Non task_name directories exits in benchmark {benchmark_name}"
             # Sort task names in natural order (e.g., 1, 2, 10, 20)
             def natural_key(s):
                 return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
             task_names.sort(key=natural_key)
+            task_output_dir.sort(key=natural_key)
 
-            # Parse each task within the benchmark directory
-            for task_name in task_names:
-                mlir_file_path, build_log_file_path, pnr_log_file_path, aiecc_compile_log_file_path, npu_run_log_file_path, json_file_path = "", "", "", "", "", ""
-                if variant == 'std':
-                    mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
-                    build_log_file_path = os.path.join(benchmark_dir, f"{task_name}.build.log")
-                    aiecc_compile_log_file_path = os.path.join(benchmark_dir, f"{task_name}.compile.log")
-                    npu_run_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
-                    json_file_path = os.path.join(benchmark_dir, f"{task_name}.post_compile_routing_summary.compile.json")
-                elif variant == 'pnr':
-                    mlir_file_path = os.path.join(benchmark_dir, f"{task_name}.build.mlir")
-                    build_log_file_path = os.path.join(benchmark_dir, f"{task_name}.build.log")
-                    pnr_log_file_path = os.path.join(benchmark_dir, f"{task_name}.pnr.log")
-                    aiecc_compile_log_file_path = os.path.join(benchmark_dir, f"{task_name}.compile.log")
-                    npu_run_log_file_path = os.path.join(benchmark_dir, f"{task_name}.stdout.run.log")
-                    json_file_path = os.path.join(benchmark_dir, f"{task_name}.post_compile_routing_summary.compile.json")
+            # Parse each task within the task directory
+            for task_output_path, task_name in zip(task_output_dir, task_names):
+                mlir_file_path, build_log_file_path, pnr_log_file_path, aiecc_compile_log_file_path, npu_run_log_file_path, routing_summary_json_file_path = "", "", "", "", "", ""
+                mlir_file_path = os.path.join(task_output_path, "build", f"{task_name}.mlir")
+                build_log_file_path = os.path.join(task_output_path, f"{task_name}.build.log")
+                pnr_log_file_path = os.path.join(task_output_path, f"pnr.log")
+                aiecc_compile_log_file_path = os.path.join(task_output_path, f"{task_name}.compile.log")
+                npu_run_log_file_path = os.path.join(task_output_path, f"{task_name}.run.log")
+                routing_summary_json_file_path = os.path.join(task_output_path, "build", f"post_compile_routing_summary.json")
                 if not os.path.exists(npu_run_log_file_path):
-                    npu_run_log_file_path = os.path.join(benchmark_dir, f"{task_name}.error.log")
+                    npu_run_log_file_path = os.path.join(task_output_path, f"{task_name}.error.log")
 
                 end2end_compilation_time = 0.0
                 result_file.write(f"{benchmark_name}, {task_name}")
+                # Parse MLIR file for number of objectFIFO and number of links info
                 if os.path.exists(mlir_file_path):
                     parse_mlir_file(mlir_file_path, result_file, verbose)
                 else:
                     result_file.write(f", N/A, N/A, N/A, N/A")
+                # Parse build log for build time
                 if os.path.exists(build_log_file_path):
                     build_time = parse_output_log_file(build_log_file_path, result_file, r'Build took[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)', "Build time", verbose)
                     if build_time >= 0.0:
                         end2end_compilation_time += build_time
                 else:
                     result_file.write(f", N/A")
+                # Parse PnR log for PnR time
+                # Since PnR runtime is included in the build time, we do not add it to the end-to-end compilation time again
                 if os.path.exists(pnr_log_file_path):
-                    pnr_time = parse_output_log_file(pnr_log_file_path, result_file, r'PnR took[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)', "PnR time", verbose)
-                    if pnr_time >= 0.0:
-                        end2end_compilation_time += pnr_time
+                    parse_output_log_file(pnr_log_file_path, result_file, r'Cost evaluation.*?:\s*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)', "PnR time", verbose)
                 else:
                     result_file.write(f", 0.0")
+                # Parse AIECC compile log for compilation time
                 if os.path.exists(aiecc_compile_log_file_path):
-                    aiecc_compile_time = parse_output_log_file(aiecc_compile_log_file_path, result_file, r'Compilation took[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)', "Compilation time", verbose)
+                    aiecc_compile_time = parse_output_log_file(aiecc_compile_log_file_path, result_file, r'Compile took[:\s]*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)', "Compilation time", verbose)
                     if aiecc_compile_time >= 0.0:
                         end2end_compilation_time += aiecc_compile_time
                 else:
                     result_file.write(f", N/A")
+                # Write total end-to-end compilation time
                 result_file.write(f", {end2end_compilation_time:.2f}")
+                # Parse NPU run log for average runtime
                 if os.path.exists(npu_run_log_file_path):
                     parse_output_log_file(npu_run_log_file_path, result_file, r'Avg NPU time:\s*([\d.]+)\s*us', "Avg NPU time", verbose)
                 else:
                     result_file.write(f", N/A")
-                if os.path.exists(json_file_path):
-                    parse_routing_summary_json_file(json_file_path, result_file, verbose)
+                # Parse routing summary JSON file for final placement and routing statistics
+                if os.path.exists(routing_summary_json_file_path):
+                    parse_routing_summary_json_file(routing_summary_json_file_path, result_file, verbose)
                 else:
                     result_file.write(f", N/A, N/A, N/A")
                     result_file.write(f", N/A, N/A, N/A, N/A, N/A, N/A")
@@ -298,13 +295,6 @@ def collect_results(output_dir = "build", result_file_path = 'results.csv', vari
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Parse benchmark results and generate a summary CSV file.")
     parser.add_argument(
-        "--variant",
-        type=str,
-        default="std",
-        help="Specify which variant to parse: 'std' for standard flow, 'pnr' for place-and-route results.",
-        required=False,
-    )
-    parser.add_argument(
         "--input-dir",
         type=str,
         default="build",
@@ -314,12 +304,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-csv",
         type=str,
-        default=None,
+        default="results.csv",
         help="Output CSV file path.",
         required=False,
     )
     args = parser.parse_args()
-
-    result_file_path = args.output_csv if args.output_csv else f"{args.variant}_results.csv"
-
-    collect_results(args.input_dir, result_file_path, args.variant)
+    
+    collect_results(args.input_dir, args.output_csv)
