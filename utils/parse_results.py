@@ -45,7 +45,7 @@ def parse_mlir_file(mlir_file_path, result_file, verbose=False):
 
 
 def parse_output_log_file(log_file_path, result_file, regex, prefix="", verbose=False):
-    runtime = 0.0
+    runtime = -1.0
     with open(log_file_path, 'r') as f:
         for line in f:
             match = re.search(regex, line)

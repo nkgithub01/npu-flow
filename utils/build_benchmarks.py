@@ -217,14 +217,14 @@ class BenchmarkTask:
     def __repr__(self) -> str:
         return f"BenchmarkTask({self.benchmark_name}/{self.task_name})"
 
-def import_pnr_results(task: BenchmarkTask, import_dir: str) -> str:
+def import_pnr_results(task: BenchmarkTask, import_dir: str, args) -> str:
     if not import_dir:
         return ""
     import_dir = os.path.join(import_dir, task.benchmark_name, task.task_name)
     task.log("Importing precomputed PnR results ...")
     required = [
-        f"build/pnr_placed_netlist.json",
-        f"build/pnr_route_summary.json",
+        f"build/pnr_placed_netlist{args.import_pnr_results_suffix}.json",
+        f"build/pnr_route_summary{args.import_pnr_results_suffix}.json",
     ]
     for f in required:
         assert os.path.exists(os.path.join(import_dir, f)), f"Missing PnR file: {os.path.join(import_dir, f)}"
@@ -253,7 +253,7 @@ def build_and_compile(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
         task.clean_build_task()
 
         task.log("Building ...")
-        import_log = import_pnr_results(task, args.import_pnr_results)
+        import_log = import_pnr_results(task, args.import_pnr_results, args)
         build_res = task.build_task(import_log) 
         if args.netlist_only:
             return task, True
@@ -385,6 +385,7 @@ if __name__ == "__main__":
     parser.add_argument("--aie-pkt-routing", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--pnr-args", type=str, default=None)
     parser.add_argument("--import-pnr-results", type=str, default=None)
+    parser.add_argument("--import-pnr-results-suffix", type=str, default="")
     parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--run", action="store_true", default=False)
     parser.add_argument("--run-only", action="store_true", default=False,
