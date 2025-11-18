@@ -1,7 +1,7 @@
 import yaml
 
 data = {
-    'name': "Microbenchmark with feedback loop",
+    'name': "microbenchmark_with_feedback_loop",
     'clean': "make clean",
     'build': "make build",
     'compile': "make aiecc",
