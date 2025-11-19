@@ -5,6 +5,8 @@ import shutil
 import argparse
 import json
 import traceback
+import tarfile
+
 from enum import Enum
 from multiprocessing import Pool
 from subprocess import Popen, PIPE, TimeoutExpired
@@ -92,7 +94,8 @@ class BenchmarkTask:
         output_dir: str,
         pnr_args: str = None,
         aie_pkt_routing: bool = False,
-        run_only: bool = False
+        run_only: bool = False,
+        netlist_only: bool = False,
     ):
         # --- Load and validate configuration ---
         assert os.path.exists(config_path), f"Config file {config_path} does not exist"
@@ -126,13 +129,13 @@ class BenchmarkTask:
             assert cmd_value, f"No {cmd_name} command specified in {config_path}"
 
         # --- Task-specific setup ---
-        self.env_vars, self.output_mlir = self._prepare_env(self.tasks, pnr_args, aie_pkt_routing)
+        self.env_vars, self.output_mlir = self._prepare_env(self.tasks, pnr_args, aie_pkt_routing, netlist_only)
 
     # -------------------------------------------------------------------------
     # Internal setup helpers
     # -------------------------------------------------------------------------
 
-    def _prepare_env(self, tasks, pnr_args, aie_pkt_routing):
+    def _prepare_env(self, tasks, pnr_args, aie_pkt_routing, netlist_only):
         for task in tasks:
             if task.get("name") == self.task_name:
                 env = os.environ.copy()
@@ -144,12 +147,11 @@ class BenchmarkTask:
                 env["use_placed"] = "1" if self.placer == "hand_placed" else "0"
                 if self.placer == "sa_placer":
                     env["pnr_args"] = pnr_args or ""
-
                 env["aiecc_extra_args"] = (
                     "--use-pnr-routing" if self.placer == "sa_placer" else
                     "--packet-sw-objFifos" if aie_pkt_routing else ""
-                )
-
+                ) 
+                env["netlist_only"] = "1" if netlist_only else "0"
                 env["src_dir"] = self.src_dir
                 env["output_dir"] = self.output_dir
                 env["build_dir"] = os.path.join(self.output_dir, "build")
@@ -254,7 +256,8 @@ def build_and_compile(task: BenchmarkTask, args) -> (BenchmarkTask, bool):
         task.log("Building ...")
         import_log = import_pnr_results(task, args.import_pnr_results)
         build_res = task.build_task(import_log) 
-
+        if args.netlist_only:
+            return task, True
         compile_res = None
         if args.compile:
             task.log("Compiling ...")
@@ -266,12 +269,50 @@ def build_and_compile(task: BenchmarkTask, args) -> (BenchmarkTask, bool):
                 write_text_file(os.path.join(task.output_dir, f"{task.task_name}.compile.log"), compile_res)
         return task, True
     except Exception as e:
+        if args.netlist_only:
+            task.log(f"Netlist-only mode: ignoring exception ...")
+            return task, True
         err_path = os.path.join(task.output_dir, f"{task.task_name}.error.log")
         write_text_file(err_path, traceback.format_exc())
         task.log(f" Error: {e}")
         if args.verbose:
             traceback.print_exc()
         return task, False
+
+def create_netlist_zip(tasks: BenchmarkTask, args) -> None:
+    root = args.output_dir
+    staging_dir = os.path.join(root, "_netlists_tmp")
+
+    if os.path.exists(staging_dir):
+        shutil.rmtree(staging_dir)
+    os.makedirs(staging_dir, exist_ok=True)
+
+    netlist_paths = []
+    for dir_path, _, files in os.walk(root):
+        if "netlist.json" in files:
+            netlist_paths.append(os.path.join(dir_path, "netlist.json"))
+    
+    for netlist_path in netlist_paths:
+        # Path looks like: root / benchmark_name / task_name / build / netlist.json
+        build_dir = os.path.dirname(netlist_path)
+        task_dir = os.path.dirname(build_dir)
+        benchmark_dir = os.path.dirname(task_dir)
+
+        task_name = os.path.basename(task_dir)
+        benchmark_name = os.path.basename(benchmark_dir)
+
+        out_name = f"{benchmark_name}_{task_name}.json"
+        dest_path = os.path.join(staging_dir, out_name)
+
+        shutil.copy2(netlist_path, dest_path)
+
+    tar_path = os.path.join(root, "netlists.tar.gz")
+    with tarfile.open(tar_path, "w:gz") as tar:
+        for filename in os.listdir(staging_dir):
+            tar.add(os.path.join(staging_dir, filename), arcname=filename)
+    shutil.rmtree(staging_dir)
+
+    print(f"Created netlist archive at {tar_path} containing {len(netlist_paths)} netlists.")
 
 def run_benchmark_tasks(tasks: BenchmarkTask, args) -> None:
     tasks_to_run = []
@@ -304,7 +345,15 @@ def run_benchmark_tasks(tasks: BenchmarkTask, args) -> None:
             if args.verbose:
                 traceback.print_exc()
 
-def parse_tasklist_entry(entry, placer, output_dir, pnr_args, aie_pkt_routing, run_only) -> BenchmarkTask:
+def parse_tasklist_entry(
+    entry, 
+    placer, 
+    output_dir, 
+    pnr_args, 
+    aie_pkt_routing, 
+    run_only, 
+    netlist_only
+) -> BenchmarkTask:
     parts = entry.split("/")
     assert len(parts) == 2, f"Invalid task entry '{entry}'. Expected format: benchmark/task"
 
@@ -320,7 +369,8 @@ def parse_tasklist_entry(entry, placer, output_dir, pnr_args, aie_pkt_routing, r
         output_dir=output_dir,
         pnr_args=pnr_args,
         aie_pkt_routing=aie_pkt_routing,
-        run_only=run_only
+        run_only=run_only,
+        netlist_only=netlist_only,
     )
 
 if __name__ == "__main__":
@@ -340,6 +390,7 @@ if __name__ == "__main__":
     parser.add_argument("--run", action="store_true", default=False)
     parser.add_argument("--run-only", action="store_true", default=False,
                         help="Run task without building/compiling (assumes --output-dir was previously built/compiled, skips tasks with built/compile error log)")
+    parser.add_argument("--netlist-only", action="store_true", default=False)
     parser.add_argument("--hook", type=str, default=None)
     parser.add_argument("-j", type=int, default=None)
     parser.add_argument("--verbose", action="store_true", default=False)
@@ -355,6 +406,11 @@ if __name__ == "__main__":
         args.build = False
         args.compile = False
         args.run = True
+    if args.netlist_only:
+        args.placer = "sa_placer"
+        args.build = True
+        args.compile = False
+        args.run = False
     os.makedirs(args.output_dir, exist_ok=True)
 
     task_entries = []
@@ -366,9 +422,16 @@ if __name__ == "__main__":
         else:
             task_entries.append(arg_item)
     benchmark_tasks = [
-      parse_tasklist_entry(entry, args.placer, args.output_dir, 
-                           args.pnr_args, args.aie_pkt_routing, args.run_only)
-      for entry in task_entries
+        parse_tasklist_entry(
+            entry, 
+            args.placer, 
+            args.output_dir, 
+            args.pnr_args, 
+            args.aie_pkt_routing, 
+            args.run_only, 
+            args.netlist_only
+        )
+        for entry in task_entries
     ]
 
     if args.clean_all:
@@ -387,7 +450,8 @@ if __name__ == "__main__":
                 results = pool.starmap(build_and_compile, [(bt, args) for bt in benchmark_tasks])
         else:
             results = [build_and_compile(bt, args) for bt in benchmark_tasks]
-    
+    if args.netlist_only:
+        create_netlist_zip(benchmark_tasks, args)
     # --- Serial run ---
     if args.run:
         tasks_to_run = results if args.build else benchmark_tasks

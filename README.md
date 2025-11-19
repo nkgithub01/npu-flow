@@ -100,6 +100,7 @@ Usage: utils/build_benchmarks.py tasklist
 | `--pnr-args` | `str` | `None` | Arguments to pass directly to the Placement and Routing (PnR) tool. |
 | `--run` | `store_true` | `False` | Run after build/compile. |
 | `--run-only` | `store_true` | `False` | Run task without building or compiling. Assumes the `--output-dir` was previously built/compiled. Skips tasks with build/compile errors. |
+| `--netlist-only` | `store_true` | `False` | Builds only the netlists for the specified task list. A tar file output will be generated in the output directory. |
 | `--import-pnr-results` | `str`| `None`| Path to import pre-existing PnR results from. |
 | `--j` | `int` | `None` | Number of parallel jobs to run. Defaults to system CPU count. |
 
