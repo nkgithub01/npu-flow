@@ -89,7 +89,7 @@ Usage: utils/build_benchmarks.py tasklist
 #### Positional Arguments
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `tasklist` |  Path to task list yaml or specific benchmark_name/task_name pairs | `benchmarks/tasklist.yml` or  `vector_scalar_add/default`
+| `tasklist` |  Path to task list yaml or specific benchmark_name/task_name pairs | `benchmarks/tasklist.yml` or  `edge_detection/col_1`
 
 #### Optional Arguments
 | Flag | Type | Default | Description
@@ -191,3 +191,31 @@ Example schedule `--start-temperatures 1000.0 0.5 0.001 --cooling-factors 0.95 0
 - Last stage (after 0.001): greedy (factor=0,T=0)
 
 Note: The SA process will stop when either the maximum number of iterations set by `--max-iterations` is reached, or when all stages scheduled (including the last greedy stage) are completed.
+
+## Docker Setup
+
+To build and run the Docker container that replicates the testing environment, follow these steps:
+
+### Build the Docker Image
+
+Navigate to the root of the project directory and run the following command to build the Docker image:
+
+```bash
+git clone https://github.com/ueqri/npu-flow.git
+cd npu-flow # Recommended to build from clean project root
+git submodule update --init --recursive
+docker build -t npu-flow .
+```
+
+Note: To distinguish between different builds, you can tag the image with a specific version or commit hash using the `-t` option, e.g., `-t npu-flow:latest` or `-t npu-flow:<commit-hash>`. Please refer to the [Tagging images|Docker Docs](https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/#tagging-images) for more details.
+
+### Run the Docker Container
+
+Once the image is built, you can run the container using:
+
+```bash
+docker run -it --rm npu-flow
+# /workspace should contain all project files
+```
+
+This command will start a new container from the `npu-flow` image and drop you into a bash shell where you can execute commands in the configured environment.
