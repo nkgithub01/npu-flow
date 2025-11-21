@@ -34,35 +34,29 @@ class CommandResult:
     stdout: str
     stderr: str
     returncode: int
-    is_timed_out: bool
 
-    def ok(self) -> bool:
-        return self.returncode == 0 and not self.is_timed_out
+    def ok(self):
+        return self.returncode == 0
 
-    def check(self) -> None:
+    def check(self):
         if not self.ok():
             raise RuntimeError(
-                f"Command '{self.cmd}' (in '{self.cwd}') failed with code {self.returncode}\n\n"
-                f"--- STDOUT ---\n{self.stdout}\n\n--- STDERR ---\n{self.stderr}"
+                f"Command '{self.cmd}' (on directory '{self.cwd}' with env '{self.env}') "
+                f"failed with return code {self.returncode}.\n\n"
+                f"Stdout:\n{self.stdout}\n\nStderr:\n{self.stderr}"
             )
 
     def __repr__(self):
         return (
             f"CommandResult(cmd={self.cmd}, cwd={self.cwd}, returncode={self.returncode}, "
-            f"is_timed_out={self.is_timed_out},\nstdout={self.stdout},\nstderr={self.stderr},\nenv={self.env})"
+            f"stdout={self.stdout},\nstderr={self.stderr},\nenv={self.env})"
         )
 
-def synch_run_cmd(cmd: str, cwd: str=None, env: dict=None, timeout_sec: int=36000) -> CommandResult:
+def synch_run_cmd(cmd, cwd=None, env=None):
+    assert isinstance(cmd, str), "Command must be a string"
     process = Popen(cmd, cwd=cwd, shell=True, stdout=PIPE, stderr=PIPE, env=env)
-    is_timed_out = False
 
-    try:
-        stdout, stderr = process.communicate(timeout=timeout_sec)
-    except TimeoutExpired:
-        process.kill()
-        stdout, stderr = process.communicate()
-        is_timed_out = True
-        print(f"Command '{cmd}' timed out after {timeout_sec} seconds.")
+    stdout, stderr = process.communicate()
 
     return CommandResult(
         cmd=cmd,
@@ -71,7 +65,6 @@ def synch_run_cmd(cmd: str, cwd: str=None, env: dict=None, timeout_sec: int=3600
         stdout=stdout.decode(),
         stderr=stderr.decode(),
         returncode=process.returncode,
-        is_timed_out=is_timed_out,
     )
 
 class BuildStage(Enum):
