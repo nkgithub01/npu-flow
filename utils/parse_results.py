@@ -7,11 +7,13 @@ import yaml
 import json
 import re
 import math
+import copy
 from collections import OrderedDict
 from openpyxl import Workbook
 from openpyxl.chart import ScatterChart, Reference, Series
-from openpyxl.chart.layout import Layout, ManualLayout
+from openpyxl.chart.axis import Scaling
 from openpyxl.chart.text import RichText
+from openpyxl.chart.layout import Layout, ManualLayout
 from openpyxl.drawing.text import Paragraph, ParagraphProperties, CharacterProperties, Font   
 
 # This class represents a single field in the test result
@@ -448,11 +450,11 @@ class TestResult:
                             "rejected_legal_move_delta_cost": rejected_legal_move_delta_cost,
                             "rejected_congested_move_delta_cost": rejected_congested_move_delta_cost,
                             "rejected_illegal_move_delta_cost": rejected_illegal_move_delta_cost,
-                            "delta_cost_90th_percentile": delta_cost_90th_percentile,
-                            "delta_cost_75th_percentile": delta_cost_75th_percentile,
-                            "delta_cost_50th_percentile": delta_cost_50th_percentile,
-                            "delta_cost_25th_percentile": delta_cost_25th_percentile,
                             "delta_cost_10th_percentile": delta_cost_10th_percentile,
+                            "delta_cost_25th_percentile": delta_cost_25th_percentile,
+                            "delta_cost_50th_percentile": delta_cost_50th_percentile,
+                            "delta_cost_75th_percentile": delta_cost_75th_percentile,
+                            "delta_cost_90th_percentile": delta_cost_90th_percentile,
                         })
 
                 # Calculate accepted/rejected move breakdowns
@@ -815,8 +817,7 @@ class TestResult:
         chart.height = 20
         chart.width = 40
         chart.layout=Layout(manualLayout=ManualLayout(
-            xMode='edge',
-            x=0.08, y=0, h=0.8, w=0.60,
+            x=-0.125, y=0, h=0.8, w=0.60,
         ))
         chart.legend.layout=Layout(manualLayout=ManualLayout(
             xMode='edge',
@@ -848,18 +849,25 @@ class TestResult:
         # Column M (index 13) is rejected illegal moves delta cost
         chart.series.append(create_scatter_plot_series(ws, 13, xvalues, "x", marker_size, "FF0000"))
 
-        # Column N (index 14) is 90th percentile delta cost line
-        chart.series.append(create_scatter_plot_series(ws, 14, xvalues, "dash", marker_size, "70FF00", line_no_fill=False))
-        # Column O (index 15) is 75th percentile delta cost line
-        chart.series.append(create_scatter_plot_series(ws, 15, xvalues, "dash", marker_size, "ADFF00", line_no_fill=False))
+        # Column N (index 14) is 10th percentile delta cost line
+        chart.series.append(create_scatter_plot_series(ws, 14, xvalues, "dash", marker_size, "FF7000", line_no_fill=False))
+        # Column O (index 15) is 25th percentile delta cost line
+        chart.series.append(create_scatter_plot_series(ws, 15, xvalues, "dash", marker_size, "FFAD00", line_no_fill=False))
         # Column P (index 16) is 50th percentile delta cost line
         chart.series.append(create_scatter_plot_series(ws, 16, xvalues, "dash", marker_size, "FFFF00", line_no_fill=False))
-        # Column Q (index 17) is 25th percentile delta cost line
-        chart.series.append(create_scatter_plot_series(ws, 17, xvalues, "dash", marker_size, "FFAD00", line_no_fill=False))
-        # Column R (index 18) is 10th percentile delta cost line
-        chart.series.append(create_scatter_plot_series(ws, 18, xvalues, "dash", marker_size, "FF7000", line_no_fill=False))
+        # Column Q (index 17) is 75th percentile delta cost line
+        chart.series.append(create_scatter_plot_series(ws, 17, xvalues, "dash", marker_size, "ADFF00", line_no_fill=False))
+        # Column R (index 18) is 90th percentile delta cost line
+        chart.series.append(create_scatter_plot_series(ws, 18, xvalues, "dash", marker_size, "70FF00", line_no_fill=False))
 
-        ws.add_chart(chart, "T42")  # Place chart at cell T42
+        ws.add_chart(chart, "T42")  # Place chart at cell T48
+
+        # Create a separate Scatter chart for delta cost of each SA move in log scale
+        chart = copy.deepcopy(chart)
+        chart.title = "Detla cost of each SA move (Log Scale)"
+        chart.y_axis.title = "Delta Cost (Log Scale)"
+        chart.y_axis.scaling.logBase = 10
+        ws.add_chart(chart, "T82")  # Place chart at cell T48
 
         # Save workbook
         wb.save(os.path.join(self.result_dir, f"{self.task_name}_SA_per_move_info.xlsx"))

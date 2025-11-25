@@ -15,7 +15,7 @@ def calculate_averages_and_geometric_means(df, prefix=""):
     for col in output_df.columns:
         if col not in ["benchmark_name", 'task_name']:
             output_df.loc['average', col] = df[col].astype(float).mean()
-            output_df.loc['geometric_mean', col] = np.exp(np.mean(np.log(df[col].astype(float)))) if (df[col].astype(float) > 0).all() else 0.0
+            output_df.loc['geometric_mean', col] = np.exp(np.mean(np.log(df[col].astype(float)))) if (df[col].astype(float) > 0).all() else np.nan
         else:
             output_df.loc['average', col] = prefix + 'average'
             output_df.loc['geometric_mean', col] = prefix + 'geometric_mean'
@@ -121,7 +121,7 @@ def main(args):
             dfs[file] = data
 
             # Remove failed test cases which contain 'N/A' in any column except "benchmark_name" and 'task_name' or -1.0 for avg_runtime [us]
-            mask = (data['avg_NPU_runtime [us]'].map(lambda x: math.isnan(x)))
+            mask = (data['compilation_time [s]'].map(lambda x: math.isnan(x)))
             dfs["success_" + file] = data[~mask].reset_index(drop=True)
             print(f"After removing failed test cases, {file} has shape {dfs["success_" + file].shape}")
 
