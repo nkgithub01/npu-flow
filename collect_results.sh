@@ -1,83 +1,114 @@
 #!/bin/bash
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+PNR_COMMIT_HASH=$(git rev-parse --short HEAD:./npu-pnr)
+OUTPUT_PATH="./Results"
+PNR_OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
 
-# Hand placed benchmarks
-rm -rf ./build
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --placed-iron --run --output-dir=./build -j 1 --verbose
-python3 utils/parse_results.py --variant=std --output-csv="./Results/hand_placed_results_${TIMESTAMP}.csv"
-mv ./build ./Results/build_hand_placed_results_${TIMESTAMP}
+# Collect hand placed results
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml --placer="hand_placed" --run --output-dir="${OUTPUT_PATH}/hand_placed_${TIMESTAMP}" --verbose -j 20
+python utils/parse_results.py --tasklists benchmarks/tasklist.yml --input-dir "${OUTPUT_PATH}/hand_placed_${TIMESTAMP}" --output-csv "${OUTPUT_PATH}/hand_placed_${TIMESTAMP}/hand_placed_results_${TIMESTAMP}.csv"
 
-rm -rf ./build
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --placed-iron --run --output-dir=./build -j 1 --verbose --aie-pkt-routing
-python3 utils/parse_results.py --variant=std --output-csv="./Results/hand_placed_using_packet_flow_results_${TIMESTAMP}.csv"
-mv ./build ./Results/build_hand_placed_using_packet_flow_results_${TIMESTAMP}
+# Collect sequential placer results
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml --placer="sequential_placer" --run --output-dir="${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}" --verbose -j 20
+python utils/parse_results.py --tasklists benchmarks/tasklist.yml --input-dir "${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}" --output-csv "${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}/sequential_placer_results_${TIMESTAMP}.csv"
 
-# AMD Sequential Placer
-rm -rf ./build
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sequential_placer --run --output-dir=./build -j 1 --verbose
-python3 utils/parse_results.py --variant=std --output-csv="./Results/sequential_placer_results_${TIMESTAMP}.csv"
-mv ./build ./Results/build_sequential_placer_results_${TIMESTAMP}
-
-rm -rf ./build
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sequential_placer --run --output-dir=./build -j 1 --verbose --aie-pkt-routing
-python3 utils/parse_results.py --variant=std --output-csv="./Results/sequential_placer_using_packet_flow_results_${TIMESTAMP}.csv"
-mv ./build ./Results/build_sequential_placer_using_packet_flow_results_${TIMESTAMP}
-
-# MLIPPlacer with packing
-rm -rf ./build
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sa_placer --compile --run --pnr --pnr-args="-r -u milp" --output-dir=./build -j 1 --verbose
-python3 utils/parse_results.py --variant=pnr --output-csv="./Results/milpplacer_with_packing_results_${TIMESTAMP}.csv"
-mv ./build ./Results/build_milpplacer_with_packing_${TIMESTAMP}
-
-for n in 0 1 10 100 1000
+# Collect SAPlacer results
+# Pure Greedy runs
+n=1000
+m=4
+g=$n
+RUN_NAME="SAPlacer_pure_greedy"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer="sa_placer" \
+    --pnr-args="-u sa -s 0 -r -n $n -T 0 -c 0 -g $g -m $m --log-interval 1 --write-interval 100" \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    --verbose \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Run checkpoint iteration collections results
+for iter in 100 200 300 400 500 600 700 800 900 1000
 do
-    # SAPlacer with pre-packed memory, varying n
-    rm -rf ./build
-    rm -rf ./tmp-parallel-pnr
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --placed-iron --no-compile --pnr --pnr-args="-n 0 -r -u sa --enable-packing" --output-dir=./build -j 1 --verbose
-    python3 utils/parallel_pnr.py ./build -o ./tmp-parallel-pnr --pnr-args="-n $n" -j 20
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --pnr --import-pnr-results ./tmp-parallel-pnr --run -j 1 --verbose --output-dir=./build
-    python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_pre_pack_n${n}_results_${TIMESTAMP}.csv"
-    mv ./build ./Results/build_saplacer_with_pre_pack_n${n}_${TIMESTAMP}
-    mv ./tmp-parallel-pnr ./Results/tmp_parallel_pnr_saplacer_with_pre_pack_n${n}_${TIMESTAMP}
-
-    # SAPlacer with packing, varying n
-    rm -rf ./build
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml --build --no-placed-iron --iron-placer=sa_placer --compile --run --pnr --pnr-args="-n $n -r -u sa --enable-packing" --output-dir=./build -j 1 --verbose
-    python3 utils/parse_results.py --variant=pnr --output-csv="./Results/saplacer_with_packing_n${n}_results_${TIMESTAMP}.csv"
-    mv ./build ./Results/build_saplacer_with_packing_n${n}_${TIMESTAMP}
-
+    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
+    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+        --placer="sa_placer" \
+        --import-pnr-results ${PNR_OUTPUT_DIR} \
+        --import-pnr-results-suffix=".json_iter_${iter}" \
+        --run \
+        --output-dir="${output_dir}" \
+        --verbose \
+        -j 20
+    python utils/parse_results.py \
+        --tasklists benchmarks/tasklist.yml \
+        --input-dir "${output_dir}" \
+        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
 done
 
-python3 utils/compare_results.py \
-    -f  Results/hand_placed_results_${TIMESTAMP}.csv \
-        Results/hand_placed_using_packet_flow_results_${TIMESTAMP}.csv \
-        Results/sequential_placer_results_${TIMESTAMP}.csv \
-        Results/sequential_placer_using_packet_flow_results_${TIMESTAMP}.csv \
-        Results/milpplacer_with_packing_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_pre_pack_n0_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_pre_pack_n1_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_pre_pack_n10_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_pre_pack_n100_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_pre_pack_n1000_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_packing_n0_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_packing_n1_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_packing_n10_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_packing_n100_results_${TIMESTAMP}.csv \
-        Results/saplacer_with_packing_n1000_results_${TIMESTAMP}.csv \
-    -l  HP \
-        HP_wPacket \
-        SP \
-        SP_wPacket \
-        MILPP \
-        SAP_nopack_n0 \
-        SAP_nopack_n1 \
-        SAP_nopack_n10 \
-        SAP_nopack_n100 \
-        SAP_nopack_n1000 \
-        SAP_pack_n0 \
-        SAP_pack_n1 \
-        SAP_pack_n10 \
-        SAP_pack_n100 \
-        SAP_pack_n1000 \
-    -o  overall_results_${TIMESTAMP}.xlsx
+# Dynamic Temperature Scheduling runs
+n=1000
+m=4
+g=200
+RUN_NAME="SAPlacer_dynamic_temperature_scheduling"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer="sa_placer" \
+    --pnr-args="-u sa -s 0 -r -n $n --dynamic-temperature-scheduling -g $g -m $m --log-interval 1 --write-interval 100" \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    --verbose \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Run checkpoint iteration collections results
+for iter in 100 200 300 400 500 600 700 800 900 1000
+do
+    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
+    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+        --placer="sa_placer" \
+        --import-pnr-results ${PNR_OUTPUT_DIR} \
+        --import-pnr-results-suffix=".json_iter_${iter}" \
+        --run \
+        --output-dir="${output_dir}" \
+        --verbose \
+        -j 20
+    python utils/parse_results.py \
+        --tasklists benchmarks/tasklist.yml \
+        --input-dir "${output_dir}" \
+        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
+done
+
+# Collect LSMOPlacer results
+n=1000
+RUN_NAME="LSMOPlacer"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer="sa_placer" \
+    --pnr-args="-u lsmo -s 0 -r -n $n -g 200 -m $m --log-interval 1 --write-interval 100" \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    --verbose \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Run checkpoint iteration collections results
+for iter in 100 200 300 400 500 600 700 800 900 1000
+do
+    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
+    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+        --placer="sa_placer" \
+        --import-pnr-results ${PNR_OUTPUT_DIR} \
+        --import-pnr-results-suffix=".json_iter_${iter}" \
+        --run \
+        --output-dir="${output_dir}" \
+        --verbose \
+        -j 20
+    python utils/parse_results.py \
+        --tasklists benchmarks/tasklist.yml \
+        --input-dir "${output_dir}" \
+        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
+done

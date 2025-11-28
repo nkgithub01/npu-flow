@@ -2,9 +2,8 @@ src_dir ?= $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 build_dir ?= $(src_dir)/build
 include ${src_dir}/../makefile-common
 
-target_name = edge_detect
+target_name = edge_detection
 aie_py_src=${target_name}.py
-
 use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${target_name}.py
@@ -24,10 +23,10 @@ TRACE_SIZE = 134217728
 NUM_ITERATION ?= 100
 WARMUP_ITERATION ?= 50
 mlir_target?=${build_dir}/${target_name}.mlir
-trace_mlir_target?=${build_dir}/${target_name}_trace.mlir
+trace_mlir_target?=${build_dir}/trace_${target_name}.mlir
 xclbin_target?=${build_dir}/${target_name}.xclbin
-trace_xclbin_target?=${build_dir}/${target_name}_trace.xclbin
-insts_target?=${build_dir}/${target_name}_insts.bin
+trace_xclbin_target?=${build_dir}/trace_${target_name}.xclbin
+insts_target?=${build_dir}/insts_${target_name}.bin
 
 pnr_args ?= -n 1 -r
 aieargs+=-iwd ${EDGEDETECT_WIDTH} -iht ${EDGEDETECT_HEIGHT} -nc ${NUM_COMPUTE_COLUMNS}

@@ -5,7 +5,6 @@ include ${src_dir}/../makefile-common
 
 target_name := vector_scalar_mul
 aie_py_src=${target_name}.py
-
 use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${target_name}.py
@@ -32,10 +31,10 @@ data_size = in1_size
 NUM_ITERATION := 100
 WARMUP_ITERATION := 50
 mlir_target?=${build_dir}/${target_name}.mlir
-trace_mlir_target?=${build_dir}/${target_name}_trace.mlir
+trace_mlir_target?=${build_dir}/trace_${target_name}.mlir
 xclbin_target?=${build_dir}/${target_name}.xclbin
-trace_xclbin_target?=${build_dir}/${target_name}_trace.xclbin
-insts_target?=${build_dir}/${target_name}_insts.bin
+trace_xclbin_target?=${build_dir}/trace_${target_name}.xclbin
+insts_target?=${build_dir}/insts_${target_name}.bin
 pnr_args ?= -n 1 -r
 aieargs+=-i1s ${in1_size} -i2s ${in2_size} -os ${out_size} -bw ${int_bit_width}
 runargs+=--iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}

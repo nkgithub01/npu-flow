@@ -3,7 +3,7 @@ import yaml
 import os
 import shutil
 import argparse
-import json
+import time
 import traceback
 import tarfile
 
@@ -175,23 +175,29 @@ class BenchmarkTask:
             pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/placer")
             assert os.path.exists(pnr_bin), f"PnR binary not found at {pnr_bin}"
 
+        start_time = time.perf_counter()
         result = synch_run_cmd(self.build_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
+        end_time = time.perf_counter()
+        build_time = end_time - start_time
         self.last_built_stage = BuildStage.BUILD
 
         output_mlir = self._get_output_file(self.output_mlir)
         summary_files = {}
 
-        return f"{import_log}\n{result}"
+        return f"{import_log}\n{result}\nBuild took: {build_time:.2f} seconds"
 
     def compile_task(self):
         assert self.last_built_stage == BuildStage.BUILD, "Build before compile"
 
+        start_time = time.perf_counter()
         result = synch_run_cmd(self.compile_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
+        end_time = time.perf_counter()
+        compile_time = end_time - start_time
         self.last_built_stage = BuildStage.COMPILE
 
-        return str(result)
+        return f"{result}\nCompile took: {compile_time:.2f} seconds"
 
     def run_task(self):
         assert self.last_built_stage == BuildStage.COMPILE, "Compile before run"
@@ -211,14 +217,14 @@ class BenchmarkTask:
     def __repr__(self) -> str:
         return f"BenchmarkTask({self.benchmark_name}/{self.task_name})"
 
-def import_pnr_results(task: BenchmarkTask, import_dir: str) -> str:
+def import_pnr_results(task: BenchmarkTask, import_dir: str, args) -> str:
     if not import_dir:
         return ""
     import_dir = os.path.join(import_dir, task.benchmark_name, task.task_name)
     task.log("Importing precomputed PnR results ...")
     required = [
-        f"build/pnr_placed_netlist.json",
-        f"build/pnr_route_summary.json",
+        f"build/pnr_placed_netlist{args.import_pnr_results_suffix}.json",
+        f"build/pnr_route_summary{args.import_pnr_results_suffix}.json",
     ]
     for f in required:
         assert os.path.exists(os.path.join(import_dir, f)), f"Missing PnR file: {os.path.join(import_dir, f)}"
@@ -241,13 +247,13 @@ def import_pnr_results(task: BenchmarkTask, import_dir: str) -> str:
         )
     return ""
 
-def build_and_compile(task: BenchmarkTask, args) -> (BenchmarkTask, bool):
+def build_and_compile(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
     try:
         task.log("Cleaning ...")
         task.clean_build_task()
 
         task.log("Building ...")
-        import_log = import_pnr_results(task, args.import_pnr_results)
+        import_log = import_pnr_results(task, args.import_pnr_results, args)
         build_res = task.build_task(import_log) 
         if args.netlist_only:
             return task, True
@@ -379,6 +385,7 @@ if __name__ == "__main__":
     parser.add_argument("--aie-pkt-routing", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--pnr-args", type=str, default=None)
     parser.add_argument("--import-pnr-results", type=str, default=None)
+    parser.add_argument("--import-pnr-results-suffix", type=str, default="")
     parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--run", action="store_true", default=False)
     parser.add_argument("--run-only", action="store_true", default=False,

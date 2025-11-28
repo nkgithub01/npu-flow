@@ -2,6 +2,7 @@ import os
 import re
 import argparse
 import csv
+import math
 import numpy as np
 import pandas as pd
 from openpyxl.styles import PatternFill, Border, Side
@@ -12,9 +13,9 @@ def calculate_averages_and_geometric_means(df, prefix=""):
         return df
     output_df = df.copy()
     for col in output_df.columns:
-        if col not in ['benchmark', 'task_name']:
+        if col not in ["benchmark_name", 'task_name']:
             output_df.loc['average', col] = df[col].astype(float).mean()
-            output_df.loc['geometric_mean', col] = np.exp(np.mean(np.log(df[col].astype(float)))) if (df[col].astype(float) > 0).all() else 0.0
+            output_df.loc['geometric_mean', col] = np.exp(np.mean(np.log(df[col].astype(float)))) if (df[col].astype(float) > 0).all() else np.nan
         else:
             output_df.loc['average', col] = prefix + 'average'
             output_df.loc['geometric_mean', col] = prefix + 'geometric_mean'
@@ -24,12 +25,12 @@ def calculate_averages_and_geometric_means(df, prefix=""):
 def normalize_matching_rows(baseline_df, comparison_df):
     normalized_df = comparison_df.copy()
     for idx, row in comparison_df.iterrows():
-        benchmark = row['benchmark']
+        benchmark = row["benchmark_name"]
         task_name = row['task_name']
-        baseline_row = baseline_df[(baseline_df['benchmark'] == benchmark) & (baseline_df['task_name'] == task_name)]
+        baseline_row = baseline_df[(baseline_df["benchmark_name"] == benchmark) & (baseline_df['task_name'] == task_name)]
         for col in comparison_df.columns:
-            if col not in ['benchmark', 'task_name']:
-                if (not baseline_row.empty) and (baseline_row.loc[idx, col] not in ['N/A', -1.0, ""]):
+            if col not in ["benchmark_name", 'task_name']:
+                if (not baseline_row.empty) and (baseline_row.loc[idx, col] not in ['N/A', -1.0, "", float('nan')]):
                     try:
                         normalized_value = float(row[col]) / float(baseline_row.loc[idx, col])
                         normalized_df.at[idx, col] = normalized_value
@@ -94,14 +95,14 @@ def main(args):
     def helper_get_benchmark_group_df(df, benchmark_group_patterns):
         mask = pd.Series([False] * df.shape[0])
         for benchmark_name, task_name_pattern in benchmark_group_patterns:
-            mask |= df["benchmark"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False)
+            mask |= df["benchmark_name"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False)
         return df[mask].copy()
     def helper_get_ungrouped_df(df):
         df.reset_index(drop=True, inplace=True)
         mask = pd.Series([True] * df.shape[0])
         for group in benchmark_groups:
             for benchmark_name, task_name_pattern in group['benchmark_group_patterns']:
-                mask &= ~(df["benchmark"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False))
+                mask &= ~(df["benchmark_name"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False))
         return df[mask].copy()
 
     # Read CSV files into DataFrames
@@ -116,11 +117,11 @@ def main(args):
             data.columns = data.columns.str.strip()
             def natural_sort_key(s):
                 return tuple([int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)])
-            data.sort_values(by=['benchmark', 'task_name'], key=lambda col: col.apply(natural_sort_key), inplace=True, ignore_index=True)
+            data.sort_values(by=["benchmark_name", 'task_name'], key=lambda col: col.apply(natural_sort_key), inplace=True, ignore_index=True)
             dfs[file] = data
 
-            # Remove failed test cases which contain 'N/A' in any column except 'benchmark' and 'task_name' or -1.0 for avg_runtime [us]
-            mask = (data.drop(columns=['benchmark', 'task_name']).map(lambda x: x == 'N/A').any(axis=1)) | (data['avg_runtime [us]'] == -1.0)
+            # Remove failed test cases which contain 'N/A' in any column except "benchmark_name" and 'task_name' or -1.0 for avg_runtime [us]
+            mask = (data['compilation_time [s]'].map(lambda x: math.isnan(x)))
             dfs["success_" + file] = data[~mask].reset_index(drop=True)
             print(f"After removing failed test cases, {file} has shape {dfs["success_" + file].shape}")
 
@@ -128,12 +129,12 @@ def main(args):
             print(f"Error reading {file}: {e}")
 
     # Create dataframes that contain only the test cases that are present in all success files
-    common_benchmarks = set(dfs["success_" + baseline_file][['benchmark', 'task_name']].itertuples(index=False, name=None))
+    common_benchmarks = set(dfs["success_" + baseline_file][["benchmark_name", 'task_name']].itertuples(index=False, name=None))
     for file in args.files:
         if file != baseline_file:
-            common_benchmarks.intersection_update(set(dfs["success_" + file][['benchmark', 'task_name']].itertuples(index=False, name=None)))
+            common_benchmarks.intersection_update(set(dfs["success_" + file][["benchmark_name", 'task_name']].itertuples(index=False, name=None)))
     for file in args.files:
-        dfs["common_success_" + file] = dfs["success_" + file][dfs["success_" + file][['benchmark', 'task_name']].apply(tuple, axis=1).isin(common_benchmarks)].reset_index(drop=True)
+        dfs["common_success_" + file] = dfs["success_" + file][dfs["success_" + file][["benchmark_name", 'task_name']].apply(tuple, axis=1).isin(common_benchmarks)].reset_index(drop=True)
         print(f"After filtering to common benchmarks that all files have success run results, {file} has shape {dfs["common_success_" + file].shape}")
 
     # Calculate averages and geometric means for each common success file by overall and benchmark groups
@@ -151,40 +152,52 @@ def main(args):
             df_with_stats = pd.concat([df_with_stats, ungrouped_df_with_stats, empty_row_df], ignore_index=True)
         # Add overall stats
         dfs["common_success_" + file] = calculate_averages_and_geometric_means(dfs["common_success_" + file], prefix="Overall ")
-        dfs["common_success_" + file] = pd.concat([df_with_stats, empty_row_df, dfs["common_success_" + file][dfs["common_success_" + file]["benchmark"].str.contains("average|geometric_mean")]], ignore_index=True)
+        dfs["common_success_" + file] = pd.concat([df_with_stats, empty_row_df, dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean")]], ignore_index=True)
 
     # Calculate the normalized values
     for file in args.files:
         dfs["normalized_" + file] = normalize_matching_rows(dfs["common_success_" + baseline_file], dfs["common_success_" + file])
     
     # Collect overall stats for each file and calculate stats for each group
-    dfs["Overall Statistics"] = pd.DataFrame(columns=['Sheet', 'Benchmark Group', 'Total Number Test Cases', 'Successful Test Cases', 'Success Rate', 'Common Successful Test Cases Across All Files'])
+    dfs["Overall Statistics"] = pd.DataFrame(columns=['Sheet', 'Benchmark Group', 'Total Number Test Cases', 'Number of Successfully Builded Test Cases', 'Number of Successfully Compiled Test Cases', 'Successful Test Cases', 'Success Rate', 'Common Successful Test Cases Across All Files'])
     empty_row_df = pd.DataFrame([[""]*len(dfs["Overall Statistics"].columns)], columns=dfs["Overall Statistics"].columns)
     for file in args.files:
         total_test_cases = dfs[file].shape[0]
+        successful_builded = dfs[file][dfs[file]['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
+        successful_compiled = dfs[file][dfs[file]['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         successful_test_cases = dfs["success_" + file].shape[0]
-        common_successful_test_cases = dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark"].str.match(r"^$"))].shape[0]
+        common_successful_test_cases = dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))].shape[0]
         for group in benchmark_groups:
-            group_total = helper_get_benchmark_group_df(dfs[file], group['benchmark_group_patterns']).shape[0]
+            gropu_df = helper_get_benchmark_group_df(dfs[file], group['benchmark_group_patterns'])
+            group_total = gropu_df.shape[0]
+            group_successful_builded = gropu_df[gropu_df['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
+            group_successful_compiled = gropu_df[gropu_df['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
             group_successful = helper_get_benchmark_group_df(dfs["success_" + file], group['benchmark_group_patterns']).shape[0]
             group_common_successful = helper_get_benchmark_group_df(dfs["common_success_" + file], group['benchmark_group_patterns']).shape[0]
             dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
                 'Sheet': file_label_map[file],
                 'Benchmark Group': group['benchmark_group_name'],
                 'Total Number Test Cases': group_total,
+                'Number of Successfully Builded Test Cases': group_successful_builded,
+                'Number of Successfully Compiled Test Cases': group_successful_compiled,
                 'Successful Test Cases': group_successful,
                 'Success Rate': float(group_successful) / float(group_total) if float(group_total) > 0.0 else 0.0,
                 'Common Successful Test Cases Across All Files': group_common_successful
                 }).to_frame().T
             ], ignore_index=True)
         # Add ungrouped stats
-        ungrouped_total = helper_get_ungrouped_df(dfs[file]).shape[0]
+        ungrouped_df = helper_get_ungrouped_df(dfs[file])
+        ungrouped_total = ungrouped_df.shape[0]
+        ungroup_successful_builded = ungrouped_df[ungrouped_df['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
+        ungroup_successful_compiled = ungrouped_df[ungrouped_df['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         ungrouped_successful = helper_get_ungrouped_df(dfs["success_" + file]).shape[0]
-        ungrouped_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark"].str.match(r"^$"))]).shape[0]
+        ungrouped_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))]).shape[0]
         dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
             'Sheet': file_label_map[file],
             'Benchmark Group': 'Ungrouped',
             'Total Number Test Cases': ungrouped_total,
+            'Number of Successfully Builded Test Cases': ungroup_successful_builded,
+            'Number of Successfully Compiled Test Cases': ungroup_successful_compiled,
             'Successful Test Cases': ungrouped_successful,
             'Success Rate': float(ungrouped_successful) / float(ungrouped_total) if float(ungrouped_total) > 0.0 else 0.0,
             'Common Successful Test Cases Across All Files': ungrouped_common_successful
@@ -195,6 +208,8 @@ def main(args):
             'Sheet': file_label_map[file],
             'Benchmark Group': 'Overall',
             'Total Number Test Cases': total_test_cases,
+            'Number of Successfully Builded Test Cases': successful_builded,
+            'Number of Successfully Compiled Test Cases': successful_compiled,
             'Successful Test Cases': successful_test_cases,
             'Success Rate': float(successful_test_cases) / float(total_test_cases) if float(total_test_cases) > 0.0 else 0.0,
             'Common Successful Test Cases Across All Files': common_successful_test_cases
@@ -305,6 +320,8 @@ def main(args):
             writer.sheets[f"common_success_{file_name}"[:31]].freeze_panes = "C2"
             writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]].freeze_panes = "C2"
         writer.sheets["Overall Statistics"].freeze_panes = "C2"
+    
+    print(f"Comparison results saved to {args.output_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compare CSV files")

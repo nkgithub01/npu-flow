@@ -9,7 +9,6 @@ dtype_out := i16
 
 target_name := GEMM
 aie_py_src := ${target_name}.py
-
 use_placed ?= 1
 ifeq (${use_placed}, 0)
 aie_py_src=${target_name}.py
@@ -41,7 +40,6 @@ b_col_maj?=0
 kernels:=mm_${m}x${k}x${n}
 aieargs:=-m $m -k $k -n $n --n_aie_cols ${n_aie_cols} --b_col_maj ${b_col_maj}
 runargs:=--b_col_maj ${b_col_maj}
-target_suffix:=${M}x${K}x${N}_${m}x${k}x${n}_${n_aie_cols}c
 
 # set this flag to 1 for linear buffer allocation
 # else, 0 for bank-aware
@@ -57,11 +55,11 @@ VERBOSITY := 2
 TRACE_SIZE := 1048576
 NUM_ITERATION := 100
 WARMUP_ITERATION := 50
-mlir_target?=${build_dir}/aie_${target_suffix}.mlir
-trace_mlir_target?=${build_dir}/aie_trace_${target_suffix}.mlir
-xclbin_target?=${build_dir}/GEMM_${target_suffix}.xclbin
-trace_xclbin_target?=${build_dir}/GEMM_trace_${target_suffix}.xclbin
-insts_target?=${build_dir}/insts_${target_suffix}.bin
+mlir_target?=${build_dir}/${target_name}.mlir
+trace_mlir_target?=${build_dir}/trace_${target_name}.mlir
+xclbin_target?=${build_dir}/${target_name}.xclbin
+trace_xclbin_target?=${build_dir}/trace_${target_name}.xclbin
+insts_target?=${build_dir}/insts_${target_name}.bin
 pnr_args ?= -n 1 -r
 aieargs+=--dev ${device_name} -M $M -K $K -N $N --dtype_in ${dtype_in} --dtype_out ${dtype_out}
 runargs+=-M $M -K $K -N $N -dtype_in=${dtype_in} -dtype_out=${dtype_out} -v ${VERBOSITY} --iters ${NUM_ITERATION} --warmup ${WARMUP_ITERATION}
