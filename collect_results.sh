@@ -17,11 +17,12 @@ python utils/parse_results.py --tasklists benchmarks/tasklist.yml --input-dir "$
 n=1000
 m=4
 g=$n
+max_n=$((n*m))
 RUN_NAME="SAPlacer_pure_greedy"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
-    --pnr-args="-u sa -s 0 -r -n $n -T 0 -c 0 -g $g -m $m --log-interval 1 --write-interval 100" \
+    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n -T 0 -c 0 --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
     --verbose \
     -j 20
@@ -51,11 +52,12 @@ done
 n=1000
 m=4
 g=200
+max_n=$((n*m))
 RUN_NAME="SAPlacer_dynamic_temperature_scheduling"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
-    --pnr-args="-u sa -s 0 -r -n $n --dynamic-temperature-scheduling -g $g -m $m --log-interval 1 --write-interval 100" \
+    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n --dynamic-temperature-scheduling --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
     --verbose \
     -j 20
@@ -87,7 +89,7 @@ RUN_NAME="LSMOPlacer"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
-    --pnr-args="-u lsmo -s 0 -r -n $n -g 200 -m $m --log-interval 1 --write-interval 100" \
+    --pnr-args="-u lsmo -s 0 -r -n $n --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
     --verbose \
     -j 20
