@@ -219,3 +219,52 @@ docker run -it --rm npu-flow
 ```
 
 This command will start a new container from the `npu-flow` image and drop you into a bash shell where you can execute commands in the configured environment.
+
+## Apptainer Setup
+
+Clone a fresh copy of **npu-flow** (recommended to build from a clean project root) and build image:
+
+```bash
+git clone https://github.com/ueqri/npu-flow.git
+cd npu-flow 
+git submodule update --init --recursive
+sudo apptainer build image_name.sif apptainer.def
+```
+
+## Run Commands with Apptainer
+
+To run commands using the container:
+
+```bash
+apptainer run image_name.sif <your command>
+```
+
+It is recommended to bind-mount a directory **outside the repository** for all build or benchmark outputs.  
+This prevents generated files from appearing inside the repo and avoids accidentally committing them.
+
+```bash
+mkdir -p /path/to/folder/outside/repo
+
+apptainer run \
+    --bind /path/to/folder/outside/repo:/build_output \
+    image_name.sif \
+    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+        --placer="sa_placer" \
+        --pnr-args="-n 10" \
+        --output-dir=./build_output
+```
+In this case `build_output` will refer to the external folder.
+
+## Interactive Shell (Like Docker's -it)
+
+To drop into an interactive bash shell, you need to then manually activate environments.
+```bash
+apptainer shell image_name.sif
+source /workspace/mlir-aie/ironenv/bin/activate
+source /opt/xilinx/xrt/setup.sh
+```
+
+## File Transfer to Compute Canada
+```bash
+scp image_name.sif username@hostname.computecanada.ca:~/projects/def-vaughn/npu-flow-images
+```
