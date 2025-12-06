@@ -24,6 +24,7 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
     --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n -T 0 -c 0 --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
+    --no-compile \
     --verbose \
     -j 20
 python utils/parse_results.py \
@@ -59,6 +60,43 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
     --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n --dynamic-temperature-scheduling --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
+    --no-compile \
+    --verbose \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Run checkpoint iteration collections results
+for iter in 100 200 300 400 500 600 700 800 900 1000
+do
+    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
+    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+        --placer="sa_placer" \
+        --import-pnr-results ${PNR_OUTPUT_DIR} \
+        --import-pnr-results-suffix=".json_iter_${iter}" \
+        --run \
+        --output-dir="${output_dir}" \
+        --verbose \
+        -j 20
+    python utils/parse_results.py \
+        --tasklists benchmarks/tasklist.yml \
+        --input-dir "${output_dir}" \
+        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
+done
+
+# Dynamic Temperature Scheduling runs with Cost Estimation
+n=1000
+m=4
+g=200
+max_n=$((n*m))
+RUN_NAME="SAPlacer_dynamic_temperature_scheduling_with_cost_estimation_and_congestion_estimation"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer="sa_placer" \
+    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n --dynamic-temperature-scheduling --sa-use-cost-estimation --log-interval 1 --write-interval 100" \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    --no-compile \
     --verbose \
     -j 20
 python utils/parse_results.py \
@@ -91,6 +129,7 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --placer="sa_placer" \
     --pnr-args="-u lsmo -s 0 -r -n $n --log-interval 1 --write-interval 100" \
     --output-dir="${PNR_OUTPUT_DIR}" \
+    --no-compile \
     --verbose \
     -j 20
 python utils/parse_results.py \

@@ -216,9 +216,6 @@ def main(args):
             }).to_frame().T,
             empty_row_df
         ], ignore_index=True)
-    
-    with open('output.log', 'w') as output_log:
-        output_log.write(str(dfs))
 
     # Save the results to Excel files
     with pd.ExcelWriter(args.output_file, engine='openpyxl') as writer:

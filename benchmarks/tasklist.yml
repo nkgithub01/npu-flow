@@ -12,10 +12,10 @@
 # - llama_mha/default
 
 # General Matrix Multiplication (GEMM)
-- GEMM/GEMM_R6_C8
-- GEMM/GEMM_R6_C4
-- GEMM/GEMM_R6_C2
 - GEMM/GEMM_R6_C1
+- GEMM/GEMM_R6_C2
+- GEMM/GEMM_R6_C4
+- GEMM/GEMM_R6_C8
 
 # # Cascade GEMM (Placed only, don't run these tests by default)
 # TODO: Remove cascade GEMM because out of scope
