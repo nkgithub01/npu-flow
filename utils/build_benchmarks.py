@@ -52,12 +52,11 @@ class CommandResult:
             f"stdout={self.stdout},\nstderr={self.stderr},\nenv={self.env})"
         )
 
-def synch_run_cmd(cmd, cwd=None, env=None):
+def synch_run_cmd(cmd, cwd=None, env=None, timeout=None):
     assert isinstance(cmd, str), "Command must be a string"
     process = Popen(cmd, cwd=cwd, shell=True, stdout=PIPE, stderr=PIPE, env=env)
 
-    stdout, stderr = process.communicate()
-
+    stdout, stderr = process.communicate(timeout=timeout)
     return CommandResult(
         cmd=cmd,
         cwd=cwd,
@@ -191,7 +190,7 @@ class BenchmarkTask:
         assert self.last_built_stage == BuildStage.BUILD, "Build before compile"
 
         start_time = time.perf_counter()
-        result = synch_run_cmd(self.compile_cmd, cwd=self.src_dir, env=self.env_vars)
+        result = synch_run_cmd(self.compile_cmd, cwd=self.src_dir, env=self.env_vars, timeout=300)
         result.check()
         end_time = time.perf_counter()
         compile_time = end_time - start_time
@@ -247,7 +246,14 @@ def import_pnr_results(task: BenchmarkTask, import_dir: str, args) -> str:
         )
     return ""
 
-def build_and_compile(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
+def log_error(task: BenchmarkTask, e: Exception, err_file: str, verbose: bool) -> None:
+    err_path = os.path.join(task.output_dir, err_file)
+    write_text_file(err_path, traceback.format_exc())
+    task.log(f" Error: {e}")
+    if verbose:
+        traceback.print_exc()
+
+def build_single_task(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
     try:
         task.log("Cleaning ...")
         task.clean_build_task()
@@ -257,42 +263,48 @@ def build_and_compile(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
         build_res = task.build_task(import_log) 
         if args.netlist_only:
             return task, True
-        compile_res = None
-        if args.compile:
-            task.log("Compiling ...")
-            compile_res = task.compile_task()
-
         if args.debug:
             write_text_file(os.path.join(task.output_dir, f"{task.task_name}.build.log"), build_res)
-            if compile_res:
-                write_text_file(os.path.join(task.output_dir, f"{task.task_name}.compile.log"), compile_res)
         return task, True
     except Exception as e:
         if args.netlist_only:
             task.log(f"Netlist-only mode: ignoring exception ...")
             return task, True
-        err_path = os.path.join(task.output_dir, f"{task.task_name}.error.log")
-        write_text_file(err_path, traceback.format_exc())
-        task.log(f" Error: {e}")
-        if args.verbose:
-            traceback.print_exc()
+        log_error(task, e, f"{task.task_name}.build.error.log", args.verbose)
         return task, False
 
-def create_netlist_zip(tasks: BenchmarkTask, args) -> None:
-    root = args.output_dir
-    staging_dir = os.path.join(root, "_netlists_tmp")
+def compile_benchmark_tasks(tasks: list[tuple[BenchmarkTask, bool]], args) -> tuple[BenchmarkTask, bool]:
+    compile_results = []
+    for task, ok in tasks:
+        if not ok:
+            task.log("Skipping compile due to build stage errors.")
+            compile_results.append((task, False))
+            continue
+        try:
+            task.log("Compiling ...")
+            compile_res = task.compile_task()
+            if args.debug:
+                write_text_file(os.path.join(task.output_dir, f"{task.task_name}.compile.log"), compile_res)
+            compile_results.append((task, True))
+        except Exception as e:
+            log_error(task, e, f"{task.task_name}.compile.error.log", args.verbose)
+            compile_results.append((task, False))
+    return compile_results
+
+def create_netlist_zip(root_path: str) -> None:
+    staging_dir = os.path.join(root_path, "_netlists_tmp")
 
     if os.path.exists(staging_dir):
         shutil.rmtree(staging_dir)
     os.makedirs(staging_dir, exist_ok=True)
 
     netlist_paths = []
-    for dir_path, _, files in os.walk(root):
+    for dir_path, _, files in os.walk(root_path):
         if "netlist.json" in files:
             netlist_paths.append(os.path.join(dir_path, "netlist.json"))
     
     for netlist_path in netlist_paths:
-        # Path looks like: root / benchmark_name / task_name / build / netlist.json
+        # Path looks like: root_path / benchmark_name / task_name / build / netlist.json
         build_dir = os.path.dirname(netlist_path)
         task_dir = os.path.dirname(build_dir)
         benchmark_dir = os.path.dirname(task_dir)
@@ -313,7 +325,7 @@ def create_netlist_zip(tasks: BenchmarkTask, args) -> None:
 
     print(f"Created netlist archive at {tar_path} containing {len(netlist_paths)} netlists.")
 
-def run_benchmark_tasks(tasks: BenchmarkTask, args) -> None:
+def run_benchmark_tasks(tasks: list[tuple[BenchmarkTask, bool]], args) -> None:
     tasks_to_run = []
     if not args.run_only:
         for task, ok in tasks:
@@ -441,17 +453,21 @@ if __name__ == "__main__":
         exit(0)
     
     results = []
-    # --- Parallel build and compile ---
+    # --- Parallel build ---
     if args.build:
         n_parallel = args.j or os.cpu_count()
         if n_parallel > 1:
             print(f"Building benchmarks in parallel with {n_parallel} processes ...")
             with Pool(processes=n_parallel) as pool:
-                results = pool.starmap(build_and_compile, [(bt, args) for bt in benchmark_tasks])
+                results = pool.starmap(build_single_task, [(bt, args) for bt in benchmark_tasks])
         else:
-            results = [build_and_compile(bt, args) for bt in benchmark_tasks]
+            results = [build_single_task(bt, args) for bt in benchmark_tasks]
     if args.netlist_only:
-        create_netlist_zip(benchmark_tasks, args)
+        create_netlist_zip(args.output_dir)
+        exit(0)
+    # --- Serial compile ---
+    if args.compile:
+        results = compile_benchmark_tasks(results, args)
     # --- Serial run ---
     if args.run:
         tasks_to_run = results if args.build else benchmark_tasks
