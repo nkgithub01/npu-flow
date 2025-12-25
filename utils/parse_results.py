@@ -544,10 +544,13 @@ class TestResult:
             self.fields["total_end2end_compilation_time [s]"].value = total_time
         
         # Parse the final placement of the design from routing summary JSON file
-        routing_summary_json_file_path = os.path.join(self.result_dir, "build", f"post_compile_routing_summary.json")
+        routing_summary_json_file_path = os.path.join(self.result_dir, "build", f"pnr_route_summary.json")
         if os.path.exists(routing_summary_json_file_path):
             with open(routing_summary_json_file_path, 'r') as file:
-                data = json.load(file)
+                try:
+                    data = json.load(file)
+                except json.JSONDecodeError:
+                    return  # Unable to parse JSON file
 
             # Count neighbor connections
             nbr_route_count = 0

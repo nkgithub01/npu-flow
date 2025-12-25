@@ -7,11 +7,21 @@ import numpy as np
 import pandas as pd
 from openpyxl.styles import PatternFill, Border, Side
 
-# Calculate average and geometric mean for each column in a DataFrame and add these values back to the DataFrame
-def calculate_averages_and_geometric_means(df, prefix=""):
+def augment_stats(df, prefix=""):
     if len(df) == 0:
         return df
     output_df = df.copy()
+
+    # Find Min and Max for each column in a DataFrame and add these values back to the DataFrame
+    for col in output_df.columns:
+        if col not in ["benchmark_name", 'task_name']:
+            output_df.loc['min', col] = df[col].astype(float).min()
+            output_df.loc['max', col] = df[col].astype(float).max()
+        else:
+            output_df.loc['min', col] = prefix + 'min'
+            output_df.loc['max', col] = prefix + 'max'
+
+    # Calculate average and geometric mean for each column in a DataFrame and add these values back to the DataFrame
     for col in output_df.columns:
         if col not in ["benchmark_name", 'task_name']:
             output_df.loc['average', col] = df[col].astype(float).mean()
@@ -121,7 +131,7 @@ def main(args):
             dfs[file] = data
 
             # Remove failed test cases which contain 'N/A' in any column except "benchmark_name" and 'task_name' or -1.0 for avg_runtime [us]
-            mask = (data['compilation_time [s]'].map(lambda x: math.isnan(x)))
+            mask = (data['avg_NPU_runtime [us]'].map(lambda x: math.isnan(x)))
             dfs["success_" + file] = data[~mask].reset_index(drop=True)
             print(f"After removing failed test cases, {file} has shape {dfs["success_" + file].shape}")
 
@@ -144,15 +154,15 @@ def main(args):
         for group in benchmark_groups:
             partial_df = helper_get_benchmark_group_df(dfs["common_success_" + file], group['benchmark_group_patterns'])
             if not partial_df.empty:
-                partial_df_with_stats = calculate_averages_and_geometric_means(partial_df, prefix=group['benchmark_group_name'] + " ")
+                partial_df_with_stats = augment_stats(partial_df, prefix=group['benchmark_group_name'] + " ")
                 df_with_stats = pd.concat([df_with_stats, partial_df_with_stats, empty_row_df], ignore_index=True)
         ungrouped_df = helper_get_ungrouped_df(dfs["common_success_" + file])
         if not ungrouped_df.empty:
-            ungrouped_df_with_stats = calculate_averages_and_geometric_means(ungrouped_df, prefix="Ungrouped ")
+            ungrouped_df_with_stats = augment_stats(ungrouped_df, prefix="Ungrouped ")
             df_with_stats = pd.concat([df_with_stats, ungrouped_df_with_stats, empty_row_df], ignore_index=True)
         # Add overall stats
-        dfs["common_success_" + file] = calculate_averages_and_geometric_means(dfs["common_success_" + file], prefix="Overall ")
-        dfs["common_success_" + file] = pd.concat([df_with_stats, empty_row_df, dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean")]], ignore_index=True)
+        dfs["common_success_" + file] = augment_stats(dfs["common_success_" + file], prefix="Overall ")
+        dfs["common_success_" + file] = pd.concat([df_with_stats, empty_row_df, dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean")]], ignore_index=True)
 
     # Calculate the normalized values
     for file in args.files:
@@ -166,7 +176,7 @@ def main(args):
         successful_builded = dfs[file][dfs[file]['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         successful_compiled = dfs[file][dfs[file]['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         successful_test_cases = dfs["success_" + file].shape[0]
-        common_successful_test_cases = dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))].shape[0]
+        common_successful_test_cases = dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))].shape[0]
         for group in benchmark_groups:
             gropu_df = helper_get_benchmark_group_df(dfs[file], group['benchmark_group_patterns'])
             group_total = gropu_df.shape[0]
@@ -191,7 +201,7 @@ def main(args):
         ungroup_successful_builded = ungrouped_df[ungrouped_df['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         ungroup_successful_compiled = ungrouped_df[ungrouped_df['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
         ungrouped_successful = helper_get_ungrouped_df(dfs["success_" + file]).shape[0]
-        ungrouped_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))]).shape[0]
+        ungrouped_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))]).shape[0]
         dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
             'Sheet': file_label_map[file],
             'Benchmark Group': 'Ungrouped',
@@ -281,32 +291,43 @@ def main(args):
                         fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                         worksheet.cell(row=row, column=col).fill = fill
 
-        # Add border to the average and geometric_mean rows in each sheet with orange border
+        # Add border to the min, max, average and geometric_mean rows in each sheet with orange border
+        enclosed_row_fields = ["min", "max", "average", "geometric_mean"]
+        num_enclosed_rows = len(enclosed_row_fields)
+        def add_border_to_enclosed_rows(worksheet):
+            thick_border_side = Side(border_style="thick", color="FFA500") # orange border
+            for row in range(2, worksheet.max_row + 1):
+                if any(item in worksheet.cell(row=row, column=2).value for item in enclosed_row_fields):
+                    for col in range(1, worksheet.max_column + 1):
+                        # only add border to the top and bottom of the enclosed rows
+                        # only add left and right border to leftmost and rightmost columns
+                        top_side = Side(border_style="none")
+                        bottom_side = Side(border_style="none")
+                        left_side = Side(border_style="none")
+                        right_side = Side(border_style="none")
+                        if (worksheet.cell(row=row - 1, column=2).value is None) or (not any(item in worksheet.cell(row=row - 1, column=2).value for item in enclosed_row_fields)):
+                            top_side = thick_border_side
+                        if (worksheet.cell(row=row + 1, column=2).value is None) or (not any(item in worksheet.cell(row=row + 1, column=2).value for item in enclosed_row_fields)):
+                            bottom_side = thick_border_side
+                        if col == 1:
+                            left_side = thick_border_side
+                        if col == worksheet.max_column:
+                            right_side = thick_border_side
+                        worksheet.cell(row=row, column=col).border = Border(
+                            left=left_side,
+                            right=right_side,
+                            top=top_side,
+                            bottom=bottom_side
+                        )
+
         for file in args.files:
             file_name = file_label_map[file]
             baseline_file_name = file_label_map[baseline_file]
             worksheet = writer.sheets[f"common_success_{file_name}"[:31]]
-            for row in range(2, worksheet.max_row + 1):
-                if any(item in worksheet.cell(row=row, column=2).value for item in ["average", "geometric_mean"]):
-                    for col in range(1, worksheet.max_column + 1):
-                        thick_border_side = Side(border_style="thick", color="FFA500") # orange border
-                        worksheet.cell(row=row, column=col).border = Border(
-                            left=thick_border_side,
-                            right=thick_border_side,
-                            top=thick_border_side,
-                            bottom=thick_border_side
-                        )
+            add_border_to_enclosed_rows(worksheet)
+
             worksheet = writer.sheets[f"normalized_{file_name}_vs_{baseline_file_name}"[:31]]
-            for row in range(2, worksheet.max_row + 1):
-                if any(item in worksheet.cell(row=row, column=2).value for item in ["average", "geometric_mean"]):
-                    for col in range(1, worksheet.max_column + 1):
-                        thick_border_side = Side(border_style="thick", color="FFA500") # orange border
-                        worksheet.cell(row=row, column=col).border = Border(
-                            left=thick_border_side,
-                            right=thick_border_side,
-                            top=thick_border_side,
-                            bottom=thick_border_side
-                        )
+            add_border_to_enclosed_rows(worksheet)
         
         # Freeze the first row and the first 2 columns of the sheet
         for file in args.files:
