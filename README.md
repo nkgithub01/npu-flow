@@ -79,7 +79,7 @@ make -j
 cd npu-flow
 source mlir-aie/utils/betzgrp_setup.sh
 source mlir-aie/ironenv/bin/activate
-export NPU_PNR_BIN_DIR=$PWD/npu-pnr/build/apps
+export NPU_PNR_BIN_DIR=$PWD/npu-pnr/build
 ```
 
 ### 3. Running Benchmark Tests
@@ -92,29 +92,32 @@ Usage: utils/build_benchmarks.py tasklist
 | `tasklist` |  Path to task list yaml or specific benchmark_name/task_name pairs | `benchmarks/tasklist.yml` or  `edge_detection/col_1`
 
 #### Optional Arguments
-| Flag | Type | Default | Description
-|----------|-------------|---------|---------|
-| `--output-dir` | `str` | `build` | Directory to store all build and run outputs. |
-| `--clean-all` | `store_true` | `False` | Cleans the entire output directory before starting. |
-| `--placer` | `str` | `sequential_placer` | See choices below. |
-| `--pnr-args` | `str` | `None` | Arguments to pass directly to the Placement and Routing (PnR) tool. |
-| `--run` | `store_true` | `False` | Run after build/compile. |
-| `--run-only` | `store_true` | `False` | Run task without building or compiling. Assumes the `--output-dir` was previously built/compiled. Skips tasks with build/compile errors. |
-| `--netlist-only` | `store_true` | `False` | Builds only the netlists for the specified task list. A tar file output will be generated in the output directory. |
-| `--import-pnr-results` | `str`| `None`| Path to import pre-existing PnR results from. |
-| `--j` | `int` | `None` | Number of parallel jobs to run. Defaults to system CPU count. |
-
-#### Placer Choices (`--placer`)
-| Value | Description |
-| --- | --- |
-| `sequential_placer`| MLIR-AIE's sequential placement.
-| `sa_placer`| PnR Placer.
-|`hand_placed`| Manual placement.
+| Category | Flag | Default | Description |
+|--------|------|---------|-------------|
+| Output | `--output-dir` | `build` | Directory to store build outputs |
+| Pipeline | `--clean-all` | `False` | Remove all generated build artifacts in `--output-dir` before running |
+| Pipeline | `--build / --no-build` | `True` | Build stage: creates MLIR from IRON and optionally runs PnR |
+| Pipeline | `--compile / --no-compile` | `True` | Compile MLIR to executable binary (required for AIE router) |
+| Pipeline | `--run` | `False` | Run the benchmark on NPU after compilation |
+| Placer | `--placer.type` | `aie` | Select placement strategy (`aie`, `pnr`, `hand_placed`) |
+| PnR Placer | `--placer.pnr.type` | `sa` | PnR placer backend to use |
+| PnR Placer | `--placer.pnr.args` | `None` | Extra arguments forwarded directly to the PnR tool |
+| Router | `--router.type` | `aie` | Select routing strategy (`aie`, `pnr`) |
+| PnR Router | `--router.pnr.type` | `milp` | PnR router backend to use |
+| AIE Router | `--router.aie.use-pkt-routing / --no-router.aie.use-pkt-routing` | `False` | Use packet-switched routing in AIE router |
+| Debug | `-j` | `None` | Parallelism level (implementation-defined) |
+| Debug | `--import-pnr-results` | `None` | Import placement/routing results from previous PnR run |
+| Debug | `--import-pnr-iter` | `None` | Import specific PnR iteration |
+| Debug | `--verbose` | `False` | Enable verbose logging |
+| Debug | `--debug` | `True` | Enable debug mode |
+| Debug | `--netlist-only` | `False` | Generate netlist only and exit |
+| Debug | `--run-only` | `False` | Run without build/compile (assumes prior build exists) |
+| Debug | `--hook` | `None` | Custom hook for development or debugging |
 
 #### Example Usage
-This command runs all tasks defined in `benchmarks/tasklist.yml`, using `sa_placer` with 100 sa iterations.
+This command runs all tasks defined in `benchmarks/tasklist.yml`, using PnR's SA placer and run 100 SA iterations, and uses PnR's milp router, then runs results on the NPU.
 ```
-utils/build_benchmarks.py benchmarks/tasklist.yml --placer="sa_placer" --pnr-args="-n 100" --run --output-dir=./build
+utils/build_benchmarks.py benchmarks/tasklist.yml --placer.type pnr --placer.pnr.type sa --placer.pnr.args="-n 100" --router.type pnr --router.pnr.type milp --run --output-dir=./build
 ```
  The output directory will look as follows:
 ```
