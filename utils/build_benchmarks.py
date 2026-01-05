@@ -457,7 +457,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--placer.pnr.type",
         dest="placer_pnr_type",
-        choices=["sa", "milp", "lsmo"],
+        choices=["sa", "milp", "ls", "noop"],
         default="sa",
         help="PnR placer to use",
     )
