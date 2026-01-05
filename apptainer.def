@@ -19,7 +19,9 @@ From: ubuntu:24.04
         git \
         ca-certificates \
         wget \
-        sudo
+        sudo \
+        sqlite3 \
+        libsqlite3-dev
 
     # Switch to workspace for the rest of the installation
     cd /workspace
@@ -56,13 +58,11 @@ From: ubuntu:24.04
 
     # --- 5. Install PnR Tool ---
     export NPU_PNR_BUILD_DIR=/workspace/npu-pnr/build
-    export NPU_PNR_BIN_DIR=$NPU_PNR_BUILD_DIR/apps
     
     mkdir -p $NPU_PNR_BUILD_DIR
     cd $NPU_PNR_BUILD_DIR
     cmake .. -DCMAKE_PREFIX_PATH=$OR_TOOLS_DIR -DCMAKE_BUILD_TYPE=Release
     make -j$(nproc)
-    make test
 
 %environment
     # --- Runtime Environment Variables ---
@@ -90,7 +90,7 @@ From: ubuntu:24.04
 
     # 4. PnR Tool variables
     export NPU_PNR_BUILD_DIR=/workspace/npu-pnr/build
-    export NPU_PNR_BIN_DIR=$NPU_PNR_BUILD_DIR/apps
+    export NPU_PNR_BIN_DIR=$NPU_PNR_BUILD_DIR
     export PATH=$NPU_PNR_BUILD_DIR:$PATH
     
 %runscript
