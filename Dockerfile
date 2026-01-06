@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
     git \
     ca-certificates \
     wget \
-    sudo
+    sudo \
+    sqlite3 \
+    libsqlite3-dev
 
 # Set the working directory
 WORKDIR /workspace
@@ -22,9 +24,9 @@ WORKDIR /workspace
 COPY . /workspace/
 
 # Make the scripts executable
-RUN chmod +x .github/scripts/install_ci_xrt.sh \
-    && chmod +x .github/scripts/install_mlir_aie.sh \
-    && chmod +x .github/scripts/install_or_tools.sh
+RUN chmod +x .github/scripts/install_ci_xrt.sh && \
+    chmod +x .github/scripts/install_mlir_aie.sh && \
+    chmod +x .github/scripts/install_or_tools.sh
 
 # Install XRT
 RUN bash -c "source .github/scripts/install_ci_xrt.sh"
@@ -52,9 +54,8 @@ ENV NPU_PNR_BUILD_DIR=/workspace/npu-pnr/build
 RUN mkdir -p $NPU_PNR_BUILD_DIR && \
     cd $NPU_PNR_BUILD_DIR && \
     cmake .. -DCMAKE_PREFIX_PATH=$OR_TOOLS_DIR -DCMAKE_BUILD_TYPE=Release && \
-    make -j$(nproc) && \
-    make test
-ENV NPU_PNR_BIN_DIR=$NPU_PNR_BUILD_DIR/apps
+    make -j$(nproc)
+ENV NPU_PNR_BIN_DIR=$NPU_PNR_BUILD_DIR
 ENV PATH=$NPU_PNR_BUILD_DIR:$PATH
 
 # Add environment setups to .bashrc
