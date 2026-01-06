@@ -143,7 +143,7 @@ class BenchmarkTask:
                 env["src_dir"] = self.src_dir
                 env["output_dir"] = self.output_dir
                 env["build_dir"] = os.path.join(self.output_dir, "build")
-                if args.debug:
+                if args.telemetry_enable:
                     env["pnr_args"] += " " + shlex.quote("--telemetry.enable")
                     env["pnr_args"] += " " + shlex.quote(
                         f"--telemetry.save_path={env['build_dir']}/telemetry.db"
@@ -511,6 +511,7 @@ if __name__ == "__main__":
     parser.add_argument("--run-only", action="store_true", default=False,
                         help="Run task without building/compiling (assumes --output-dir was previously built/compiled, skips tasks with built/compile error log)")
     parser.add_argument("--hook", type=str, default=None)
+    parser.add_argument("--telemetry.enable", dest="telemetry_enable", action="store_true", default=False)
 
     args = parser.parse_args()
     args.pnr_args_string = create_pnr_args_string(args)
