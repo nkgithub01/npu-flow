@@ -218,6 +218,16 @@ def import_pnr_results(
     import_root: str,
     iteration: int,
 ) -> str:
+    if iteration == -1:
+        os.makedirs(os.path.join(task.output_dir, "build"), exist_ok=True)
+        import_dir = os.path.join(import_root, task.benchmark_name, task.task_name)
+        imported_netlist = os.path.join(import_dir, "build", "pnr_placed_netlist.json")
+        if not os.path.exists(imported_netlist):
+            raise FileNotFoundError(f"Imported netlist not found: {imported_netlist}")
+        dest_netlist = os.path.join(task.output_dir, "build", "pnr_placed_netlist.json")
+        shutil.copyfile(imported_netlist, dest_netlist)
+        return f"Copied PnR placed netlist from {imported_netlist} to {dest_netlist}\n"
+
     if iteration is None:
         raise ValueError("Importing PnR results requires a valid iteration number (--import-pnr-iter)")
 
@@ -341,11 +351,17 @@ def create_netlist_zip(root_path: str) -> None:
 
         task_name = os.path.basename(task_dir)
         benchmark_name = os.path.basename(benchmark_dir)
-
-        out_name = f"{benchmark_name}_{task_name}.json"
+        out_name = f"{benchmark_name}_{task_name}.toml"
         dest_path = os.path.join(staging_dir, out_name)
 
-        shutil.copy2(netlist_path, dest_path)
+        translator_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/tools/netlist_translator")
+        translate_cmd = (
+            f"{translator_bin} "
+            f"{shlex.quote(netlist_path)} "
+            f"-o {shlex.quote(dest_path)} "
+        )
+        translate_res = synch_run_cmd(translate_cmd)
+        translate_res.check()
 
     tar_path = os.path.join(root_path, "netlists.tar.gz")
     with tarfile.open(tar_path, "w:gz") as tar:
@@ -534,7 +550,11 @@ if __name__ == "__main__":
         if not os.path.exists(pnr_bin):
             raise FileNotFoundError(f"PnR binary not found at {pnr_bin}")
 
+    if args.import_pnr_results and args.placer_type != "pnr":
+        raise ValueError("Importing PnR results requires --placer.type to be 'pnr'.")
+
     if args.run_only:
+        args.iron_placer = "sa_placer"
         args.build = False
         args.compile = False
         args.run = True
