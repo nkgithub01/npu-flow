@@ -347,7 +347,7 @@ def create_netlist_zip(root_path: str) -> None:
 
         shutil.copy2(netlist_path, dest_path)
 
-    tar_path = os.path.join(root, "netlists.tar.gz")
+    tar_path = os.path.join(root_path, "netlists.tar.gz")
     with tarfile.open(tar_path, "w:gz") as tar:
         for filename in os.listdir(staging_dir):
             tar.add(os.path.join(staging_dir, filename), arcname=filename)
