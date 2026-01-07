@@ -90,6 +90,8 @@ class TestResult:
             "num_neighbour_sharing_objectFIFO": ResultField("num_neighbour_sharing_objectFIFO", "Number of object FIFO connections that are using neighbour sharing routing in the final placement"),
             "num_circuit_switch_objectFIFO": ResultField("num_circuit_switch_objectFIFO", "Number of object FIFO connections that are using circuit switch routing in the final placement"),
             "num_packet_flow_objectFIFO": ResultField("num_packet_flow_objectFIFO", "Number of object FIFO connections that are using packet flow in the final placement"),
+            "total_routing_length": ResultField("total_routing_length", "Total routing length (in hops) of all object FIFO connections in the final placement"),
+            "total_num_neighbour_sharing_tracks": ResultField("total_num_neighbour_sharing_tracks", "Total number of neighbour sharing tracks used in the final placement"),
             "total_num_circuit_switch_tracks": ResultField("total_num_circuit_switch_tracks", "Total number of circuit switch tracks used in the final placement"),
             "largest_circuit_switch_net": ResultField("largest_circuit_switch_net", "Largest number of tracks used by a single circuit switch net in the final placement"),
             "smallest_circuit_switch_net": ResultField("smallest_circuit_switch_net", "Smallest number of tracks used by a single circuit switch net in the final placement"),
@@ -184,18 +186,20 @@ class TestResult:
         result+= f"{prt_space}{self.fields["num_neighbour_sharing_objectFIFO"]}\n"
         result+= f"{prt_space}{self.fields["num_circuit_switch_objectFIFO"]}\n"
         result+= f"{prt_space}{self.fields["num_packet_flow_objectFIFO"]}\n"
-        result+= f"{prt_space}{self.fields["total_num_circuit_switch_tracks"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["largest_circuit_switch_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["smallest_circuit_switch_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["avg_track_per_circuit_switch_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["longest_circuit_switch_path"]}\n"
-        result+= f"{prt_space}{prt_last}{self.fields["shortest_circuit_switch_path"]}\n"
-        result+= f"{prt_space}{self.fields["total_num_packet_flow_tracks"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["largest_packet_flow_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["smallest_packet_flow_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["avg_track_per_packet_flow_net"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["longest_packet_flow_path"]}\n"
-        result+= f"{prt_space}{prt_last}{self.fields["shortest_packet_flow_path"]}\n"
+        result+= f"{prt_space}{self.fields["total_routing_length"]}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["total_num_neighbour_sharing_tracks"]}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["total_num_circuit_switch_tracks"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_tee}{self.fields["largest_circuit_switch_net"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_tee}{self.fields["smallest_circuit_switch_net"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_tee}{self.fields["avg_track_per_circuit_switch_net"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_tee}{self.fields["longest_circuit_switch_path"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_last}{self.fields["shortest_circuit_switch_path"]}\n"
+        result+= f"{prt_space}{prt_last}{self.fields["total_num_packet_flow_tracks"]}\n"
+        result+= f"{prt_space}{prt_space}{prt_tee}{self.fields["largest_packet_flow_net"]}\n"
+        result+= f"{prt_space}{prt_space}{prt_tee}{self.fields["smallest_packet_flow_net"]}\n"
+        result+= f"{prt_space}{prt_space}{prt_tee}{self.fields["avg_track_per_packet_flow_net"]}\n"
+        result+= f"{prt_space}{prt_space}{prt_tee}{self.fields["longest_packet_flow_path"]}\n"
+        result+= f"{prt_space}{prt_space}{prt_last}{self.fields["shortest_packet_flow_path"]}\n"
         result+= f"{prt_space}{self.fields["total_num_dma_ports"]}\n"
         result+= f"{prt_space}{prt_tee}{self.fields["total_num_dma_in_ports"]}\n"
         result+= f"{prt_space}{prt_last}{self.fields["total_num_dma_out_ports"]}\n"
@@ -544,7 +548,7 @@ class TestResult:
             self.fields["total_end2end_compilation_time [s]"].value = total_time
         
         # Parse the final placement of the design from routing summary JSON file
-        routing_summary_json_file_path = os.path.join(self.result_dir, "build", f"pnr_route_summary.json")
+        routing_summary_json_file_path = os.path.join(self.result_dir, "build", f"post_compile_routing_summary.json")
         if os.path.exists(routing_summary_json_file_path):
             with open(routing_summary_json_file_path, 'r') as file:
                 try:
@@ -553,9 +557,11 @@ class TestResult:
                     return  # Unable to parse JSON file
 
             # Count neighbor connections
+            total_nbr_tracks = 0
             nbr_route_count = 0
             if 'nbr_routes' in data:
                 nbr_route_count = len(data['nbr_routes'])
+                total_nbr_tracks = nbr_route_count  # each neighbor connection uses 1 track
 
             # Count circuit switch connections
             cct_route_count = 0
@@ -615,6 +621,12 @@ class TestResult:
             if num_tracks_per_pkt_route_net:
                 avg_num_tracks_per_pkt_route_net = sum(num_tracks_per_pkt_route_net) / len(num_tracks_per_pkt_route_net)
 
+            # Calculate total routing length
+            total_routing_length = 0
+            total_routing_length += total_nbr_tracks
+            total_routing_length += total_cct_route_tracks
+            total_routing_length += total_pkt_route_tracks
+
             # Count number of DMA port Usage
             total_dma_ports = 0
             total_dma_in_ports = 0
@@ -665,6 +677,8 @@ class TestResult:
             self.fields["num_neighbour_sharing_objectFIFO"].value = nbr_route_count
             self.fields["num_circuit_switch_objectFIFO"].value = cct_route_count
             self.fields["num_packet_flow_objectFIFO"].value = pkt_route_count
+            self.fields["total_routing_length"].value = total_routing_length
+            self.fields["total_num_neighbour_sharing_tracks"].value = total_nbr_tracks
             if cct_route_count > 0:
                 self.fields["total_num_circuit_switch_tracks"].value = total_cct_route_tracks
                 self.fields["largest_circuit_switch_net"].value = largest_cct_route_net

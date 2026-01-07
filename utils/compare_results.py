@@ -79,16 +79,16 @@ def main(args):
     # Define benchmark groups
     benchmark_groups = []
     benchmark_groups.append(dict(
-        benchmark_group_name = "Synthetic-Mesh",
-        benchmark_group_patterns = [("microbenchmark", "mesh"), ("microbenchmark_with_feedback_loop", "mesh")]
-    ))
-    benchmark_groups.append(dict(
         benchmark_group_name = "Synthetic-Line",
         benchmark_group_patterns = [("microbenchmark", "line"), ("microbenchmark_with_feedback_loop", "line")]
     ))
     benchmark_groups.append(dict(
+        benchmark_group_name = "Synthetic-Mesh",
+        benchmark_group_patterns = [("microbenchmark", "mesh"), ("microbenchmark_with_feedback_loop", "mesh"), ("microbenchmark", "Custom_CNN")]
+    ))
+    benchmark_groups.append(dict(
         benchmark_group_name = "Synthetic-Tree",
-        benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree")]
+        benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree"), ("microbenchmark", "single_multicast")]
     ))
     benchmark_groups.append(dict(
         benchmark_group_name = "Real_World_Application-Edge_Detection",
