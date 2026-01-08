@@ -221,11 +221,16 @@ def import_pnr_results(
     if iteration == -1:
         os.makedirs(os.path.join(task.output_dir, "build"), exist_ok=True)
         import_dir = os.path.join(import_root, task.benchmark_name, task.task_name)
-        imported_netlist = os.path.join(import_dir, "build", "pnr_placed_netlist.json")
+        imported_netlist = os.path.join(import_dir, "build", "solution.toml")
+        dest_netlist = os.path.join(task.output_dir, "build", "pnr_placed_netlist.json")
         if not os.path.exists(imported_netlist):
             raise FileNotFoundError(f"Imported netlist not found: {imported_netlist}")
-        dest_netlist = os.path.join(task.output_dir, "build", "pnr_placed_netlist.json")
-        shutil.copyfile(imported_netlist, dest_netlist)
+        translator_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/tools/netlist_translator")
+        translate_cmd = (
+            f"{translator_bin} "
+            f"{shlex.quote(imported_netlist)} "
+            f"-o {shlex.quote(dest_netlist)} "
+        )
         return f"Copied PnR placed netlist from {imported_netlist} to {dest_netlist}\n"
 
     if iteration is None:
