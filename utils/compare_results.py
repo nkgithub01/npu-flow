@@ -33,7 +33,7 @@ def augment_stats(df, prefix=""):
 
 # Normalize the values in comparison_df based on baseline_df for rows with matching name in benchmark and task_name
 def normalize_matching_rows(baseline_df, comparison_df):
-    normalized_df = comparison_df.copy()
+    normalized_df = comparison_df.copy().astype(object)
     for idx, row in comparison_df.iterrows():
         benchmark = row["benchmark_name"]
         task_name = row['task_name']
@@ -147,27 +147,28 @@ def main(args):
         dfs["common_success_" + file] = dfs["success_" + file][dfs["success_" + file][["benchmark_name", 'task_name']].apply(tuple, axis=1).isin(common_benchmarks)].reset_index(drop=True)
         print(f"After filtering to common benchmarks that all files have success run results, {file} has shape {dfs["common_success_" + file].shape}")
 
-    # Calculate averages and geometric means for each common success file by overall and benchmark groups
-    for file in args.files:
-        df_with_stats = pd.DataFrame(columns=dfs["common_success_" + file].columns)
-        empty_row_df = pd.DataFrame([[""]*len(dfs["common_success_" + file].columns)], columns=dfs["common_success_" + file].columns)
-        for group in benchmark_groups:
-            partial_df = helper_get_benchmark_group_df(dfs["common_success_" + file], group['benchmark_group_patterns'])
-            if not partial_df.empty:
-                partial_df_with_stats = augment_stats(partial_df, prefix=group['benchmark_group_name'] + " ")
-                df_with_stats = pd.concat([df_with_stats, partial_df_with_stats, empty_row_df], ignore_index=True)
-        ungrouped_df = helper_get_ungrouped_df(dfs["common_success_" + file])
-        if not ungrouped_df.empty:
-            ungrouped_df_with_stats = augment_stats(ungrouped_df, prefix="Ungrouped ")
-            df_with_stats = pd.concat([df_with_stats, ungrouped_df_with_stats, empty_row_df], ignore_index=True)
-        # Add overall stats
-        dfs["common_success_" + file] = augment_stats(dfs["common_success_" + file], prefix="Overall ")
-        dfs["common_success_" + file] = pd.concat([df_with_stats, empty_row_df, dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean")]], ignore_index=True)
-
     # Calculate the normalized values
     for file in args.files:
         dfs["normalized_" + file] = normalize_matching_rows(dfs["common_success_" + baseline_file], dfs["common_success_" + file])
-    
+
+    # Calculate averages and geometric means for each common success and normalized files by overall and benchmark groups
+    for prefix in ["normalized_", "common_success_"]:
+        for file in args.files:
+            df_with_stats = pd.DataFrame(columns=dfs[prefix + file].columns)
+            empty_row_df = pd.DataFrame([[""]*len(dfs[prefix + file].columns)], columns=dfs[prefix + file].columns)
+            for group in benchmark_groups:
+                partial_df = helper_get_benchmark_group_df(dfs[prefix + file], group['benchmark_group_patterns'])
+                if not partial_df.empty:
+                    partial_df_with_stats = augment_stats(partial_df, prefix=group['benchmark_group_name'] + " ")
+                    df_with_stats = pd.concat([df_with_stats, partial_df_with_stats, empty_row_df], ignore_index=True)
+            ungrouped_df = helper_get_ungrouped_df(dfs[prefix + file])
+            if not ungrouped_df.empty:
+                ungrouped_df_with_stats = augment_stats(ungrouped_df, prefix="Ungrouped ")
+                df_with_stats = pd.concat([df_with_stats, ungrouped_df_with_stats, empty_row_df], ignore_index=True)
+            # Add overall stats
+            dfs[prefix + file] = augment_stats(dfs[prefix + file], prefix="Overall ")
+            dfs[prefix + file] = pd.concat([df_with_stats, empty_row_df, dfs[prefix + file][dfs[prefix + file]["benchmark_name"].str.contains("min|max|average|geometric_mean")]], ignore_index=True)
+
     # Collect overall stats for each file and calculate stats for each group
     dfs["Overall Statistics"] = pd.DataFrame(columns=['Sheet', 'Benchmark Group', 'Total Number Test Cases', 'Number of Successfully Builded Test Cases', 'Number of Successfully Compiled Test Cases', 'Successful Test Cases', 'Success Rate', 'Common Successful Test Cases Across All Files'])
     empty_row_df = pd.DataFrame([[""]*len(dfs["Overall Statistics"].columns)], columns=dfs["Overall Statistics"].columns)
