@@ -5,151 +5,167 @@ OUTPUT_PATH="./Results"
 PNR_OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
 
 # Collect hand placed results
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --placer="hand_placed" --run --output-dir="${OUTPUT_PATH}/hand_placed_${TIMESTAMP}" --verbose -j 20
-python utils/parse_results.py --tasklists benchmarks/tasklist.yml --input-dir "${OUTPUT_PATH}/hand_placed_${TIMESTAMP}" --output-csv "${OUTPUT_PATH}/hand_placed_${TIMESTAMP}/hand_placed_results_${TIMESTAMP}.csv"
+RUN_NAME="Hand_Placed"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type "hand_placed" \
+    --router.type "aie" \
+    --run \
+    --output-dir "${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect sequential placer results
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml --placer="sequential_placer" --run --output-dir="${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}" --verbose -j 20
-python utils/parse_results.py --tasklists benchmarks/tasklist.yml --input-dir "${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}" --output-csv "${OUTPUT_PATH}/sequential_placer_${TIMESTAMP}/sequential_placer_results_${TIMESTAMP}.csv"
-
-# Collect SAPlacer results
-# Pure Greedy runs
-n=1000
-m=4
-g=$n
-max_n=$((n*m))
-RUN_NAME="SAPlacer_pure_greedy"
+RUN_NAME="Sequential_Placed"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer="sa_placer" \
-    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n -T 0 -c 0 --log-interval 1 --write-interval 100" \
-    --output-dir="${PNR_OUTPUT_DIR}" \
-    --no-compile \
-    --verbose \
+    --placer.type "aie" \
+    --router.type "aie" \
+    --run \
+    --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
     --tasklists benchmarks/tasklist.yml \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
-# Run checkpoint iteration collections results
-for iter in 100 200 300 400 500 600 700 800 900 1000
-do
-    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-        --placer="sa_placer" \
-        --import-pnr-results ${PNR_OUTPUT_DIR} \
-        --import-pnr-results-suffix=".json_iter_${iter}" \
-        --run \
-        --output-dir="${output_dir}" \
-        --verbose \
-        -j 20
-    python utils/parse_results.py \
-        --tasklists benchmarks/tasklist.yml \
-        --input-dir "${output_dir}" \
-        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
-done
 
-# Dynamic Temperature Scheduling runs
-n=1000
-m=4
-g=200
-max_n=$((n*m))
-RUN_NAME="SAPlacer_dynamic_temperature_scheduling"
+# Collect SAPlacer results with MILP Costing Estimation
+RUN_NAME="SAPlacer_MILP_Cost"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer="sa_placer" \
-    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n --dynamic-temperature-scheduling --log-interval 1 --write-interval 100" \
+    --placer.type pnr \
+    --placer.pnr.type sa \
+    --router.type pnr \
+    --router.pnr.type milp \
+    --placer.pnr.args=" \
+        --placer.greedy_stage_entering_temperature 1e-6 \
+        --placer.greedy_stage_entering_acceptance_ratio 0.001 \
+        --placer.greedy_stage_num_iters_scaling_factor 5 \
+        --placer.max_iters 1000000 \
+        --placer.greedy_stage_max_iters 10000 \
+        --placer.max_move_attempts 2000000000 \
+        --placer.num_moves_per_iter 10000 \
+        --placer.enable_dynamic_temperature_scheduling \
+        --placer.enable_initial_placement_randomization \
+        --placer.cost_estimator milp \
+        --logger.verbose minimal \
+        --timeout_sec 3600 \
+    " \
+    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
-    --no-compile \
-    --verbose \
     -j 20
 python utils/parse_results.py \
     --tasklists benchmarks/tasklist.yml \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
-# Run checkpoint iteration collections results
-for iter in 100 200 300 400 500 600 700 800 900 1000
-do
-    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-        --placer="sa_placer" \
-        --import-pnr-results ${PNR_OUTPUT_DIR} \
-        --import-pnr-results-suffix=".json_iter_${iter}" \
-        --run \
-        --output-dir="${output_dir}" \
-        --verbose \
-        -j 20
-    python utils/parse_results.py \
-        --tasklists benchmarks/tasklist.yml \
-        --input-dir "${output_dir}" \
-        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
-done
-
-# Dynamic Temperature Scheduling runs with Cost Estimation
-n=1000
-m=4
-g=200
-max_n=$((n*m))
-RUN_NAME="SAPlacer_dynamic_temperature_scheduling_with_cost_estimation_and_congestion_estimation"
+# Try AIE router on the above results
+IMPORT_DIR=$PNR_OUTPUT_DIR
+RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer="sa_placer" \
-    --pnr-args="-u sa -s 0 -r -n $n -m $m -g $g --sa-max-move-attempts $max_n --dynamic-temperature-scheduling --sa-use-cost-estimation --log-interval 1 --write-interval 100" \
+    --placer.type pnr \
+    --router.type aie \
+    --import-pnr-results "${IMPORT_DIR}" \
+    --import-pnr-iter -1 \
+    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
-    --no-compile \
-    --verbose \
     -j 20
 python utils/parse_results.py \
     --tasklists benchmarks/tasklist.yml \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
-# Run checkpoint iteration collections results
-for iter in 100 200 300 400 500 600 700 800 900 1000
-do
-    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-        --placer="sa_placer" \
-        --import-pnr-results ${PNR_OUTPUT_DIR} \
-        --import-pnr-results-suffix=".json_iter_${iter}" \
-        --run \
-        --output-dir="${output_dir}" \
-        --verbose \
-        -j 20
-    python utils/parse_results.py \
-        --tasklists benchmarks/tasklist.yml \
-        --input-dir "${output_dir}" \
-        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
-done
 
-# Collect LSMOPlacer results
-n=1000
-RUN_NAME="LSMOPlacer"
+# Collect SAPlacer results with Only Cost Estimation
+RUN_NAME="SAPlacer_Cost_Estimation"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer="sa_placer" \
-    --pnr-args="-u lsmo -s 0 -r -n $n --log-interval 1 --write-interval 100" \
+    --placer.type pnr \
+    --placer.pnr.type sa \
+    --router.type pnr \
+    --router.pnr.type milp \
+    --placer.pnr.args=" \
+        --placer.greedy_stage_entering_temperature 1e-6 \
+        --placer.greedy_stage_entering_acceptance_ratio 0.001 \
+        --placer.greedy_stage_num_iters_scaling_factor 5 \
+        --placer.max_iters 1000000 \
+        --placer.greedy_stage_max_iters 10000 \
+        --placer.max_move_attempts 2000000000 \
+        --placer.num_moves_per_iter 10000 \
+        --placer.enable_dynamic_temperature_scheduling \
+        --placer.enable_initial_placement_randomization \
+        --placer.cost_estimator bb \
+        --logger.verbose minimal \
+        --timeout_secs 3600 \
+    " \
+    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
-    --no-compile \
-    --verbose \
     -j 20
 python utils/parse_results.py \
     --tasklists benchmarks/tasklist.yml \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
-# Run checkpoint iteration collections results
-for iter in 100 200 300 400 500 600 700 800 900 1000
-do
-    output_dir="${PNR_OUTPUT_PATH}/${RUN_NAME}_n${iter}_${TIMESTAMP}"
-    python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-        --placer="sa_placer" \
-        --import-pnr-results ${PNR_OUTPUT_DIR} \
-        --import-pnr-results-suffix=".json_iter_${iter}" \
-        --run \
-        --output-dir="${output_dir}" \
-        --verbose \
-        -j 20
-    python utils/parse_results.py \
-        --tasklists benchmarks/tasklist.yml \
-        --input-dir "${output_dir}" \
-        --output-csv "${output_dir}/${RUN_NAME}_n${iter}_results_${TIMESTAMP}.csv"
-done
+# Try AIE router on the above results
+IMPORT_DIR=$PNR_OUTPUT_DIR
+RUN_NAME="${RUN_NAME}_AIE_Router"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --router.type aie \
+    --import-pnr-results "${IMPORT_DIR}" \
+    --import-pnr-iter -1 \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+
+# Collect SAPlacer results with Cost and Congestion Estimation
+RUN_NAME="SAPlacer_Cost_Congestion_Estimation"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --placer.pnr.type sa \
+    --router.type pnr \
+    --router.pnr.type milp \
+    --placer.pnr.args=" \
+        --placer.greedy_stage_entering_temperature 1e-6 \
+        --placer.greedy_stage_entering_acceptance_ratio 0.001 \
+        --placer.greedy_stage_num_iters_scaling_factor 5 \
+        --placer.max_iters 1000000 \
+        --placer.greedy_stage_max_iters 10000 \
+        --placer.max_move_attempts 2000000000 \
+        --placer.num_moves_per_iter 10000 \
+        --placer.enable_dynamic_temperature_scheduling \
+        --placer.enable_initial_placement_randomization \
+        --placer.cost_estimator prob \
+        --logger.verbose minimal \
+        --timeout_secs 3600 \
+    " \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Try AIE router on the above results
+IMPORT_DIR=$PNR_OUTPUT_DIR
+RUN_NAME="${RUN_NAME}_AIE_Router"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --router.type aie \
+    --import-pnr-results "${IMPORT_DIR}" \
+    --import-pnr-iter -1 \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
