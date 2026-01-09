@@ -47,7 +47,7 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
         --placer.max_iters 1000000 \
         --placer.greedy_stage_max_iters 10000 \
         --placer.max_move_attempts 2000000000 \
-        --placer.num_moves_per_iter 10000 \
+        --placer.num_moves_per_iter 100 \
         --placer.enable_dynamic_temperature_scheduling \
         --placer.enable_initial_placement_randomization \
         --placer.cost_estimator milp \
@@ -145,6 +145,78 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
         --placer.cost_estimator prob \
         --logger.verbose minimal \
         --timeout_secs 3600 \
+    " \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Try AIE router on the above results
+IMPORT_DIR=$PNR_OUTPUT_DIR
+RUN_NAME="${RUN_NAME}_AIE_Router"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --router.type aie \
+    --import-pnr-results "${IMPORT_DIR}" \
+    --import-pnr-iter -1 \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+
+# Collect One shot MILP results
+RUN_NAME="MILPPlacer"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --placer.pnr.type milp \
+    --router.type pnr \
+    --router.pnr.type milp \
+    --placer.pnr.args=" \
+        --logger.verbose minimal \
+        --timeout_sec 3600 \
+    " \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+# Try AIE router on the above results
+IMPORT_DIR=$PNR_OUTPUT_DIR
+RUN_NAME="${RUN_NAME}_AIE_Router"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --router.type aie \
+    --import-pnr-results "${IMPORT_DIR}" \
+    --import-pnr-iter -1 \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+
+# Collect LSMO results
+RUN_NAME="LSMOPlacer"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type pnr \
+    --placer.pnr.type ls \
+    --router.type pnr \
+    --router.pnr.type milp \
+    --placer.pnr.args=" \
+        --logger.verbose minimal \
+        --timeout_sec 3600 \
     " \
     --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
