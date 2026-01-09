@@ -104,6 +104,7 @@ def parse_netlist(dtype_str, netlist_file):
             elif len(link['src_net_ids']) > 1 and len(link['dst_net_ids']) == 1:
                 obj_fifos = netlist_info["obj_fifos"][link['dst_net_ids'][0]].prod().join(
                     offsets=[0]*len(link['src_net_ids']),
+                    obj_types=[np.ndarray[netlist_info["obj_fifos_data_shape"][src_id], np.dtype[dtype_map[dtype_str]]] for src_id in link['src_net_ids']],
                     names=[f"obj_fifo_{src_id}" for src_id in link['src_net_ids']]
                 )
                 for idx, net_id in enumerate(link['src_net_ids']):
