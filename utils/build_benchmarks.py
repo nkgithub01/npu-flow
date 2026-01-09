@@ -219,6 +219,7 @@ def import_pnr_results(
     iteration: int,
 ) -> str:
     if iteration == -1:
+        task.log("Importing PnR placed netlist ...")
         os.makedirs(os.path.join(task.output_dir, "build"), exist_ok=True)
         import_dir = os.path.join(import_root, task.benchmark_name, task.task_name)
         imported_netlist = os.path.join(import_dir, "build", "solution.toml")
@@ -231,6 +232,9 @@ def import_pnr_results(
             f"{shlex.quote(imported_netlist)} "
             f"-o {shlex.quote(dest_netlist)} "
         )
+        translate_res = synch_run_cmd(translate_cmd)
+        translate_res.check()
+        task.log(f"Copied PnR placed netlist from {imported_netlist} to {dest_netlist}")
         return f"Copied PnR placed netlist from {imported_netlist} to {dest_netlist}\n"
 
     if iteration is None:
