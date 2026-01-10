@@ -169,18 +169,76 @@ class BenchmarkTask:
     def clean_build_task(self) -> None:
         synch_run_cmd(self.clean_cmd, cwd=self.src_dir).check()
         self.last_built_stage = BuildStage.CLEAN
+    
+    def hand_placed_pnr_router_task(self) -> None:
+        self.log("Running PnR router on hand-placed design ...")
+        output_mlir = self._get_output_file(self.output_mlir)
+        build_dir = os.path.join(self.output_dir, "build")
+        os.makedirs(build_dir, exist_ok=True)
 
-    def build_task(self) -> str:
+        extract_netlist = os.path.join(build_dir, "netlist.json")
+        extract_netlist_toml = os.path.join(build_dir, "netlist.toml")
+        solution_toml = os.path.join(build_dir, "solution.toml")
+        placed_json = os.path.join(build_dir, "pnr_placed_netlist.json")
+        tmp_mlir = os.path.join(build_dir, "tmp.mlir")
+
+        # 1. Extract netlist
+        extract_cmd = (
+            f"aie-opt {shlex.quote(output_mlir)} "
+            f"--pnr-extract-netlist=netlist-file={shlex.quote(extract_netlist)} "
+            f"-o /dev/null"
+        )
+        synch_run_cmd(extract_cmd).check()
+
+        # 2. JSON -> TOML
+        translator_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/tools/netlist_translator")
+        synch_run_cmd(
+            f"{translator_bin} "
+            f"{shlex.quote(extract_netlist)} "
+            f"-o {shlex.quote(extract_netlist_toml)}"
+        ).check()
+
+        # 3. Run PnR router
+        pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/apps/pnr")
+        pnr_res = synch_run_cmd(
+            f"{pnr_bin} {shlex.quote(extract_netlist_toml)} "
+            f"--placer.type noop --router.type milp "
+            f"--output={shlex.quote(solution_toml)}"
+        )
+        pnr_res.check()
+
+        # 4. TOML -> JSON
+        synch_run_cmd(
+            f"{translator_bin} "
+            f"{shlex.quote(solution_toml)} "
+            f"-o {shlex.quote(placed_json)}"
+        ).check()
+
+        # 5. Apply placement to MLIR
+        synch_run_cmd(
+            f"aie-opt {shlex.quote(output_mlir)} "
+            f"--pnr-place-tiles=netlist-file={shlex.quote(placed_json)} "
+            f"-o {shlex.quote(tmp_mlir)}"
+        ).check()
+
+        shutil.move(tmp_mlir, output_mlir)
+        return pnr_res
+
+    def build_task(self, hand_placed_pnr_router_flag=False) -> str:
         start_time = time.perf_counter()
         result = synch_run_cmd(self.build_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
-        end_time = time.perf_counter()
-        build_time = end_time - start_time
         self.last_built_stage = BuildStage.BUILD
 
-        output_mlir = self._get_output_file(self.output_mlir)
-        summary_files = {}
-
+        if hand_placed_pnr_router_flag:
+            # To route hand-placed designs with PnR router, need to extract netlist,
+            # run PnR, overwrite mlir placement and continue.
+            hp_pnr_res = self.hand_placed_pnr_router_task()
+            end_time = time.perf_counter()
+            build_time = end_time - start_time
+            return f"{result}\n{hp_pnr_res}\nBuild took: {build_time:.2f} seconds"
+        end_time = time.perf_counter()
+        build_time = end_time - start_time
         return f"{result}\nBuild took: {build_time:.2f} seconds"
 
     def compile_task(self) -> str:
@@ -308,7 +366,7 @@ def build_single_task(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
         task.log("Building ...")
         if args.import_pnr_results:
             import_log = import_pnr_results(task, args.import_pnr_results, args.import_pnr_iter)
-        build_res = task.build_task() 
+        build_res = task.build_task(args.hand_placed_pnr_router_flag) 
         if args.debug and not args.netlist_only:
             write_text_file(
                 os.path.join(task.output_dir, f"{task.task_name}.build.log"), 
@@ -548,12 +606,13 @@ if __name__ == "__main__":
     else:
         args.iron_placer = "sequential_placer"
     
-    if args.placer_type != "pnr" and args.router_type == "pnr":
-        raise ValueError("Cannot use PnR router with AIE placer. Please set --placer.type to 'pnr'.")
+    if args.placer_type == "aie" and args.router_type == "pnr":
+        raise ValueError("Cannot use PnR router with AIE placer. Please set --placer.type to 'pnr' or 'hand_placed'.")
 
     if args.iron_placer == "hand_placed" and args.router_type == "pnr":
-        raise ValueError("Cannot use PnR router with hand-placed designs.")
-
+        args.hand_placed_pnr_router_flag = True
+    else:
+        args.hand_placed_pnr_router_flag = False
     if args.iron_placer == "sa_placer":
         pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/apps/pnr")
         if not os.path.exists(pnr_bin):
