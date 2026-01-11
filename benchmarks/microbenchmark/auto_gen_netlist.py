@@ -566,6 +566,14 @@ def generate_netlist(args):
     generate_func = TOPOLOGIES_CONVERSION[args.netlist_topologies]
     netlist = generate_func(args, netlist)
 
+    # Remove unused nodes from the netlist
+    used_node_ids = set()
+    for net in netlist["nets"]:
+        used_node_ids.add(net["src_id"])
+        for dst_id in net["dst_id"]:
+            used_node_ids.add(dst_id)
+    netlist["nodes"] = [node for node in netlist["nodes"] if node["id"] in used_node_ids]
+
     return netlist
 
 

@@ -76,9 +76,11 @@ def my_benchmark(opts):
                 obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
 
         # Tile declarations as tile[row][col]
-        tiles = [
-            [tile(col, row) for col in range(0, num_cols)] for row in range(0, num_rows)
-        ]
+        tiles = dict()
+        for row in range(2, num_rows):
+            for col in range(0, num_cols):
+                tiles[(row, col)] = tile(col, row)
+
         total_num_comp_tiles = (num_rows - 2) * num_cols
 
         fifo_depth = 2
@@ -101,12 +103,17 @@ def my_benchmark(opts):
             curr_node_x = node_idx % num_cols
             curr_node_y = 2 + (node_idx // num_cols)
             if node_idx == 0:
+                # define the MEM and SHIM tiles if not already defined
+                if (0, curr_node_x) not in tiles:
+                    tiles[(0, curr_node_x)] = tile(curr_node_x, 0)
+                if (1, curr_node_x) not in tiles:
+                    tiles[(1, curr_node_x)] = tile(curr_node_x, 1)
                 # Output from COMP to MEM
                 out_core_to_mem_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{curr_node_y}_{curr_node_x}_to_{1}_{curr_node_x}",
-                    tiles[curr_node_y][curr_node_x],
-                    tiles[1][curr_node_x],
+                    tiles[(curr_node_y, curr_node_x)],
+                    tiles[(1, curr_node_x)],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -115,8 +122,8 @@ def my_benchmark(opts):
                 out_mem_to_shim_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{1}_{curr_node_x}_to_{0}_{curr_node_x}",
-                    tiles[1][curr_node_x],
-                    tiles[0][curr_node_x],
+                    tiles[(1, curr_node_x)],
+                    tiles[(0, curr_node_x)],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -133,8 +140,8 @@ def my_benchmark(opts):
                     obj_fifo_id = len(obj_fifos)
                     obj_fifos.append(object_fifo(
                         f"obj_fifo_{child_y}_{child_x}_to_{curr_node_y}_{curr_node_x}",
-                        tiles[child_y][child_x],
-                        tiles[curr_node_y][curr_node_x],
+                        tiles[(child_y, child_x)],
+                        tiles[(curr_node_y, curr_node_x)],
                         fifo_depth,
                         intermediate_data_dtype,
                     ))
@@ -148,12 +155,17 @@ def my_benchmark(opts):
                     no_children_node_locs.append((curr_node_y, curr_node_x))
 
             if node_idx == total_num_comp_tiles-1:
+                # define the MEM and SHIM tiles if not already defined
+                if (0, curr_node_x) not in tiles:
+                    tiles[(0, curr_node_x)] = tile(curr_node_x, 0)
+                if (1, curr_node_x) not in tiles:
+                    tiles[(1, curr_node_x)] = tile(curr_node_x, 1)
                 # Input from SHIM to MEM
                 in_shim_to_mem_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{0}_{curr_node_x}_to_{1}_{curr_node_x}",
-                    tiles[0][curr_node_x],
-                    tiles[1][curr_node_x],
+                    tiles[(0, curr_node_x)],
+                    tiles[(1, curr_node_x)],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -161,8 +173,8 @@ def my_benchmark(opts):
                 in_mem_to_core_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{1}_{curr_node_x}_to_{curr_node_y}_{curr_node_x}",
-                    tiles[1][curr_node_x],
-                    tiles[curr_node_y][curr_node_x],
+                    tiles[(1, curr_node_x)],
+                    tiles[(curr_node_y, curr_node_x)],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -175,8 +187,8 @@ def my_benchmark(opts):
                     obj_fifo_id = len(obj_fifos)
                     obj_fifos.append(object_fifo(
                         f"obj_fifo_{curr_node_y}_{curr_node_x}_to_node_with_no_children",
-                        tiles[curr_node_y][curr_node_x],
-                        [tiles[y][x] for (y, x) in no_children_node_locs],
+                        tiles[(curr_node_y, curr_node_x)],
+                        [tiles[(y, x)] for (y, x) in no_children_node_locs],
                         fifo_depth,
                         intermediate_data_dtype,
                     ))
@@ -189,8 +201,8 @@ def my_benchmark(opts):
                 feedback_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_2_0_to_{curr_node_y}_{curr_node_x}_feedback",
-                    tiles[2][0],
-                    tiles[curr_node_y][curr_node_x],
+                    tiles[(2, 0)],
+                    tiles[(curr_node_y, curr_node_x)],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -200,7 +212,7 @@ def my_benchmark(opts):
         # Core function declarations
         for row in range(2,num_rows):
             for col in range(0,num_cols):
-                @core(tiles[row][col], "accumulate.o")
+                @core(tiles[(row, col)], "accumulate.o")
                 def core_body():
                     # Initial accumulation to avoid deadlock
                     do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)

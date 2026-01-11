@@ -76,9 +76,10 @@ def my_benchmark(opts):
                 obj_fifos[output_fifo_id].release(ObjectFifoPort.Produce, 1)
 
         # Tile declarations as tile[row][col]
-        tiles = [
-            [tile(col, row) for col in range(0, num_cols)] for row in range(0, num_rows)
-        ]
+        tiles = dict()
+        for row in range(2, num_rows):
+            for col in range(0, num_cols):
+                tiles[(row, col)] = tile(col, row)
 
         fifo_depth = 2
         obj_fifo_lookup = dict()
@@ -99,8 +100,8 @@ def my_benchmark(opts):
                 to_top_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{curr_node[0]}_{curr_node[1]}_to_{top_node[0]}_{top_node[1]}",
-                    tiles[curr_node[0]][curr_node[1]],
-                    tiles[top_node[0]][top_node[1]],
+                    tiles[curr_node],
+                    tiles[top_node],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -114,8 +115,8 @@ def my_benchmark(opts):
                 to_right_obj_fifo_id = len(obj_fifos)
                 obj_fifos.append(object_fifo(
                     f"obj_fifo_{curr_node[0]}_{curr_node[1]}_to_{right_node[0]}_{right_node[1]}",
-                    tiles[curr_node[0]][curr_node[1]],
-                    tiles[right_node[0]][right_node[1]],
+                    tiles[curr_node],
+                    tiles[right_node],
                     fifo_depth,
                     intermediate_data_dtype,
                 ))
@@ -125,19 +126,25 @@ def my_benchmark(opts):
                 if row == 3 and col < num_cols-1:
                     obj_fifo_lookup[(right_node[0], right_node[1])]['initial_in'].append(to_right_obj_fifo_id)
 
+        # object fifos to/from memory tiles
+        # Define SHIM and MEM tiles
+        tiles[(0,0)] = tile(0,0)
+        tiles[(0,num_cols-1)] = tile(num_cols-1,0)
+        tiles[(1,0)] = tile(0,1)
+        tiles[(1,num_cols-1)] = tile(num_cols-1,1)
         in_shim_to_mem_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
             f"obj_fifo_0_0_to_1_0",
-            tiles[0][0],
-            tiles[1][0],
+            tiles[(0,0)],
+            tiles[(1,0)],
             fifo_depth,
             intermediate_data_dtype,
         ))
         in_mem_to_core_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
             f"obj_fifo_1_0_to_3_0",
-            tiles[1][0],
-            tiles[3][0],
+            tiles[(1,0)],
+            tiles[(3,0)],
             fifo_depth,
             intermediate_data_dtype,
         ))
@@ -145,16 +152,16 @@ def my_benchmark(opts):
         out_core_to_mem_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
             f"obj_fifo_2_{num_cols-1}_to_1_{num_cols-1}",
-            tiles[2][num_cols-1],
-            tiles[1][num_cols-1],
+            tiles[(2,num_cols-1)],
+            tiles[(1,num_cols-1)],
             fifo_depth,
             intermediate_data_dtype,
         ))
         out_mem_to_shim_obj_fifo_id = len(obj_fifos)
         obj_fifos.append(object_fifo(
             f"obj_fifo_1_{num_cols-1}_to_0_{num_cols-1}",
-            tiles[1][num_cols-1],
-            tiles[0][num_cols-1],
+            tiles[(1,num_cols-1)],
+            tiles[(0,num_cols-1)],
             fifo_depth,
             intermediate_data_dtype,
         ))
@@ -164,35 +171,36 @@ def my_benchmark(opts):
         for row in range(2,num_rows):
             for col in range(0,num_cols):
                 # Input core that takes input from outside AIE-array then repeatedly sends to the next cores
+                curr_node = (row, col)
                 if (row == 3 and col == 0):
-                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
+                    @core(tiles[curr_node], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel([in_mem_to_core_obj_fifo_id], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                        do_kernel([in_mem_to_core_obj_fifo_id], obj_fifo_lookup[curr_node]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(sys.maxsize):
-                            do_kernel([in_mem_to_core_obj_fifo_id] + obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel([in_mem_to_core_obj_fifo_id] + obj_fifo_lookup[curr_node]["in"], obj_fifo_lookup[curr_node]["out"], obj_fifos, zero_i32, accumulate_i32)
 
                 # Output core that takes input from the previous cores then repeatedly sends to outside AIE-array
                 elif (row == 2 and col == num_cols-1):
-                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
+                    @core(tiles[curr_node], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         for _ in range_(sys.maxsize):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"] + [out_core_to_mem_obj_fifo_id], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[curr_node]["in"], obj_fifo_lookup[curr_node]["out"] + [out_core_to_mem_obj_fifo_id], obj_fifos, zero_i32, accumulate_i32)
                             
                 # Intermediate cores
                 elif row == 3 or col == 0:
-                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
+                    @core(tiles[curr_node], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         # Initial accumulation to avoid deadlock
-                        do_kernel(obj_fifo_lookup[(row, col)]["initial_in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                        do_kernel(obj_fifo_lookup[curr_node]["initial_in"], obj_fifo_lookup[curr_node]["out"], obj_fifos, zero_i32, accumulate_i32)
                         for _ in range_(sys.maxsize):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[curr_node]["in"], obj_fifo_lookup[curr_node]["out"], obj_fifos, zero_i32, accumulate_i32)
                             
                 else:
-                    @core(tiles[row][col], "accumulate.o",stack_size=0xFF0)
+                    @core(tiles[curr_node], "accumulate.o",stack_size=0xFF0)
                     def core_body():
                         for _ in range_(sys.maxsize):
-                            do_kernel(obj_fifo_lookup[(row, col)]["in"], obj_fifo_lookup[(row, col)]["out"], obj_fifos, zero_i32, accumulate_i32)
+                            do_kernel(obj_fifo_lookup[curr_node]["in"], obj_fifo_lookup[curr_node]["out"], obj_fifos, zero_i32, accumulate_i32)
 
         # To/from AIE-array data movement
         @runtime_sequence(
