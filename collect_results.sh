@@ -8,8 +8,8 @@ PNR_OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
 RUN_NAME="Hand_Placed"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer.type "hand_placed" \
-    --router.type "aie" \
+    --placer.type hand_placed \
+    --router.type aie \
     --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
@@ -17,13 +17,26 @@ python utils/parse_results.py \
     --tasklists benchmarks/tasklist.yml \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
-
-# Collect sequential placer results
-RUN_NAME="Sequential_Placed"
+# Try PNR router on the above results
+RUN_NAME="${RUN_NAME}_PNR_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
-    --placer.type "aie" \
-    --router.type "aie" \
+    --placer.type hand_placed \
+    --router.type pnr \
+    --run \
+    --output-dir="${PNR_OUTPUT_DIR}" \
+    -j 20
+python utils/parse_results.py \
+    --tasklists benchmarks/tasklist.yml \
+    --input-dir "${PNR_OUTPUT_DIR}" \
+    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+
+# Collect sequential placer results
+RUN_NAME="Sequential_Placer"
+PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+    --placer.type aie \
+    --router.type aie \
     --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
@@ -215,6 +228,9 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --router.type pnr \
     --router.pnr.type milp \
     --placer.pnr.args=" \
+        --placer.enable_aggressive_local_search \
+        --placer.neighbor_region_shape cross \
+        --placer.max_consecutive_iters_no_best_cost_improvement_scaling_factor 1.5 \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
