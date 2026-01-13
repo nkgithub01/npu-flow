@@ -105,14 +105,14 @@ def main(args):
     def helper_get_benchmark_group_df(df, benchmark_group_patterns):
         mask = pd.Series([False] * df.shape[0])
         for benchmark_name, task_name_pattern in benchmark_group_patterns:
-            mask |= df["benchmark_name"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False)
+            mask |= (df["benchmark_name"] == benchmark_name) & df["task_name"].str.contains(task_name_pattern, na=False)
         return df[mask].copy()
     def helper_get_ungrouped_df(df):
         df.reset_index(drop=True, inplace=True)
         mask = pd.Series([True] * df.shape[0])
         for group in benchmark_groups:
             for benchmark_name, task_name_pattern in group['benchmark_group_patterns']:
-                mask &= ~(df["benchmark_name"].str.contains(benchmark_name, na=False) & df["task_name"].str.contains(task_name_pattern, na=False))
+                mask &= ~((df["benchmark_name"] == benchmark_name) & df["task_name"].str.contains(task_name_pattern, na=False))
         return df[mask].copy()
 
     # Read CSV files into DataFrames
