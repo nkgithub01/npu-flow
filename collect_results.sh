@@ -3,52 +3,53 @@ TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 PNR_COMMIT_HASH=$(git rev-parse --short HEAD:./npu-pnr)
 OUTPUT_PATH="./Results"
 PNR_OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
+tasklist="benchmarks/tasklist.yml"
 
 # Collect hand placed results
 RUN_NAME="Hand_Placed"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type aie \
     --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try PNR router on the above results
 RUN_NAME="${RUN_NAME}_PNR_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type pnr \
     --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect sequential placer results
 RUN_NAME="Sequential_Placer"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type aie \
     --router.type aie \
     --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect SAPlacer results with Only Cost Estimation
 RUN_NAME="SAPlacer_Cost_Estimation"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
     --router.type pnr \
@@ -71,14 +72,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
     --import-pnr-results "${IMPORT_DIR}" \
@@ -87,14 +88,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect SAPlacer results with Cost and Congestion Estimation
 RUN_NAME="SAPlacer_Cost_Congestion_Estimation"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
     --router.type pnr \
@@ -117,14 +118,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
     --import-pnr-results "${IMPORT_DIR}" \
@@ -133,14 +134,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect SAPlacer results with MILP Costing Estimation
 RUN_NAME="SAPlacer_MILP_Cost"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
     --router.type pnr \
@@ -163,14 +164,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
     --import-pnr-results "${IMPORT_DIR}" \
@@ -179,14 +180,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect One shot MILP results
 RUN_NAME="MILPPlacer"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type milp \
     --router.type pnr \
@@ -199,14 +200,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
     --import-pnr-results "${IMPORT_DIR}" \
@@ -215,14 +216,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 
 # Collect LSMO results
 RUN_NAME="LSMOPlacer"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type ls \
     --router.type pnr \
@@ -238,14 +239,14 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
 PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
+python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
     --import-pnr-results "${IMPORT_DIR}" \
@@ -254,6 +255,6 @@ python3 utils/build_benchmarks.py benchmarks/tasklist.yml \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
-    --tasklists benchmarks/tasklist.yml \
+    --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
     --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
