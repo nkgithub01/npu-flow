@@ -1,0 +1,23 @@
+name: packet_example
+clean: make clean
+build: make build
+compile: make aiecc
+run: make run
+tasks:
+  - name: repeat_1
+    params:
+      num_repeat_cores: 1
+    output: build/packet.mlir
+  - name: repeat_2
+    params:
+      num_repeat_cores: 2
+    output: build/packet.mlir
+  - name: repeat_3
+    params:
+      num_repeat_cores: 3
+    output: build/packet.mlir
+  - name: repeat_4
+    params:
+      num_repeat_cores: 4
+    output: build/packet.mlir
+    
