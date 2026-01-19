@@ -33,7 +33,6 @@ aiecc: ${xclbin_target}
 
 
 ifeq ($(use_placed),0)
-pnr_args += -r
 ${mlir_target}: ${src_dir}/${aie_py_src}
 	mkdir -p ${@D}
 	python3 $< --num-repeat-cores ${num_repeat_cores} > $@
