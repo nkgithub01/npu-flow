@@ -218,3 +218,12 @@
 - microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C6
 - microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C7
 - microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C8
+
+# Benchmarks that must use packet routing
+- packet_example/repeat_2
+- packet_example/repeat_3
+- packet_example/repeat_4
+- packet_example/repeat_5
+- packet_example/repeat_6
+- packet_example/repeat_7
+- packet_example/repeat_8

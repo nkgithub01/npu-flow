@@ -12,7 +12,7 @@ placer ?= sa_placer
 NUM_ITERATION := 1
 WARMUP_ITERATION := 0
 
-mlir_target?=${build_dir}/${target_name}.mlir
+mlir_target?=${build_dir}/${target_name}_example.mlir
 xclbin_target?=${build_dir}/${target_name}.xclbin
 insts_target?=${build_dir}/${target_name}_insts.bin
 num_repeat_cores ?= 1

@@ -33,6 +33,7 @@ netlist_file := ${NETLIST_FILE_DIR}/auto_gen_netlist.json
 netlist_topology ?= tree
 num_rows ?= 6
 num_cols ?= 8
+obj_fifo_depth ?= 2
 tree_branching_factor ?= 2
 tree_use_multicast ?= 0
 
@@ -80,7 +81,7 @@ ifeq (${use_auto_gen_netlist}, 0)
 else
 	@echo "Generating netlist file: ${netlist_file} with topology: ${netlist_topology}"
 	python3 ${src_dir}/auto_gen_netlist.py --netlist ${netlist_file} --topology ${netlist_topology} --num_rows ${num_rows} --num_cols ${num_cols} \
-		--branching_factor ${tree_branching_factor} --tree_use_multicast ${tree_use_multicast}
+		--obj_fifo_depth ${obj_fifo_depth} --branching_factor ${tree_branching_factor} --tree_use_multicast ${tree_use_multicast}
 endif
 
 ${build_dir}/%.o: ${AIE_KERNELS_DIR}/%.cc
