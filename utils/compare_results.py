@@ -7,6 +7,338 @@ import numpy as np
 import pandas as pd
 from openpyxl.styles import PatternFill, Border, Side
 
+benchmark_groups_by_type = []
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Synthetic-Line",
+    benchmark_group_patterns = [("microbenchmark", "line"), ("microbenchmark_with_feedback_loop", "line")]
+))
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Synthetic-Mesh",
+    benchmark_group_patterns = [("microbenchmark", "mesh"), ("microbenchmark_with_feedback_loop", "mesh"), ("microbenchmark", "Custom_CNN")]
+))
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Synthetic-Tree",
+    benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree"), ("microbenchmark", "single_multicast")]
+))
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Real_World_Application-Edge_Detection",
+    benchmark_group_patterns = [("edge_detection", "")]
+))
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Real_World_Application-GEMM",
+    benchmark_group_patterns = [("GEMM", ""), ("vector_scalar_mul", "")]
+))
+benchmark_groups_by_type.append(dict(
+    benchmark_group_name = "Real_World_Application-ML",
+    benchmark_group_patterns = [("ResNet", "")]
+))
+
+benchmark_groups_synth_vs_real_world = []
+benchmark_groups_synth_vs_real_world.append(dict(
+    benchmark_group_name = "Synthetic",
+    benchmark_group_patterns = [
+        ("microbenchmark", "line"),
+        ("microbenchmark_with_feedback_loop", "line"),
+        ("microbenchmark", "mesh"),
+        ("microbenchmark_with_feedback_loop", "mesh"),
+        ("microbenchmark", "Custom_CNN"),
+        ("microbenchmark", "tree"),
+        ("microbenchmark_with_feedback_loop", "tree"),
+        ("microbenchmark", "single_multicast")
+    ]
+))
+benchmark_groups_synth_vs_real_world.append(dict(
+    benchmark_group_name = "Real_World_Application",
+    benchmark_group_patterns = [
+        ("edge_detection", ""),
+        ("GEMM", ""),
+        ("vector_scalar_mul", ""),
+        ("ResNet", "")
+    ]
+))
+
+benchmark_groups_pipelined_vs_feedback_loop = []
+benchmark_groups_pipelined_vs_feedback_loop.append(dict(
+    benchmark_group_name = "Pipelined",
+    benchmark_group_patterns = [
+        ("microbenchmark", ""),
+        ("edge_detection", ""),
+        ("GEMM", ""),
+        ("vector_scalar_mul", ""),
+        ("ResNet", "")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop.append(dict(
+    benchmark_group_name = "Feedback_Loop",
+    benchmark_group_patterns = [
+        ("microbenchmark_with_feedback_loop", "")
+    ]
+))
+
+benchmark_groups_by_size = []
+benchmark_groups_by_size.append(dict(
+    benchmark_group_name = "Small-Test-Cases",
+    benchmark_group_patterns = [
+        ("microbenchmark", "R3_C1"),
+        ("microbenchmark", "R4_C1"),
+        ("microbenchmark", "R5_C1"),
+        ("microbenchmark", "R6_C1"),
+        ("microbenchmark", "R3_C2"),
+        ("microbenchmark", "R4_C2"),
+        ("microbenchmark", "R5_C2"),
+        ("microbenchmark", "R6_C2"),
+        ("microbenchmark", "R3_C3"),
+        ("microbenchmark", "R4_C3"),
+        ("microbenchmark", "R5_C3"),
+        ("microbenchmark", "R6_C3"),
+        ("microbenchmark", "R3_C4"),
+        ("microbenchmark", "R4_C4"),
+        ("microbenchmark", "R5_C4"),
+        ("microbenchmark", "R6_C4"),
+        ("microbenchmark", "single_multicast"),
+        ("microbenchmark_with_feedback_loop", "R3_C1"),
+        ("microbenchmark_with_feedback_loop", "R4_C1"),
+        ("microbenchmark_with_feedback_loop", "R5_C1"),
+        ("microbenchmark_with_feedback_loop", "R6_C1"),
+        ("microbenchmark_with_feedback_loop", "R3_C2"),
+        ("microbenchmark_with_feedback_loop", "R4_C2"),
+        ("microbenchmark_with_feedback_loop", "R5_C2"),
+        ("microbenchmark_with_feedback_loop", "R6_C2"),
+        ("microbenchmark_with_feedback_loop", "R3_C3"),
+        ("microbenchmark_with_feedback_loop", "R4_C3"),
+        ("microbenchmark_with_feedback_loop", "R5_C3"),
+        ("microbenchmark_with_feedback_loop", "R6_C3"),
+        ("microbenchmark_with_feedback_loop", "R3_C4"),
+        ("microbenchmark_with_feedback_loop", "R4_C4"),
+        ("microbenchmark_with_feedback_loop", "R5_C4"),
+        ("microbenchmark_with_feedback_loop", "R6_C4"),
+        ("microbenchmark_with_feedback_loop", "line_length_4"),
+        ("microbenchmark_with_feedback_loop", "line_length_5"),
+        ("microbenchmark_with_feedback_loop", "line_length_6"),
+        ("microbenchmark_with_feedback_loop", "line_length_7"),
+        ("microbenchmark_with_feedback_loop", "line_length_8"),
+        ("microbenchmark_with_feedback_loop", "line_length_9"),
+        ("microbenchmark_with_feedback_loop", "line_length_10"),
+        ("microbenchmark_with_feedback_loop", "line_length_11"),
+        ("microbenchmark_with_feedback_loop", "line_length_12"),
+        ("microbenchmark_with_feedback_loop", "line_length_13"),
+        ("microbenchmark_with_feedback_loop", "line_length_14"),
+        ("microbenchmark_with_feedback_loop", "line_length_15"),
+        ("microbenchmark_with_feedback_loop", "line_length_16"),
+        ("microbenchmark_with_feedback_loop", "line_length_17"),
+        ("microbenchmark_with_feedback_loop", "line_length_18"),
+        ("edge_detection", "col_1"),
+        ("edge_detection", "col_2"),
+        ("edge_detection", "col_3"),
+        ("edge_detection", "col_4"),
+        ("GEMM", "R6_C1"),
+        ("GEMM", "R6_C2"),
+        ("vector_scalar_mul", "")
+    ]
+))
+benchmark_groups_by_size.append(dict(
+    benchmark_group_name = "Large-Test-Cases",
+    benchmark_group_patterns = [
+        ("microbenchmark", "R3_C5"),
+        ("microbenchmark", "R4_C5"),
+        ("microbenchmark", "R5_C5"),
+        ("microbenchmark", "R6_C5"),
+        ("microbenchmark", "R3_C6"),
+        ("microbenchmark", "R4_C6"),
+        ("microbenchmark", "R5_C6"),
+        ("microbenchmark", "R6_C6"),
+        ("microbenchmark", "R3_C7"),
+        ("microbenchmark", "R4_C7"),
+        ("microbenchmark", "R5_C7"),
+        ("microbenchmark", "R6_C7"),
+        ("microbenchmark", "R3_C8"),
+        ("microbenchmark", "R4_C8"),
+        ("microbenchmark", "R5_C8"),
+        ("microbenchmark", "R6_C8"),
+        ("microbenchmark", "3d_mesh"),
+        ("microbenchmark", "Custom_CNN"),
+        ("microbenchmark_with_feedback_loop", "R3_C5"),
+        ("microbenchmark_with_feedback_loop", "R4_C5"),
+        ("microbenchmark_with_feedback_loop", "R5_C5"),
+        ("microbenchmark_with_feedback_loop", "R6_C5"),
+        ("microbenchmark_with_feedback_loop", "R3_C6"),
+        ("microbenchmark_with_feedback_loop", "R4_C6"),
+        ("microbenchmark_with_feedback_loop", "R5_C6"),
+        ("microbenchmark_with_feedback_loop", "R6_C6"),
+        ("microbenchmark_with_feedback_loop", "R3_C7"),
+        ("microbenchmark_with_feedback_loop", "R4_C7"),
+        ("microbenchmark_with_feedback_loop", "R5_C7"),
+        ("microbenchmark_with_feedback_loop", "R6_C7"),
+        ("microbenchmark_with_feedback_loop", "R3_C8"),
+        ("microbenchmark_with_feedback_loop", "R4_C8"),
+        ("microbenchmark_with_feedback_loop", "R5_C8"),
+        ("microbenchmark_with_feedback_loop", "R6_C8"),
+        ("microbenchmark_with_feedback_loop", "line_length_19"),
+        ("microbenchmark_with_feedback_loop", "line_length_20"),
+        ("microbenchmark_with_feedback_loop", "line_length_21"),
+        ("microbenchmark_with_feedback_loop", "line_length_22"),
+        ("microbenchmark_with_feedback_loop", "line_length_23"),
+        ("microbenchmark_with_feedback_loop", "line_length_24"),
+        ("microbenchmark_with_feedback_loop", "line_length_25"),
+        ("microbenchmark_with_feedback_loop", "line_length_26"),
+        ("microbenchmark_with_feedback_loop", "line_length_27"),
+        ("microbenchmark_with_feedback_loop", "line_length_28"),
+        ("microbenchmark_with_feedback_loop", "line_length_29"),
+        ("microbenchmark_with_feedback_loop", "line_length_30"),
+        ("microbenchmark_with_feedback_loop", "line_length_31"),
+        ("microbenchmark_with_feedback_loop", "line_length_32"),
+        ("edge_detection", "col_5"),
+        ("edge_detection", "col_6"),
+        ("edge_detection", "col_7"),
+        ("edge_detection", "col_8"),
+        ("GEMM", "R6_C4"),
+        ("GEMM", "R6_C8"),
+        ("ResNet", "")
+    ]
+))
+
+benchmark_groups_pipelined_vs_feedback_loop_by_size = []
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Small Synthetic Pipeline",
+    benchmark_group_patterns = [
+        ("microbenchmark", "R3_C1"),
+        ("microbenchmark", "R4_C1"),
+        ("microbenchmark", "R5_C1"),
+        ("microbenchmark", "R6_C1"),
+        ("microbenchmark", "R3_C2"),
+        ("microbenchmark", "R4_C2"),
+        ("microbenchmark", "R5_C2"),
+        ("microbenchmark", "R6_C2"),
+        ("microbenchmark", "R3_C3"),
+        ("microbenchmark", "R4_C3"),
+        ("microbenchmark", "R5_C3"),
+        ("microbenchmark", "R6_C3"),
+        ("microbenchmark", "R3_C4"),
+        ("microbenchmark", "R4_C4"),
+        ("microbenchmark", "R5_C4"),
+        ("microbenchmark", "R6_C4"),
+        ("microbenchmark", "single_multicast")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Large Synthetic Pipeline",
+    benchmark_group_patterns = [
+        ("microbenchmark", "R3_C5"),
+        ("microbenchmark", "R4_C5"),
+        ("microbenchmark", "R5_C5"),
+        ("microbenchmark", "R6_C5"),
+        ("microbenchmark", "R3_C6"),
+        ("microbenchmark", "R4_C6"),
+        ("microbenchmark", "R5_C6"),
+        ("microbenchmark", "R6_C6"),
+        ("microbenchmark", "R3_C7"),
+        ("microbenchmark", "R4_C7"),
+        ("microbenchmark", "R5_C7"),
+        ("microbenchmark", "R6_C7"),
+        ("microbenchmark", "R3_C8"),
+        ("microbenchmark", "R4_C8"),
+        ("microbenchmark", "R5_C8"),
+        ("microbenchmark", "R6_C8"),
+        ("microbenchmark", "3d_mesh"),
+        ("microbenchmark", "Custom_CNN")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Small Synthetic feedback loop",
+    benchmark_group_patterns = [
+        ("microbenchmark_with_feedback_loop", "R3_C1"),
+        ("microbenchmark_with_feedback_loop", "R4_C1"),
+        ("microbenchmark_with_feedback_loop", "R5_C1"),
+        ("microbenchmark_with_feedback_loop", "R6_C1"),
+        ("microbenchmark_with_feedback_loop", "R3_C2"),
+        ("microbenchmark_with_feedback_loop", "R4_C2"),
+        ("microbenchmark_with_feedback_loop", "R5_C2"),
+        ("microbenchmark_with_feedback_loop", "R6_C2"),
+        ("microbenchmark_with_feedback_loop", "R3_C3"),
+        ("microbenchmark_with_feedback_loop", "R4_C3"),
+        ("microbenchmark_with_feedback_loop", "R5_C3"),
+        ("microbenchmark_with_feedback_loop", "R6_C3"),
+        ("microbenchmark_with_feedback_loop", "R3_C4"),
+        ("microbenchmark_with_feedback_loop", "R4_C4"),
+        ("microbenchmark_with_feedback_loop", "R5_C4"),
+        ("microbenchmark_with_feedback_loop", "R6_C4"),
+        ("microbenchmark_with_feedback_loop", "line_length_4"),
+        ("microbenchmark_with_feedback_loop", "line_length_5"),
+        ("microbenchmark_with_feedback_loop", "line_length_6"),
+        ("microbenchmark_with_feedback_loop", "line_length_7"),
+        ("microbenchmark_with_feedback_loop", "line_length_8"),
+        ("microbenchmark_with_feedback_loop", "line_length_9"),
+        ("microbenchmark_with_feedback_loop", "line_length_10"),
+        ("microbenchmark_with_feedback_loop", "line_length_11"),
+        ("microbenchmark_with_feedback_loop", "line_length_12"),
+        ("microbenchmark_with_feedback_loop", "line_length_13"),
+        ("microbenchmark_with_feedback_loop", "line_length_14"),
+        ("microbenchmark_with_feedback_loop", "line_length_15"),
+        ("microbenchmark_with_feedback_loop", "line_length_16"),
+        ("microbenchmark_with_feedback_loop", "line_length_17"),
+        ("microbenchmark_with_feedback_loop", "line_length_18")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Large Synthetic feedback loop",
+    benchmark_group_patterns = [
+        ("microbenchmark_with_feedback_loop", "R3_C5"),
+        ("microbenchmark_with_feedback_loop", "R4_C5"),
+        ("microbenchmark_with_feedback_loop", "R5_C5"),
+        ("microbenchmark_with_feedback_loop", "R6_C5"),
+        ("microbenchmark_with_feedback_loop", "R3_C6"),
+        ("microbenchmark_with_feedback_loop", "R4_C6"),
+        ("microbenchmark_with_feedback_loop", "R5_C6"),
+        ("microbenchmark_with_feedback_loop", "R6_C6"),
+        ("microbenchmark_with_feedback_loop", "R3_C7"),
+        ("microbenchmark_with_feedback_loop", "R4_C7"),
+        ("microbenchmark_with_feedback_loop", "R5_C7"),
+        ("microbenchmark_with_feedback_loop", "R6_C7"),
+        ("microbenchmark_with_feedback_loop", "R3_C8"),
+        ("microbenchmark_with_feedback_loop", "R4_C8"),
+        ("microbenchmark_with_feedback_loop", "R5_C8"),
+        ("microbenchmark_with_feedback_loop", "R6_C8"),
+        ("microbenchmark_with_feedback_loop", "line_length_19"),
+        ("microbenchmark_with_feedback_loop", "line_length_20"),
+        ("microbenchmark_with_feedback_loop", "line_length_21"),
+        ("microbenchmark_with_feedback_loop", "line_length_22"),
+        ("microbenchmark_with_feedback_loop", "line_length_23"),
+        ("microbenchmark_with_feedback_loop", "line_length_24"),
+        ("microbenchmark_with_feedback_loop", "line_length_25"),
+        ("microbenchmark_with_feedback_loop", "line_length_26"),
+        ("microbenchmark_with_feedback_loop", "line_length_27"),
+        ("microbenchmark_with_feedback_loop", "line_length_28"),
+        ("microbenchmark_with_feedback_loop", "line_length_29"),
+        ("microbenchmark_with_feedback_loop", "line_length_30"),
+        ("microbenchmark_with_feedback_loop", "line_length_31"),
+        ("microbenchmark_with_feedback_loop", "line_length_32")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Small Real_World_Application",
+    benchmark_group_patterns = [
+        ("edge_detection", "col_1"),
+        ("edge_detection", "col_2"),
+        ("edge_detection", "col_3"),
+        ("edge_detection", "col_4"),
+        ("GEMM", "R6_C1"),
+        ("GEMM", "R6_C2"),
+        ("vector_scalar_mul", "")
+    ]
+))
+benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+    benchmark_group_name = "Large Real_World_Application",
+    benchmark_group_patterns = [
+        ("edge_detection", "col_5"),
+        ("edge_detection", "col_6"),
+        ("edge_detection", "col_7"),
+        ("edge_detection", "col_8"),
+        ("GEMM", "R6_C4"),
+        ("GEMM", "R6_C8"),
+        ("ResNet", "")
+    ]
+))
+
 def augment_stats(df, prefix=""):
     if len(df) == 0:
         return df
@@ -78,30 +410,6 @@ def main(args):
 
     # Define benchmark groups
     benchmark_groups = []
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Synthetic-Line",
-        benchmark_group_patterns = [("microbenchmark", "line"), ("microbenchmark_with_feedback_loop", "line")]
-    ))
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Synthetic-Mesh",
-        benchmark_group_patterns = [("microbenchmark", "mesh"), ("microbenchmark_with_feedback_loop", "mesh"), ("microbenchmark", "Custom_CNN")]
-    ))
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Synthetic-Tree",
-        benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree"), ("microbenchmark", "single_multicast")]
-    ))
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Real_World_Application-Edge_Detection",
-        benchmark_group_patterns = [("edge_detection", "")]
-    ))
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Real_World_Application-GEMM",
-        benchmark_group_patterns = [("GEMM", ""), ("vector_scalar_mul", "")]
-    ))
-    benchmark_groups.append(dict(
-        benchmark_group_name = "Real_World_Application-ML",
-        benchmark_group_patterns = [("ResNet", "")]
-    ))
     def helper_get_benchmark_group_df(df, benchmark_group_patterns):
         mask = pd.Series([False] * df.shape[0])
         for benchmark_name, task_name_pattern in benchmark_group_patterns:
@@ -153,14 +461,15 @@ def main(args):
             df_with_stats = pd.DataFrame(columns=dfs[prefix + file].columns)
             empty_row_df = pd.DataFrame([[""]*len(dfs[prefix + file].columns)], columns=dfs[prefix + file].columns)
             for group in benchmark_groups:
-                partial_df = helper_get_benchmark_group_df(dfs[prefix + file], group['benchmark_group_patterns'])
+                if group['benchmark_group_name'] == 'Ungrouped':
+                    partial_df = helper_get_ungrouped_df(dfs[prefix + file])
+                else:
+                    partial_df = helper_get_benchmark_group_df(dfs[prefix + file], group['benchmark_group_patterns'])
                 if not partial_df.empty:
                     partial_df_with_stats = augment_stats(partial_df, prefix=group['benchmark_group_name'] + " ")
                     df_with_stats = pd.concat([df_with_stats, partial_df_with_stats, empty_row_df], ignore_index=True)
-            ungrouped_df = helper_get_ungrouped_df(dfs[prefix + file])
-            if not ungrouped_df.empty:
-                ungrouped_df_with_stats = augment_stats(ungrouped_df, prefix="Ungrouped ")
-                df_with_stats = pd.concat([df_with_stats, ungrouped_df_with_stats, empty_row_df], ignore_index=True)
+            if len(benchmark_groups) == 0:
+                df_with_stats = helper_get_ungrouped_df(dfs[prefix + file])
             # Add overall stats
             dfs[prefix + file] = augment_stats(dfs[prefix + file], prefix="Overall ")
             dfs[prefix + file] = pd.concat([df_with_stats, empty_row_df, dfs[prefix + file][dfs[prefix + file]["benchmark_name"].str.contains("min|max|average|geometric_mean")]], ignore_index=True)
@@ -170,7 +479,36 @@ def main(args):
         dfs["normalized_" + file] = normalize_matching_rows(dfs["common_success_" + baseline_file], dfs["common_success_" + file])
 
     # Collect overall stats for each file and calculate stats for each group
-    dfs["Overall Statistics"] = pd.DataFrame(columns=['Sheet', 'Benchmark Group', 'Total Number Test Cases', 'Number of Successfully Builded Test Cases', 'Number of Successfully Compiled Test Cases', 'Successful Test Cases', 'Success Rate', 'Common Successful Test Cases Across All Files'])
+    dfs["Overall Statistics"] = pd.DataFrame(columns=[
+        'Name',
+        'Benchmark Group',
+        'Total Number Test Cases',
+        'Number of Successfully Builded Test Cases',
+        'Number of Successfully Compiled Test Cases',
+        'Successful Test Cases',
+        'Success Rate',
+        'Common Successful Test Cases Across All Files',
+        'GeoMean Build Time [s]',
+        'GeoMean End-to-End Build Time [s]',
+        'GeoMean NPU Runtime [us]',
+        'GeoMean Total Route Length',
+        'Arithmetic Mean Num Net Using Neighbour Sharing',
+        'Arithmetic Mean Num Net Using AXI Stream',
+        'GeoMean Longest Route Segment',
+        'GeoMean Total Buffer Usage [Byte]',
+        'GeoMean Average Buffer Usage per Compute Tile [Byte]',
+        'GeoMean Average Buffer Usage per Memory Tile [Byte]',
+        'Normalized GeoMean Build Time [s]',
+        'Normalized GeoMean End-to-End Build Time [s]',
+        'Normalized GeoMean NPU Runtime [us]',
+        'Normalized GeoMean Total Route Length',
+        'Normalized Arithmetic Mean Num Net Using Neighbour Sharing',
+        'Normalized Arithmetic Mean Num Net Using AXI Stream',
+        'Normalized GeoMean Longest Route Segment',
+        'Normalized GeoMean Total Buffer Usage [Byte]',
+        'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]',
+        'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]'
+    ])
     empty_row_df = pd.DataFrame([[""]*len(dfs["Overall Statistics"].columns)], columns=dfs["Overall Statistics"].columns)
     for file in args.files:
         total_test_cases = dfs[file].shape[0]
@@ -179,51 +517,78 @@ def main(args):
         successful_test_cases = dfs["success_" + file].shape[0]
         common_successful_test_cases = dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))].shape[0]
         for group in benchmark_groups:
-            gropu_df = helper_get_benchmark_group_df(dfs[file], group['benchmark_group_patterns'])
+            if group['benchmark_group_name'] == 'Ungrouped':
+                gropu_df = helper_get_ungrouped_df(dfs[file])
+                group_successful = helper_get_ungrouped_df(dfs["success_" + file]).shape[0]
+                group_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file]).shape[0]
+            else:
+                gropu_df = helper_get_benchmark_group_df(dfs[file], group['benchmark_group_patterns'])
+                group_successful = helper_get_benchmark_group_df(dfs["success_" + file], group['benchmark_group_patterns']).shape[0]
+                group_common_successful = helper_get_benchmark_group_df(dfs["common_success_" + file], group['benchmark_group_patterns']).shape[0]
             group_total = gropu_df.shape[0]
             group_successful_builded = gropu_df[gropu_df['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
             group_successful_compiled = gropu_df[gropu_df['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
-            group_successful = helper_get_benchmark_group_df(dfs["success_" + file], group['benchmark_group_patterns']).shape[0]
-            group_common_successful = helper_get_benchmark_group_df(dfs["common_success_" + file], group['benchmark_group_patterns']).shape[0]
             dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
-                'Sheet': file_label_map[file],
+                'Name': file_label_map[file],
                 'Benchmark Group': group['benchmark_group_name'],
                 'Total Number Test Cases': group_total,
                 'Number of Successfully Builded Test Cases': group_successful_builded,
                 'Number of Successfully Compiled Test Cases': group_successful_compiled,
                 'Successful Test Cases': group_successful,
                 'Success Rate': float(group_successful) / float(group_total) if float(group_total) > 0.0 else 0.0,
-                'Common Successful Test Cases Across All Files': group_common_successful
+                'Common Successful Test Cases Across All Files': group_common_successful,
+                'GeoMean Build Time [s]' : dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['build_time [s]'].values[0] if group_common_successful else '',
+                'GeoMean End-to-End Build Time [s]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_end2end_compilation_time [s]'].values[0] if group_common_successful else '',
+                'GeoMean NPU Runtime [us]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_NPU_runtime [us]'].values[0] if group_common_successful else '',
+                'GeoMean Total Route Length': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_routing_length'].values[0] if group_common_successful else '',
+                'Arithmetic Mean Num Net Using Neighbour Sharing': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if group_common_successful else '',
+                'Arithmetic Mean Num Net Using AXI Stream': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_circuit_switch_objectFIFO'].values[0] if group_common_successful else '',
+                'GeoMean Longest Route Segment': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['longest_circuit_switch_path'].values[0] if group_common_successful else '',
+                'GeoMean Total Buffer Usage [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if group_common_successful else '',
+                'GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if group_common_successful else '',
+                'GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Build Time [s]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['build_time [s]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean End-to-End Build Time [s]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_end2end_compilation_time [s]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean NPU Runtime [us]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_NPU_runtime [us]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Total Route Length': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_routing_length'].values[0] if group_common_successful else '',
+                'Normalized Arithmetic Mean Num Net Using Neighbour Sharing': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if group_common_successful else '',
+                'Normalized Arithmetic Mean Num Net Using AXI Stream': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_circuit_switch_objectFIFO'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Longest Route Segment': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['longest_circuit_switch_path'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Total Buffer Usage [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if group_common_successful else ''
                 }).to_frame().T
             ], ignore_index=True)
-        # Add ungrouped stats
-        ungrouped_df = helper_get_ungrouped_df(dfs[file])
-        ungrouped_total = ungrouped_df.shape[0]
-        ungroup_successful_builded = ungrouped_df[ungrouped_df['build_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
-        ungroup_successful_compiled = ungrouped_df[ungrouped_df['compilation_time [s]'].map(lambda x: not math.isnan(x))].shape[0]
-        ungrouped_successful = helper_get_ungrouped_df(dfs["success_" + file]).shape[0]
-        ungrouped_common_successful = helper_get_ungrouped_df(dfs["common_success_" + file][~(dfs["common_success_" + file]["benchmark_name"].str.contains("min|max|average|geometric_mean") | dfs["common_success_" + file]["benchmark_name"].str.match(r"^$"))]).shape[0]
-        dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
-            'Sheet': file_label_map[file],
-            'Benchmark Group': 'Ungrouped',
-            'Total Number Test Cases': ungrouped_total,
-            'Number of Successfully Builded Test Cases': ungroup_successful_builded,
-            'Number of Successfully Compiled Test Cases': ungroup_successful_compiled,
-            'Successful Test Cases': ungrouped_successful,
-            'Success Rate': float(ungrouped_successful) / float(ungrouped_total) if float(ungrouped_total) > 0.0 else 0.0,
-            'Common Successful Test Cases Across All Files': ungrouped_common_successful
-            }).to_frame().T
-        ], ignore_index=True)    
         # Add overall stats
         dfs["Overall Statistics"] = pd.concat([dfs["Overall Statistics"], pd.Series({
-            'Sheet': file_label_map[file],
+            'Name': file_label_map[file],
             'Benchmark Group': 'Overall',
             'Total Number Test Cases': total_test_cases,
             'Number of Successfully Builded Test Cases': successful_builded,
             'Number of Successfully Compiled Test Cases': successful_compiled,
             'Successful Test Cases': successful_test_cases,
             'Success Rate': float(successful_test_cases) / float(total_test_cases) if float(total_test_cases) > 0.0 else 0.0,
-            'Common Successful Test Cases Across All Files': common_successful_test_cases
+            'Common Successful Test Cases Across All Files': common_successful_test_cases,
+            'GeoMean Build Time [s]' : dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['build_time [s]'].values[0] if common_successful_test_cases else '',
+            'GeoMean End-to-End Build Time [s]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_end2end_compilation_time [s]'].values[0] if common_successful_test_cases else '',
+            'GeoMean NPU Runtime [us]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_NPU_runtime [us]'].values[0] if common_successful_test_cases else '',
+            'GeoMean Total Route Length': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_routing_length'].values[0] if common_successful_test_cases else '',
+            'Arithmetic Mean Num Net Using Neighbour Sharing': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if common_successful_test_cases else '',
+            'Arithmetic Mean Num Net Using AXI Stream': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " average"]['num_circuit_switch_objectFIFO'].values[0] if common_successful_test_cases else '',
+            'GeoMean Longest Route Segment': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['longest_circuit_switch_path'].values[0] if common_successful_test_cases else '',
+            'GeoMean Total Buffer Usage [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if common_successful_test_cases else '',
+            'GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if common_successful_test_cases else '',
+            'GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Build Time [s]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['build_time [s]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean End-to-End Build Time [s]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_end2end_compilation_time [s]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean NPU Runtime [us]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_NPU_runtime [us]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Total Route Length': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_routing_length'].values[0] if common_successful_test_cases else '',
+            'Normalized Arithmetic Mean Num Net Using Neighbour Sharing': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if common_successful_test_cases else '',
+            'Normalized Arithmetic Mean Num Net Using AXI Stream': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " average"]['num_circuit_switch_objectFIFO'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Longest Route Segment': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['longest_circuit_switch_path'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Total Buffer Usage [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if common_successful_test_cases else ''
             }).to_frame().T,
             empty_row_df
         ], ignore_index=True)
