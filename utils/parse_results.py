@@ -394,6 +394,7 @@ class TestResult:
                 delta_cost_50th_percentile = 0.0
                 delta_cost_25th_percentile = 0.0
                 delta_cost_10th_percentile = 0.0
+                acceptance_rate = per_move_info.get("acceptance_rate")
 
                 if acceptance:
                     if legality == "Legal":
@@ -436,6 +437,7 @@ class TestResult:
                     "delta_cost_50th_percentile": delta_cost_50th_percentile,
                     "delta_cost_75th_percentile": delta_cost_75th_percentile,
                     "delta_cost_90th_percentile": delta_cost_90th_percentile,
+                    "acceptance_rate": acceptance_rate,
                 })
 
             # Calculate accepted/rejected move breakdowns
@@ -744,6 +746,7 @@ class TestResult:
         wb = Workbook()
         ws = wb.active
         ws.title = "SA Move Info"
+        ws_plot = wb.create_sheet(title="SA Move Plots")
 
         # Read CSV into Excel
         SA_move_info = self.get_per_SA_move_info_as_csv()
@@ -760,6 +763,13 @@ class TestResult:
         # If no data, return
         if ws.max_row < 2:
             return
+        
+        # Formating acceptance_rate column as percentage
+        number_format = '0.00%'
+        target_columns = ['S'] # Column S is acceptance_rate
+        for target_column in target_columns:
+            for cell in ws[target_column]:
+                cell.number_format = number_format
 
         # Create a Scatter chart for absolute cost of each SA move
         marker_size = 6
@@ -797,7 +807,7 @@ class TestResult:
         chart.series.append(create_scatter_plot_series(ws, 2, xvalues, "circle", marker_size, "0000FF", line_no_fill=False))
         # Column C (index 3) is current cost at each move
         chart.series.append(create_scatter_plot_series(ws, 3, xvalues, "triangle", marker_size, "00FF00"))
-        ws.add_chart(chart, "T2")  # Place chart at cell T2
+        ws_plot.add_chart(chart, "A2")  # Place chart at cell A2
 
         # Create a Scatter chart for delta cost of each SA move
         chart = ScatterChart()
@@ -856,14 +866,58 @@ class TestResult:
         # Column R (index 18) is 90th percentile delta cost line
         chart.series.append(create_scatter_plot_series(ws, 18, xvalues, "dash", marker_size, "70FF00", line_no_fill=False))
 
-        ws.add_chart(chart, "T42")  # Place chart at cell T48
+        ws_plot.add_chart(chart, "A42")  # Place chart at cell A42
 
         # Create a separate Scatter chart for delta cost of each SA move in log scale
         chart = copy.deepcopy(chart)
         chart.title = "Detla cost of each SA move (Log Scale)"
         chart.y_axis.title = "Delta Cost (Log Scale)"
         chart.y_axis.scaling.logBase = 10
-        ws.add_chart(chart, "T82")  # Place chart at cell T48
+        cp = CharacterProperties(latin=font_type, sz=font_size * 100)
+        pp = ParagraphProperties(defRPr=cp)
+        rtp = RichText(p=[Paragraph(pPr=pp, endParaRPr=cp)])
+        chart.title.tx.rich.p[0].pPr = pp
+        chart.x_axis.txPr = rtp
+        chart.x_axis.title.tx.rich.p[0].pPr = pp
+        chart.y_axis.txPr = rtp
+        chart.y_axis.title.tx.rich.p[0].pPr = pp
+        chart.legend.txPr = rtp
+        ws_plot.add_chart(chart, "A82")  # Place chart at cell A82
+
+        # Create a Scatter chart for acceptance rate at each SA move
+        marker_size = 6
+        font_size = 16
+        font_type = Font(typeface='Calibri')
+
+        chart = ScatterChart()
+        chart.title = "Acceptance rate at each SA move"
+        chart.style = 13
+        chart.x_axis.title = "Number of SA moves"
+        chart.x_axis.tickLblPos = "nextTo"
+        chart.x_axis.delete = False
+        chart.y_axis.title = "Acceptance Rate [%]"
+        chart.x_axis.tickLblPos = "nextTo"
+        chart.y_axis.delete = False
+        chart.legend = None
+        chart.height = 20
+        chart.width = 30
+        chart.layout=Layout(manualLayout=ManualLayout(
+            x=0, y=0, h=0.8, w=0.8,
+        ))
+
+        cp = CharacterProperties(latin=font_type, sz=font_size * 100)
+        pp = ParagraphProperties(defRPr=cp)
+        rtp = RichText(p=[Paragraph(pPr=pp, endParaRPr=cp)])
+        chart.title.tx.rich.p[0].pPr = pp
+        chart.x_axis.txPr = rtp
+        chart.x_axis.title.tx.rich.p[0].pPr = pp
+        chart.y_axis.txPr = rtp
+        chart.y_axis.title.tx.rich.p[0].pPr = pp
+
+        xvalues = Reference(ws, min_col=1, min_row=2, max_row=ws.max_row)
+        # Column S (index 19) is 10th percentile acceptance rate line
+        chart.series.append(create_scatter_plot_series(ws, 19, xvalues, "dash", marker_size, "0000FF", line_no_fill=False))
+        ws_plot.add_chart(chart, "A122")  # Place chart at cell A122
 
         # Save workbook
         wb.save(os.path.join(self.result_dir, f"{self.task_name}_SA_per_move_info.xlsx"))
