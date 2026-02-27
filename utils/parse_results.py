@@ -8,6 +8,7 @@ import json
 import re
 import math
 import copy
+import sqlite3
 from collections import OrderedDict
 from openpyxl import Workbook
 from openpyxl.chart import ScatterChart, Reference, Series
@@ -280,13 +281,24 @@ class TestResult:
 
     def _parse_pnr_stage_results(self):
         # Parse PnR log
-        pnr_log_file_path = os.path.join(self.result_dir, f"pnr.log")
+        pnr_log_file_path = os.path.join(self.result_dir, "build", f"telemetry.db")
         if os.path.exists(pnr_log_file_path):
-            # Parse PnR runtime
-            pnr_time = self._parse_runtime_results(pnr_log_file_path, r'Total placer runtime.*?:\s*([0-9]+(?:\.[0-9]+)?)\s*(?:secs?|seconds?)')
-            if pnr_time >= 0.0:
-                self.fields["pnr_time [s]"].value = pnr_time
+            # Parse telemetry database
+            conn = sqlite3.connect(pnr_log_file_path)
+            conn.execute("PRAGMA foreign_keys = ON")
+            cur = conn.cursor()
+
+            # Parse PnR Runtime
+            cur.execute("SELECT strftime('%s', start_time), strftime('%s', end_time) FROM events WHERE event_name = 'engine_run'")
+            row = cur.fetchone()
+            if row:
+                start_time = float(row[0])
+                end_time = float(row[1])
+                pnr_time = end_time - start_time
+                if pnr_time >= 0.0:
+                    self.fields["pnr_time [s]"].value = pnr_time
             
+            # Parse Simulated Annealing stats
             num_SA_moves = 0
             num_SA_legal_moves = 0
             SA_legal_move_rate = 0.0
@@ -323,169 +335,134 @@ class TestResult:
             num_SA_illegal_rejected_moves = 0
             SA_rejected_move_illegal_rate = 0.0
             current_best_cost = sys.float_info.max
+            current_cost = sys.float_info.max
             SA_per_move_info = []
-            # Parse Simulated Annealing stats
-            with open(pnr_log_file_path, 'r') as file:
-                for line in file:
-                    # Extract SA move statistics
-                    # Total move attempts
-                    match = re.search(r'\[SA\] Total # of move attempts:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_moves = int(match.group(1))
-                    
-                    # Total legal/congested/illegal/accepted/rejected moves
-                    match = re.search(r'Legal moves:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_legal_moves = int(match.group(1))
-                    
-                    match = re.search(r'Congested moves:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_congested_moves = int(match.group(1))
-                    
-                    match = re.search(r'Fatal moves:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_illegal_moves = int(match.group(1))
-                    
-                    match = re.search(r'Accepted moves:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_accepted_moves = int(match.group(1))
-                    
-                    match = re.search(r'Rejected moves:\s*([0-9]+)', line)
-                    if match:
-                        num_SA_rejected_moves = int(match.group(1))
-                    
-                    # Count accepted legal moves
-                    match = re.search(r'\[SA\] ACCEPT Move:.* Legality: Legal', line)
-                    if match:
-                        num_SA_accepted_legal_moves += 1
+
+            # fetch all the entries related to SA moves
+            cur.execute("SELECT end_properties FROM events WHERE event_name = 'sa_move'")
+            rows = cur.fetchall()
+
+            # Total move attempts
+            num_SA_moves = len(rows)
+            for per_move_info_txt in rows:
+                # Extract SA move statistics
+                per_move_info = json.loads(per_move_info_txt[0])
+                acceptance = per_move_info.get("acceptance")
+                legality = per_move_info.get("legality")
+
+                if acceptance:
+                    num_SA_accepted_moves += 1
+                    if legality == "Legal":
+                        num_SA_legal_moves += 1
                         num_SA_legal_accepted_moves += 1
-                    
-                    # Count accepted congested moves
-                    match = re.search(r'\[SA\] ACCEPT Move:.* Legality: Congested', line)
-                    if match:
-                        num_SA_accepted_congested_moves += 1
+                        num_SA_accepted_legal_moves += 1
+                    elif legality == "Congested":
+                        num_SA_congested_moves += 1
                         num_SA_congested_accepted_moves += 1
-                    
-                    # Count accepted illegal moves
-                    match = re.search(r'\[SA\] ACCEPT Move:.* Legality: Fatal', line)
-                    if match:
-                        num_SA_accepted_illegal_moves += 1
+                        num_SA_accepted_congested_moves += 1
+                    elif legality == "Fatal":
+                        num_SA_illegal_moves += 1
                         num_SA_illegal_accepted_moves += 1
-
-                    # Count rejected legal moves
-                    match = re.search(r'\[SA\] REJECT Move:.* Legality: Legal', line)
-                    if match:
-                        num_SA_rejected_legal_moves += 1
+                        num_SA_accepted_illegal_moves += 1
+                else:
+                    num_SA_rejected_moves += 1
+                    if legality == "Legal":
+                        num_SA_legal_moves += 1
                         num_SA_legal_rejected_moves += 1
-
-                    # Count rejected congested moves
-                    match = re.search(r'\[SA\] REJECT Move:.* Legality: Congested', line)
-                    if match:
-                        num_SA_rejected_congested_moves += 1
+                        num_SA_rejected_legal_moves += 1
+                    elif legality == "Congested":
+                        num_SA_congested_moves += 1
                         num_SA_congested_rejected_moves += 1
-
-                    # Count rejected illegal moves
-                    match = re.search(r'\[SA\] REJECT Move:.* Legality: Fatal', line)
-                    if match:
-                        num_SA_rejected_illegal_moves += 1
+                        num_SA_rejected_congested_moves += 1
+                    elif legality == "Fatal":
+                        num_SA_illegal_moves += 1
                         num_SA_illegal_rejected_moves += 1
-                    
-                    # Find the current best cost
-                    match = re.search(r'\[SA\] Initial cost:\s*([0-9.]+)', line)
-                    if match:
-                        current_best_cost = float(match.group(1))
-                    match = re.search(r'\[SA\] .* best cost\s*([0-9.]+)', line)
-                    if match:
-                        current_best_cost = float(match.group(1))
+                        num_SA_rejected_illegal_moves += 1
 
-                    # Store per-move info
-                    match = re.search(r'(ACCEPT|REJECT).*?Cur Cost:\s*([0-9.]+).*?Legality:\s*(Legal|Congested|Fatal).*?T:\s*([0-9.]+)', line)
-                    if match:
-                        current_cost = float(match.group(2))
-                        acceptance = match.group(1)
-                        legality = match.group(3)
-                        temperature = float(match.group(4))
-                        delta_cost = current_cost - current_best_cost
-                        accepted_legal_move_delta_cost = ""
-                        accepted_congested_move_delta_cost = ""
-                        accepted_illegal_move_delta_cost = ""
-                        rejected_legal_move_delta_cost = ""
-                        rejected_congested_move_delta_cost = ""
-                        rejected_illegal_move_delta_cost = ""
-                        delta_cost_90th_percentile = 0.0
-                        delta_cost_75th_percentile = 0.0
-                        delta_cost_50th_percentile = 0.0
-                        delta_cost_25th_percentile = 0.0
-                        delta_cost_10th_percentile = 0.0
+                current_cost = per_move_info.get("cost")
+                current_best_cost = per_move_info.get("current_best_cost")
+                temperature = per_move_info.get("temperature")
+                delta_cost = per_move_info.get("delta_cost")
+                accepted_legal_move_delta_cost = ""
+                accepted_congested_move_delta_cost = ""
+                accepted_illegal_move_delta_cost = ""
+                rejected_legal_move_delta_cost = ""
+                rejected_congested_move_delta_cost = ""
+                rejected_illegal_move_delta_cost = ""
+                delta_cost_90th_percentile = 0.0
+                delta_cost_75th_percentile = 0.0
+                delta_cost_50th_percentile = 0.0
+                delta_cost_25th_percentile = 0.0
+                delta_cost_10th_percentile = 0.0
 
-                        if acceptance == "ACCEPT":
-                            if legality == "Legal":
-                                accepted_legal_move_delta_cost = delta_cost
-                            elif legality == "Congested":
-                                accepted_congested_move_delta_cost = delta_cost
-                            elif legality == "Fatal":
-                                accepted_illegal_move_delta_cost = delta_cost
-                        elif acceptance == "REJECT":
-                            if legality == "Legal":
-                                rejected_legal_move_delta_cost = delta_cost
-                            elif legality == "Congested":
-                                rejected_congested_move_delta_cost = delta_cost
-                            elif legality == "Fatal":
-                                rejected_illegal_move_delta_cost = delta_cost
-                        
-                        if temperature > 0.0:
-                            delta_cost_90th_percentile = math.log(0.9) * (-temperature)
-                            delta_cost_75th_percentile = math.log(0.75) * (-temperature)
-                            delta_cost_50th_percentile = math.log(0.5) * (-temperature)
-                            delta_cost_25th_percentile = math.log(0.25) * (-temperature)
-                            delta_cost_10th_percentile = math.log(0.1) * (-temperature)
+                if acceptance:
+                    if legality == "Legal":
+                        accepted_legal_move_delta_cost = delta_cost
+                    elif legality == "Congested":
+                        accepted_congested_move_delta_cost = delta_cost
+                    elif legality == "Fatal":
+                        accepted_illegal_move_delta_cost = delta_cost
+                else:
+                    if legality == "Legal":
+                        rejected_legal_move_delta_cost = delta_cost
+                    elif legality == "Congested":
+                        rejected_congested_move_delta_cost = delta_cost
+                    elif legality == "Fatal":
+                        rejected_illegal_move_delta_cost = delta_cost
+                
+                if temperature > 0.0:
+                    delta_cost_90th_percentile = math.log(0.9) * (-temperature)
+                    delta_cost_75th_percentile = math.log(0.75) * (-temperature)
+                    delta_cost_50th_percentile = math.log(0.5) * (-temperature)
+                    delta_cost_25th_percentile = math.log(0.25) * (-temperature)
+                    delta_cost_10th_percentile = math.log(0.1) * (-temperature)
 
-                        SA_per_move_info.append({
-                            "move_number": len(SA_per_move_info) + 1,
-                            "best_cost": current_best_cost,
-                            "move_cost": current_cost,
-                            "acceptance": acceptance,
-                            "legality": legality,
-                            "temperature": temperature,
-                            "delta_cost": delta_cost,
-                            "accepted_legal_move_delta_cost": accepted_legal_move_delta_cost,
-                            "accepted_congested_move_delta_cost": accepted_congested_move_delta_cost,
-                            "accepted_illegal_move_delta_cost": accepted_illegal_move_delta_cost,
-                            "rejected_legal_move_delta_cost": rejected_legal_move_delta_cost,
-                            "rejected_congested_move_delta_cost": rejected_congested_move_delta_cost,
-                            "rejected_illegal_move_delta_cost": rejected_illegal_move_delta_cost,
-                            "delta_cost_10th_percentile": delta_cost_10th_percentile,
-                            "delta_cost_25th_percentile": delta_cost_25th_percentile,
-                            "delta_cost_50th_percentile": delta_cost_50th_percentile,
-                            "delta_cost_75th_percentile": delta_cost_75th_percentile,
-                            "delta_cost_90th_percentile": delta_cost_90th_percentile,
-                        })
+                SA_per_move_info.append({
+                    "move_number": len(SA_per_move_info) + 1,
+                    "best_cost": current_best_cost,
+                    "move_cost": current_cost,
+                    "acceptance": acceptance,
+                    "legality": legality,
+                    "temperature": temperature,
+                    "delta_cost": delta_cost,
+                    "accepted_legal_move_delta_cost": accepted_legal_move_delta_cost,
+                    "accepted_congested_move_delta_cost": accepted_congested_move_delta_cost,
+                    "accepted_illegal_move_delta_cost": accepted_illegal_move_delta_cost,
+                    "rejected_legal_move_delta_cost": rejected_legal_move_delta_cost,
+                    "rejected_congested_move_delta_cost": rejected_congested_move_delta_cost,
+                    "rejected_illegal_move_delta_cost": rejected_illegal_move_delta_cost,
+                    "delta_cost_10th_percentile": delta_cost_10th_percentile,
+                    "delta_cost_25th_percentile": delta_cost_25th_percentile,
+                    "delta_cost_50th_percentile": delta_cost_50th_percentile,
+                    "delta_cost_75th_percentile": delta_cost_75th_percentile,
+                    "delta_cost_90th_percentile": delta_cost_90th_percentile,
+                })
 
-                # Calculate accepted/rejected move breakdowns
-                if num_SA_moves > 0:
-                    SA_legal_move_rate = (num_SA_legal_moves / num_SA_moves) * 100.0
-                    SA_congested_move_rate = (num_SA_congested_moves / num_SA_moves) * 100.0
-                    SA_illegal_move_rate = (num_SA_illegal_moves / num_SA_moves) * 100.0
-                    SA_move_acceptance_rate = (num_SA_accepted_moves / num_SA_moves) * 100.0
-                    SA_move_rejection_rate = (num_SA_rejected_moves / num_SA_moves) * 100.0
+            # Calculate accepted/rejected move breakdowns
+            if num_SA_moves > 0:
+                SA_legal_move_rate = (num_SA_legal_moves / num_SA_moves) * 100.0
+                SA_congested_move_rate = (num_SA_congested_moves / num_SA_moves) * 100.0
+                SA_illegal_move_rate = (num_SA_illegal_moves / num_SA_moves) * 100.0
+                SA_move_acceptance_rate = (num_SA_accepted_moves / num_SA_moves) * 100.0
+                SA_move_rejection_rate = (num_SA_rejected_moves / num_SA_moves) * 100.0
 
-                if num_SA_legal_moves > 0:
-                    SA_legal_move_acceptance_rate = (num_SA_accepted_legal_moves / num_SA_legal_moves) * 100.0
-                    SA_legal_move_rejection_rate = (num_SA_rejected_legal_moves / num_SA_legal_moves) * 100.0
-                if num_SA_congested_moves > 0:
-                    SA_congested_move_acceptance_rate = (num_SA_accepted_congested_moves / num_SA_congested_moves) * 100.0
-                    SA_congested_move_rejection_rate = (num_SA_rejected_congested_moves / num_SA_congested_moves) * 100.0
-                if num_SA_illegal_moves > 0:
-                    SA_illegal_move_acceptance_rate = (num_SA_accepted_illegal_moves / num_SA_illegal_moves) * 100.0
-                    SA_illegal_move_rejection_rate = (num_SA_rejected_illegal_moves / num_SA_illegal_moves) * 100.0
-                if num_SA_accepted_moves > 0:
-                    SA_accepted_move_legal_rate = (num_SA_legal_accepted_moves / num_SA_accepted_moves) * 100.0
-                    SA_accepted_move_congested_rate = (num_SA_congested_accepted_moves / num_SA_accepted_moves) * 100.0
-                    SA_accepted_move_illegal_rate = (num_SA_illegal_accepted_moves / num_SA_accepted_moves) * 100.0
-                if num_SA_rejected_moves > 0:
-                    SA_rejected_move_legal_rate = (num_SA_legal_rejected_moves / num_SA_rejected_moves) * 100.0
-                    SA_rejected_move_congested_rate = (num_SA_congested_rejected_moves / num_SA_rejected_moves) * 100.0
-                    SA_rejected_move_illegal_rate = (num_SA_illegal_rejected_moves / num_SA_rejected_moves) * 100.0
+            if num_SA_legal_moves > 0:
+                SA_legal_move_acceptance_rate = (num_SA_accepted_legal_moves / num_SA_legal_moves) * 100.0
+                SA_legal_move_rejection_rate = (num_SA_rejected_legal_moves / num_SA_legal_moves) * 100.0
+            if num_SA_congested_moves > 0:
+                SA_congested_move_acceptance_rate = (num_SA_accepted_congested_moves / num_SA_congested_moves) * 100.0
+                SA_congested_move_rejection_rate = (num_SA_rejected_congested_moves / num_SA_congested_moves) * 100.0
+            if num_SA_illegal_moves > 0:
+                SA_illegal_move_acceptance_rate = (num_SA_accepted_illegal_moves / num_SA_illegal_moves) * 100.0
+                SA_illegal_move_rejection_rate = (num_SA_rejected_illegal_moves / num_SA_illegal_moves) * 100.0
+            if num_SA_accepted_moves > 0:
+                SA_accepted_move_legal_rate = (num_SA_legal_accepted_moves / num_SA_accepted_moves) * 100.0
+                SA_accepted_move_congested_rate = (num_SA_congested_accepted_moves / num_SA_accepted_moves) * 100.0
+                SA_accepted_move_illegal_rate = (num_SA_illegal_accepted_moves / num_SA_accepted_moves) * 100.0
+            if num_SA_rejected_moves > 0:
+                SA_rejected_move_legal_rate = (num_SA_legal_rejected_moves / num_SA_rejected_moves) * 100.0
+                SA_rejected_move_congested_rate = (num_SA_congested_rejected_moves / num_SA_rejected_moves) * 100.0
+                SA_rejected_move_illegal_rate = (num_SA_illegal_rejected_moves / num_SA_rejected_moves) * 100.0
 
             # Update the fields
             self.fields["num_SA_moves"].value = num_SA_moves
@@ -527,6 +504,8 @@ class TestResult:
             self.fields["SA_rejected_move_illegal_rate [%]"].value = SA_rejected_move_illegal_rate
 
             self.fields["SA_per_move_info"].value = SA_per_move_info
+
+            conn.close()
 
     def _parse_aiecc_compilation_stage_results(self):
         # Parse AIECC compilation log for compilation time
