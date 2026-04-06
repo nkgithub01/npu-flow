@@ -2,12 +2,12 @@
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 PNR_COMMIT_HASH=$(git rev-parse --short HEAD:./npu-pnr)
 OUTPUT_PATH="./Results"
-PNR_OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
+OUTPUT_PATH="${OUTPUT_PATH}/PnR_commit_${PNR_COMMIT_HASH}"
 tasklist="benchmarks/tasklist.yml"
 
 # Collect hand placed results
 RUN_NAME="Hand_Placed"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type aie \
@@ -17,10 +17,10 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try PNR MILP router on the above results
 RUN_NAME="Hand_Placed_PNR_MILP_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type pnr \
@@ -31,25 +31,26 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try PNR PathFinder router on the above results
+# NOTE: PathFinder needs more RAM, so use fewer parallel jobs
 RUN_NAME="Hand_Placed_PNR_PathFinder_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type pnr \
     --router.pnr.type pf \
     --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
-    -j 20
+    -j 2
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 # Collect sequential placer results
 RUN_NAME="Sequential_Placer"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type aie \
     --router.type aie \
@@ -59,12 +60,12 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 for seed in 1 2 3 4 5; do
 # Collect SAPlacer results with Only Cost Estimation
 RUN_NAME="SAPlacer_Cost_Estimation"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
@@ -83,7 +84,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --placer.cost_estimator bb \
         --placer.enable_cost_legality_estimator \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -93,11 +93,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -109,11 +109,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 # Collect SAPlacer results with Cost and Congestion Estimation
 RUN_NAME="SAPlacer_Cost_Congestion_Estimation_channel_uniform"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
@@ -133,7 +133,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --placer.cost_estimator_probability_distribution channel_uniform \
         --placer.enable_cost_legality_estimator \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -143,11 +142,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -159,10 +158,10 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 RUN_NAME="SAPlacer_Cost_Congestion_Estimation_path_uniform"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
@@ -182,7 +181,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --placer.cost_estimator_probability_distribution path_uniform \
         --placer.enable_cost_legality_estimator \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -192,11 +190,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -208,11 +206,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 # Collect SAPlacer results with MILP Costing Estimation
 RUN_NAME="SAPlacer_MILP_Cost"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type sa \
@@ -230,7 +228,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --placer.initial_temperature_multiplier 1 \
         --placer.cost_estimator milp \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -240,11 +237,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -256,11 +253,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 # Collect One shot MILP results
 RUN_NAME="MILPPlacer"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type milp \
@@ -268,7 +265,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
     --router.pnr.type milp \
     --placer.pnr.args=" \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -278,11 +274,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -294,11 +290,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 
 # Collect LSMO results
 RUN_NAME="LSMOPlacer"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --placer.pnr.type ls \
@@ -309,7 +305,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --placer.neighbor_region_shape cross \
         --placer.max_consecutive_iters_no_best_cost_improvement_scaling_factor 1.5 \
         --placer.random_seed ${seed} \
-        --router.enable_lock_constraints \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
@@ -319,11 +314,11 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 # Try AIE router on the above results
 IMPORT_DIR=$PNR_OUTPUT_DIR
 RUN_NAME="${RUN_NAME}_AIE_Router"
-PNR_OUTPUT_DIR="${PNR_OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type pnr \
     --router.type aie \
@@ -335,5 +330,5 @@ python3 utils/build_benchmarks.py "${tasklist}" \
 python utils/parse_results.py \
     --tasklists "${tasklist}" \
     --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/${RUN_NAME}_results_${TIMESTAMP}.csv"
+    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
 done
