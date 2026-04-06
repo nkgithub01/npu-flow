@@ -18,7 +18,7 @@ benchmark_groups_by_type.append(dict(
 ))
 benchmark_groups_by_type.append(dict(
     benchmark_group_name = "Synthetic-Tree",
-    benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree"), ("microbenchmark", "single_multicast")]
+    benchmark_group_patterns = [("microbenchmark", "tree"), ("microbenchmark_with_feedback_loop", "tree"), ("microbenchmark", "single_multicast"), ("packet_example", "")]
 ))
 benchmark_groups_by_type.append(dict(
     benchmark_group_name = "Real_World_Application-Edge_Detection",
@@ -44,7 +44,8 @@ benchmark_groups_synth_vs_real_world.append(dict(
         ("microbenchmark", "Custom_CNN"),
         ("microbenchmark", "tree"),
         ("microbenchmark_with_feedback_loop", "tree"),
-        ("microbenchmark", "single_multicast")
+        ("microbenchmark", "single_multicast"),
+        ("packet_example", "")
     ]
 ))
 benchmark_groups_synth_vs_real_world.append(dict(
@@ -65,7 +66,8 @@ benchmark_groups_pipelined_vs_feedback_loop.append(dict(
         ("edge_detection", ""),
         ("GEMM", ""),
         ("vector_scalar_mul", ""),
-        ("ResNet", "")
+        ("ResNet", ""),
+        ("packet_example", "")
     ]
 ))
 benchmark_groups_pipelined_vs_feedback_loop.append(dict(
@@ -133,7 +135,8 @@ benchmark_groups_by_size.append(dict(
         ("edge_detection", "col_4"),
         ("GEMM", "R6_C1"),
         ("GEMM", "R6_C2"),
-        ("vector_scalar_mul", "")
+        ("vector_scalar_mul", ""),
+        ("packet_example", "")
     ]
 ))
 benchmark_groups_by_size.append(dict(
@@ -197,8 +200,8 @@ benchmark_groups_by_size.append(dict(
     ]
 ))
 
-benchmark_groups_pipelined_vs_feedback_loop_by_size = []
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size = []
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Small Synthetic Pipeline",
     benchmark_group_patterns = [
         ("microbenchmark", "R3_C1"),
@@ -217,10 +220,11 @@ benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
         ("microbenchmark", "R4_C4"),
         ("microbenchmark", "R5_C4"),
         ("microbenchmark", "R6_C4"),
-        ("microbenchmark", "single_multicast")
+        ("microbenchmark", "single_multicast"),
+        ("packet_example", "")
     ]
 ))
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Large Synthetic Pipeline",
     benchmark_group_patterns = [
         ("microbenchmark", "R3_C5"),
@@ -243,7 +247,7 @@ benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
         ("microbenchmark", "Custom_CNN")
     ]
 ))
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Small Synthetic feedback loop",
     benchmark_group_patterns = [
         ("microbenchmark_with_feedback_loop", "R3_C1"),
@@ -279,7 +283,7 @@ benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
         ("microbenchmark_with_feedback_loop", "line_length_18")
     ]
 ))
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Large Synthetic feedback loop",
     benchmark_group_patterns = [
         ("microbenchmark_with_feedback_loop", "R3_C5"),
@@ -314,7 +318,7 @@ benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
         ("microbenchmark_with_feedback_loop", "line_length_32")
     ]
 ))
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Small Real_World_Application",
     benchmark_group_patterns = [
         ("edge_detection", "col_1"),
@@ -326,7 +330,7 @@ benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
         ("vector_scalar_mul", "")
     ]
 ))
-benchmark_groups_pipelined_vs_feedback_loop_by_size.append(dict(
+benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size.append(dict(
     benchmark_group_name = "Large Real_World_Application",
     benchmark_group_patterns = [
         ("edge_detection", "col_5"),
@@ -410,6 +414,17 @@ def main(args):
 
     # Define benchmark groups
     benchmark_groups = []
+    if args.grouping == 'type':
+        benchmark_groups = benchmark_groups_by_type
+    elif args.grouping == 'size':
+        benchmark_groups = benchmark_groups_by_size
+    elif args.grouping == 'synthetic_vs_real_world':
+        benchmark_groups = benchmark_groups_synth_vs_real_world
+    elif args.grouping == 'pipelined_vs_feedback_loop':
+        benchmark_groups = benchmark_groups_pipelined_vs_feedback_loop
+    elif args.grouping == 'synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size':
+        benchmark_groups = benchmark_groups_synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size
+    
     def helper_get_benchmark_group_df(df, benchmark_group_patterns):
         mask = pd.Series([False] * df.shape[0])
         for benchmark_name, task_name_pattern in benchmark_group_patterns:
@@ -732,6 +747,16 @@ if __name__ == "__main__":
         required=False,
         help='Output file for the comparison results',
         default='comparison_results.xlsx'
+    )
+    parser.add_argument(
+        '-g',
+        '--grouping',
+        type=str,
+        dest='grouping',
+        required=False,
+        help='Defines the benchmark groups',
+        default='',
+        choices=['', 'type', 'size', 'synthetic_vs_real_world', 'pipelined_vs_feedback_loop', 'synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size']
     )
     args = parser.parse_args()
     main(args)

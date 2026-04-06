@@ -170,7 +170,7 @@ class BenchmarkTask:
         synch_run_cmd(self.clean_cmd, cwd=self.src_dir).check()
         self.last_built_stage = BuildStage.CLEAN
     
-    def hand_placed_pnr_router_task(self) -> None:
+    def hand_placed_pnr_router_task(self, args) -> None:
         self.log("Running PnR router on hand-placed design ...")
         output_mlir = self._get_output_file(self.output_mlir)
         build_dir = os.path.join(self.output_dir, "build")
@@ -202,7 +202,7 @@ class BenchmarkTask:
         pnr_bin = os.path.expandvars("$NPU_PNR_BIN_DIR/apps/pnr")
         pnr_res = synch_run_cmd(
             f"{pnr_bin} {shlex.quote(extract_netlist_toml)} "
-            f"--placer.type noop --router.type milp "
+            f"--placer.type noop --router.type {args.router_pnr_type} "
             f"--output={shlex.quote(solution_toml)}"
         )
         pnr_res.check()
@@ -224,16 +224,16 @@ class BenchmarkTask:
         shutil.move(tmp_mlir, output_mlir)
         return pnr_res
 
-    def build_task(self, hand_placed_pnr_router_flag=False) -> str:
+    def build_task(self, args=None) -> str:
         start_time = time.perf_counter()
         result = synch_run_cmd(self.build_cmd, cwd=self.src_dir, env=self.env_vars)
         result.check()
         self.last_built_stage = BuildStage.BUILD
 
-        if hand_placed_pnr_router_flag:
+        if args.hand_placed_pnr_router_flag:
             # To route hand-placed designs with PnR router, need to extract netlist,
             # run PnR, overwrite mlir placement and continue.
-            hp_pnr_res = self.hand_placed_pnr_router_task()
+            hp_pnr_res = self.hand_placed_pnr_router_task(args)
             end_time = time.perf_counter()
             build_time = end_time - start_time
             return f"{result}\n{hp_pnr_res}\nBuild took: {build_time:.2f} seconds"
@@ -366,7 +366,7 @@ def build_single_task(task: BenchmarkTask, args) -> tuple[BenchmarkTask, bool]:
         task.log("Building ...")
         if args.import_pnr_results:
             import_log = import_pnr_results(task, args.import_pnr_results, args.import_pnr_iter)
-        build_res = task.build_task(args.hand_placed_pnr_router_flag) 
+        build_res = task.build_task(args) 
         if args.debug and not args.netlist_only:
             write_text_file(
                 os.path.join(task.output_dir, f"{task.task_name}.build.log"), 
@@ -570,7 +570,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--router.pnr.type",
         dest="router_pnr_type",
-        choices=["milp", "lp"],
+        choices=["milp", "lp", 'pf'],
         default="milp",
         help="PnR router backend to use",
     )
