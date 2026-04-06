@@ -1,4 +1,6 @@
 build
 **/.vscode
 Results/
+Netlist/
+temp**/
 **/__pycache__
