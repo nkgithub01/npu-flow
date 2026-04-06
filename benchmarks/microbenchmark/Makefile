@@ -33,7 +33,7 @@ netlist_file := ${NETLIST_FILE_DIR}/auto_gen_netlist.json
 netlist_topology ?= tree
 num_rows ?= 6
 num_cols ?= 8
-obj_fifo_depth ?= 2
+obj_fifo_depth ?= 5
 tree_branching_factor ?= 2
 tree_use_multicast ?= 0
 
