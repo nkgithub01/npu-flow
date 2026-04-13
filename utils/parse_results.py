@@ -47,6 +47,7 @@ class TestResult:
             "num_unicast_objectFIFO": ResultField("num_unicast_objectFIFO", "Number of object FIFO that is doing unicast in the task"),
             "num_multicast_objectFIFO": ResultField("num_multicast_objectFIFO", "Number of object FIFO that is doing multicast in the task"),
             "num_objectFIFO_link": ResultField("num_objectFIFO_link", "Number of object FIFO link used in the task"),
+            "netlist_size" : ResultField("netlist_size", "Size of the netlist extracted from the MLIR file, calculated as total number of compute + memory + shim tiles + number of object FIFOs"),
             "build_time [s]": ResultField("build_time [s]", "Time taken for building the mlir file from source code (This includes PnR time if PnR is invoked during build)", value_unit="seconds"),
             "pnr_time [s]": ResultField("pnr_time [s]", "Time taken for placing and routing the design", value_unit="seconds"),
             "compilation_time [s]": ResultField("compilation_time [s]", "Time taken for compiling the design to binary from the mlir file", value_unit="seconds"),
@@ -137,13 +138,14 @@ class TestResult:
         prt_tee =    '├── '
         prt_last =   '└── '
         result = f"TestResult: {self.benchmark_name} - {self.task_name}\n"
-        result+= f"{prt_space}{self.fields["num_compute_tile"]}\n"
-        result+= f"{prt_space}{self.fields["num_mem_tile"]}\n"
-        result+= f"{prt_space}{self.fields["num_shim_tile"]}\n"
-        result+= f"{prt_space}{self.fields["num_objectFIFO"]}\n"
-        result+= f"{prt_space}{prt_tee}{self.fields["num_unicast_objectFIFO"]}\n"
-        result+= f"{prt_space}{prt_last}{self.fields["num_multicast_objectFIFO"]}\n"
-        result+= f"{prt_space}{self.fields["num_objectFIFO_link"]}\n"
+        result+= f"{prt_space}{self.fields['netlist_size']}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["num_compute_tile"]}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["num_mem_tile"]}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["num_shim_tile"]}\n"
+        result+= f"{prt_space}{prt_tee}{self.fields["num_objectFIFO"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_tee}{self.fields["num_unicast_objectFIFO"]}\n"
+        result+= f"{prt_space}{prt_branch}{prt_last}{self.fields["num_multicast_objectFIFO"]}\n"
+        result+= f"{prt_space}{prt_last}{self.fields["num_objectFIFO_link"]}\n"
         result+= f"{prt_space}{self.fields["total_end2end_compilation_time [s]"]}\n"
         result+= f"{prt_space}{prt_tee}{self.fields["build_time [s]"]}\n"
         result+= f"{prt_space}{prt_branch}{prt_last}{self.fields["pnr_time [s]"]}\n"
@@ -230,6 +232,7 @@ class TestResult:
         num_unicast_objectFIFO = 0
         num_multicast_objectFIFO = 0
         num_objectFIFO_link = 0
+        netlist_size = 0
 
         # Parse MLIR file for design info
         mlir_file_path = os.path.join(self.result_dir, "build", f"{self.benchmark_name}.mlir")
@@ -263,6 +266,7 @@ class TestResult:
                     # Count objectFIFO link ops (e.g., "aie.objectfifo.link" or similar)
                     if re.search(r'\saie\.objectfifo\.link\s', line):
                         num_objectFIFO_link += 1
+                netlist_size = num_compute_tile + num_mem_tile + num_shim_tile + num_objectFIFO
             # Update the fields
             self.fields["num_compute_tile"].value = num_compute_tile
             self.fields["num_mem_tile"].value = num_mem_tile
@@ -271,6 +275,7 @@ class TestResult:
             self.fields["num_unicast_objectFIFO"].value = num_unicast_objectFIFO
             self.fields["num_multicast_objectFIFO"].value = num_multicast_objectFIFO
             self.fields["num_objectFIFO_link"].value = num_objectFIFO_link
+            self.fields["netlist_size"].value = netlist_size
         
         # Parse build log for build time
         build_log_file_path = os.path.join(self.result_dir, f"{self.task_name}.build.log")

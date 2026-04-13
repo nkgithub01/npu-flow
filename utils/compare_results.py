@@ -510,6 +510,7 @@ def main(args):
         'Arithmetic Mean Num Net Using Neighbour Sharing',
         'Arithmetic Mean Num Net Using AXI Stream',
         'GeoMean Longest Route Segment',
+        'GeoMean Average AXI Route Length',
         'GeoMean Total Buffer Usage [Byte]',
         'GeoMean Average Buffer Usage per Compute Tile [Byte]',
         'GeoMean Average Buffer Usage per Memory Tile [Byte]',
@@ -520,6 +521,7 @@ def main(args):
         'Normalized Arithmetic Mean Num Net Using Neighbour Sharing',
         'Normalized Arithmetic Mean Num Net Using AXI Stream',
         'Normalized GeoMean Longest Route Segment',
+        'Normalized GeoMean Average AXI Route Length',
         'Normalized GeoMean Total Buffer Usage [Byte]',
         'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]',
         'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]'
@@ -559,6 +561,7 @@ def main(args):
                 'Arithmetic Mean Num Net Using Neighbour Sharing': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if group_common_successful else '',
                 'Arithmetic Mean Num Net Using AXI Stream': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_circuit_switch_objectFIFO'].values[0] if group_common_successful else '',
                 'GeoMean Longest Route Segment': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['longest_circuit_switch_path'].values[0] if group_common_successful else '',
+                'GeoMean Average AXI Route Length': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_track_per_circuit_switch_net'].values[0] if group_common_successful else '',
                 'GeoMean Total Buffer Usage [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if group_common_successful else '',
                 'GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if group_common_successful else '',
                 'GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if group_common_successful else '',
@@ -569,6 +572,7 @@ def main(args):
                 'Normalized Arithmetic Mean Num Net Using Neighbour Sharing': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if group_common_successful else '',
                 'Normalized Arithmetic Mean Num Net Using AXI Stream': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " average"]['num_circuit_switch_objectFIFO'].values[0] if group_common_successful else '',
                 'Normalized GeoMean Longest Route Segment': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['longest_circuit_switch_path'].values[0] if group_common_successful else '',
+                'Normalized GeoMean Average AXI Route Length': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_track_per_circuit_switch_net'].values[0] if group_common_successful else '',
                 'Normalized GeoMean Total Buffer Usage [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if group_common_successful else '',
                 'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if group_common_successful else '',
                 'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == group['benchmark_group_name'] + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if group_common_successful else ''
@@ -591,6 +595,7 @@ def main(args):
             'Arithmetic Mean Num Net Using Neighbour Sharing': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if common_successful_test_cases else '',
             'Arithmetic Mean Num Net Using AXI Stream': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " average"]['num_circuit_switch_objectFIFO'].values[0] if common_successful_test_cases else '',
             'GeoMean Longest Route Segment': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['longest_circuit_switch_path'].values[0] if common_successful_test_cases else '',
+            'GeoMean Average AXI Route Length': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_track_per_circuit_switch_net'].values[0] if common_successful_test_cases else '',
             'GeoMean Total Buffer Usage [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if common_successful_test_cases else '',
             'GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if common_successful_test_cases else '',
             'GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["common_success_" + file][dfs["common_success_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if common_successful_test_cases else '',
@@ -601,6 +606,7 @@ def main(args):
             'Normalized Arithmetic Mean Num Net Using Neighbour Sharing': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " average"]['num_neighbour_sharing_objectFIFO'].values[0] if common_successful_test_cases else '',
             'Normalized Arithmetic Mean Num Net Using AXI Stream': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " average"]['num_circuit_switch_objectFIFO'].values[0] if common_successful_test_cases else '',
             'Normalized GeoMean Longest Route Segment': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['longest_circuit_switch_path'].values[0] if common_successful_test_cases else '',
+            'Normalized GeoMean Average AXI Route Length': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_track_per_circuit_switch_net'].values[0] if common_successful_test_cases else '',
             'Normalized GeoMean Total Buffer Usage [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['total_buffer_size [bytes]'].values[0] if common_successful_test_cases else '',
             'Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_compute [bytes]'].values[0] if common_successful_test_cases else '',
             'Normalized GeoMean Average Buffer Usage per Memory Tile [Byte]': dfs["normalized_" + file][dfs["normalized_" + file]["benchmark_name"] == "Overall" + " geometric_mean"]['avg_buffer_size_on_mem [bytes]'].values[0] if common_successful_test_cases else ''
