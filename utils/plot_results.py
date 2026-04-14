@@ -259,7 +259,7 @@ def main(args):
             y_pred = np.polyval(coeffs, x)
             r2_values.append(r2_score(y, y_pred))
 
-        elif algorithm in ["SA + MILP"]:
+        elif algorithm in ["SA + BB", "SA + BBCG", "SA + MILP"]:
             # Polynomial fit (degree 2)
             coeffs, residuals, rank, singular_values, rcond = np.polyfit(x, y, 2, full=True)
 
@@ -291,7 +291,7 @@ def main(args):
             # Calculate R² using the residuals from the polynomial fit
             log_y_pred = np.polyval(coeffs, log_x)
             y_pred = 10 ** log_y_pred
-            r2_values.append(r2_score(y, y_pred))
+            r2_values.append(r2_score(log_y, log_y_pred))
 
         plt.plot(
             trend_x,
