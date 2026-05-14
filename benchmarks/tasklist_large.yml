@@ -1,0 +1,55 @@
+# Edge Detection
+- edge_detection/col_6
+- edge_detection/col_7
+- edge_detection/col_8
+
+# General Matrix Multiplication (GEMM)
+- GEMM/GEMM_R6_C8
+
+# Microbenchmark
+- microbenchmark/2d_mesh_R5_C7
+- microbenchmark/2d_mesh_R5_C8
+- microbenchmark/2d_mesh_R6_C6
+- microbenchmark/2d_mesh_R6_C7
+- microbenchmark/2d_mesh_R6_C8
+- microbenchmark/tree_R5_C7
+- microbenchmark/tree_R5_C8
+- microbenchmark/tree_R6_C6
+- microbenchmark/tree_R6_C7
+- microbenchmark/tree_R6_C8
+- microbenchmark/line_R5_C7
+- microbenchmark/line_R5_C8
+- microbenchmark/line_R6_C6
+- microbenchmark/line_R6_C7
+- microbenchmark/line_R6_C8
+- microbenchmark/Custom_CNN
+- microbenchmark/3d_mesh
+
+# microbenchmark line topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_29
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_30
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_31
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_32
+
+# microbenchmark mesh topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R5_C7
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R5_C8
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C6
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C7
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C8
+
+# microbenchmark tree topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R5_C7
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R5_C8
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C6
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C7
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C8
+
+# Benchmarks that must use packet routing
+- packet_example/repeat_2
+- packet_example/repeat_3
+- packet_example/repeat_4
+- packet_example/repeat_5
+- packet_example/repeat_6
+- packet_example/repeat_7
+- packet_example/repeat_8

@@ -1,0 +1,22 @@
+# Edge Detection
+- edge_detection/col_1
+
+# General Matrix Multiplication (GEMM)
+- GEMM/GEMM_R6_C1
+
+# Microbenchmark
+- microbenchmark/2d_mesh_R3_C1
+- microbenchmark/tree_R3_C1
+- microbenchmark/line_R3_C1
+
+# Vector Scalar Multiplication
+- vector_scalar_mul/default
+
+# microbenchmark line topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_4
+
+# microbenchmark mesh topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R4_C2
+
+# microbenchmark tree topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R3_C1

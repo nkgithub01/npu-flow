@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     cmake \
     python3 \
     python3-pip \
-    catch2 \
+    libgtest-dev \
+    libgmock-dev \
     git \
     ca-certificates \
     wget \

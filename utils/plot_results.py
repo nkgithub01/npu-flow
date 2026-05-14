@@ -26,16 +26,24 @@ def main(args):
     ]
     num_testcases = df_success.loc[:len(categories)-1, "Total Number Test Cases"].astype(int).tolist()
 
-    methods = {
-        "Manual Placement" :    round(df_success.loc[df_success["Name"] == "HP_PNR",    "Success Rate"]*100).astype(int).tolist(),
-        "AMD Placer" :          round(df_success.loc[df_success["Name"] == "SP",        "Success Rate"]*100).astype(int).tolist(),
-        "SA + BB" :             round(df_success.loc[df_success["Name"] == "SA",        "Success Rate"]*100).astype(int).tolist(),
-        "SA + BBCG" :           round(df_success.loc[df_success["Name"] == "SA_BBCG",   "Success Rate"]*100).astype(int).tolist(),
-        "SA + MILP" :           round(df_success.loc[df_success["Name"] == "SA_MILP",   "Success Rate"]*100).astype(int).tolist(),
-        "LSMO" :                round(df_success.loc[df_success["Name"] == "LSMO",      "Success Rate"]*100).astype(int).tolist(),
-        "MILP" :                round(df_success.loc[df_success["Name"] == "MILP",      "Success Rate"]*100).astype(int).tolist()
+    # Safely extract methods only if they exist in the dataframe
+    methods = {}
+    algo_mapping_1 = {
+        "Manual Placement": "HP_PNR",
+        "AMD Placer": "SP",
+        "SA + BB": "SA",
+        "SA + BBCG": "SA_BBCG",
+        "SA + MILP": "SA_MILP",
+        "LSMO": "LSMO",
+        "MILP": "MILP"
     }
-    # Remove methods with incorrect data length
+
+    for label, name in algo_mapping_1.items():
+        matches = df_success.loc[df_success["Name"] == name, "Success Rate"]
+        if not matches.empty:
+            methods[label] = round(matches * 100).astype(int).tolist()
+
+    # Remove methods with incorrect data length (safety check)
     methods = {k: v for k, v in methods.items() if len(v) == len(categories)}
 
     # Create combined x-axis labels
@@ -59,18 +67,20 @@ def main(args):
 
     plt.xlabel("Benchmark Categories", fontsize=14, fontweight='bold')
     plt.ylabel("Successfully Solved \nBenchmarks (%)", fontsize=14, fontweight='bold')
-    plt.xticks(
-        x + bar_width * (len(methods) - 1) / 2,
-        x_labels,
-        rotation=0,
-        ha="center",
-        fontsize=12
-    )
+    
+    # Handle the case where all methods might be filtered out
+    if len(methods) > 0:
+        plt.xticks(
+            x + bar_width * (len(methods) - 1) / 2,
+            x_labels,
+            rotation=0,
+            ha="center",
+            fontsize=12
+        )
+        plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.25), ncol=len(methods), fontsize=14)
+
     plt.yticks(np.arange(0, 130, 25), fontsize=14)
-
-    plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.25), ncol=len(methods), fontsize=14)
     plt.grid(axis="y", linestyle="--", alpha=0.6)
-
     plt.tight_layout()
 
     # Save as SVG
@@ -106,11 +116,19 @@ def main(args):
         "Normalized GeoMean Average Buffer Usage per Compute Tile [Byte]"
     ]
 
-    methods = {
-        "Manual Placement" :    df_success.loc[(df_success["Name"] == "HP_PNR") & (df_success["Benchmark Group"] == "Overall"), fields].astype(float).iloc[0].tolist(),
-        "SA + BBCG" :           df_success.loc[(df_success["Name"] == "SA_BBCG") & (df_success["Benchmark Group"] == "Overall"), fields].astype(float).iloc[0].tolist(),
-        "LSMO" :                df_success.loc[(df_success["Name"] == "LSMO") & (df_success["Benchmark Group"] == "Overall"), fields].astype(float).iloc[0].tolist()
+    # Safely extract methods only if they exist in the dataframe
+    methods = {}
+    algo_mapping_2 = {
+        "Manual Placement": "HP_PNR",
+        "SA + BBCG": "SA_BBCG",
+        "LSMO": "LSMO"
     }
+
+    for label, name in algo_mapping_2.items():
+        matches = df_success.loc[(df_success["Name"] == name) & (df_success["Benchmark Group"] == "Overall"), fields]
+        if not matches.empty:
+            methods[label] = matches.astype(float).iloc[0].tolist()
+
     # Remove methods with incorrect data length
     methods = {k: v for k, v in methods.items() if len(v) == len(categories)}
 
@@ -129,19 +147,20 @@ def main(args):
 
     plt.xlabel("Benchmark Categories", fontsize=25, fontweight='bold')
     plt.ylabel("Metric Value\n(Normalized)", fontsize=25, fontweight='bold')
-    plt.xticks(
-        x + bar_width * (len(methods) - 1) / 2,
-        categories,
-        rotation=0,
-        ha="center",
-        fontsize=18
-    )
+    
+    if len(methods) > 0:
+        plt.xticks(
+            x + bar_width * (len(methods) - 1) / 2,
+            categories,
+            rotation=0,
+            ha="center",
+            fontsize=18
+        )
+        plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=len(methods), fontsize=25)
+
     plt.ylim(0, 1.6)
     plt.yticks(np.arange(0, 1.6, 0.25), fontsize=25)
-
-    plt.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=len(methods), fontsize=25)
     plt.grid(axis="y", linestyle="--", alpha=0.6)
-
     plt.tight_layout()
 
     # Save as SVG
@@ -163,13 +182,14 @@ def main(args):
         "LSMO": "LSMO",
         "MILP": "MILP"
     }
+    
     algorithms = list(algorithm_labels.keys())
     df = dict()
     for algorithm, sheet_name in algorithm_labels.items():
         try:
             df[algorithm] = pd.read_excel(excel_path, sheet_name=sheet_name, thousands=",")
         except Exception as e:
-            print(f"Warning: {algorithm} data: {e}")
+            print(f"Notice: Skipping {algorithm} - data not found in sheet '{sheet_name}'.")
             algorithms.remove(algorithm)
 
     # Columns
@@ -179,49 +199,28 @@ def main(args):
     # Create figure
     plt.figure(figsize=(12, 8))
     style_map = {
-        "AMD Placer": {
-            "color": "#ff0000", # Red
-            "marker": "o",        # Cross
-            "size": 40
-        },
-        "SA + BB": {
-            "color": "#0004FF", # Blue
-            "marker": "^",        # Triangle
-            "size": 40
-        },
-        "SA + BBCG": {
-            "color": "#ff00ff", # Pink
-            "marker": "v",        # Triangle
-            "size": 40
-        },
-        "SA + MILP": {
-            "color": "#006FA6", # Purple
-            "marker": "^",        # Triangle
-            "size": 40
-        },
-        "LSMO": {
-            "color": "#2ca02c", # Green
-            "marker": "*",        # Star
-            "size": 80
-        },
-        "MILP": {
-            "color": "#dd7700", # Orange
-            "marker": "s",        # Square
-            "size": 40
-        },
+        "AMD Placer": {"color": "#ff0000", "marker": "o", "size": 40},
+        "SA + BB": {"color": "#0004FF", "marker": "^", "size": 40},
+        "SA + BBCG": {"color": "#ff00ff", "marker": "v", "size": 40},
+        "SA + MILP": {"color": "#006FA6", "marker": "^", "size": 40},
+        "LSMO": {"color": "#2ca02c", "marker": "*", "size": 80},
+        "MILP": {"color": "#dd7700", "marker": "s", "size": 40},
     }
 
-
     # Plot scatter + trendline for each algorithm
-    r2_values = []
     def r2_score(y_true, y_pred):
         ss_res = np.sum((y_true - y_pred) ** 2)
         ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
         return 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
         
+    valid_algorithms = []
+    r2_values = []
+    
     for algorithm in algorithms:
+        if x_col not in df[algorithm].columns or y_col not in df[algorithm].columns:
+            continue
+            
         data = df[algorithm][[x_col, y_col]].dropna()
-
         x = data[x_col].values
         y = data[y_col].values
 
@@ -229,10 +228,16 @@ def main(args):
         x = x[mask]
         y = y[mask]
 
+        # Prevent numpy polyfit errors if there's no data
+        if len(x) < 2:
+            print(f"Notice: Skipping {algorithm} plot due to insufficient valid data points (< 2).")
+            continue
+            
+        valid_algorithms.append(algorithm)
+
         # Scatter
         plt.scatter(
-            x,
-            y,
+            x, y,
             s=style_map[algorithm]["size"],
             marker=style_map[algorithm]["marker"],
             color=style_map[algorithm]["color"],
@@ -246,32 +251,20 @@ def main(args):
         if algorithm in ["AMD Placer"]:
             # Polynomial fit (degree 1)
             coeffs, residuals, rank, singular_values, rcond = np.polyfit(x, y, 1, full=True)
-
-            x_min = x.min() * 0.7
-            x_max = x.max() * 1.3
+            x_min, x_max = x.min() * 0.7, x.max() * 1.3
             trend_x = np.linspace(x_min, x_max, 300)
             trend_y = np.polyval(coeffs, trend_x)
-
-            # Avoid negative values (important for visual correctness)
             trend_y[trend_y < 1e-3] = np.nan
-
-            # Calculate R² using the residuals from the polynomial fit
             y_pred = np.polyval(coeffs, x)
             r2_values.append(r2_score(y, y_pred))
 
         elif algorithm in ["SA + BB", "SA + BBCG", "SA + MILP"]:
             # Polynomial fit (degree 2)
             coeffs, residuals, rank, singular_values, rcond = np.polyfit(x, y, 2, full=True)
-
-            x_min = x.min() * 0.7
-            x_max = x.max() * 1.3
+            x_min, x_max = x.min() * 0.7, x.max() * 1.3
             trend_x = np.linspace(x_min, x_max, 300)
             trend_y = np.polyval(coeffs, trend_x)
-
-            # Avoid negative values (important for visual correctness)
             trend_y[trend_y < 1e-3] = np.nan
-
-            # Calculate R² using the residuals from the polynomial fit
             y_pred = np.polyval(coeffs, x)
             r2_values.append(r2_score(y, y_pred))
 
@@ -279,29 +272,19 @@ def main(args):
             # Power-law fit (log-log)
             log_x = np.log10(x)
             log_y = np.log10(y)
-
             coeffs, residuals, rank, singular_values, rcond = np.polyfit(log_x, log_y, 1, full=True)
-
-            log_x_min = log_x.min() - 0.5
-            log_x_max = log_x.max() + 0.4
-
+            log_x_min, log_x_max = log_x.min() - 0.5, log_x.max() + 0.4
             trend_x = np.logspace(log_x_min, log_x_max, 300)
             trend_y = (10 ** coeffs[1]) * (trend_x ** coeffs[0])
-
-            # Calculate R² using the residuals from the polynomial fit
             log_y_pred = np.polyval(coeffs, log_x)
-            y_pred = 10 ** log_y_pred
             r2_values.append(r2_score(log_y, log_y_pred))
 
         plt.plot(
-            trend_x,
-            trend_y,
+            trend_x, trend_y,
             color=style_map[algorithm]["color"],
             linewidth=3,
             alpha=0.75
         )
-
-
 
     # Labels
     plt.xlabel("Netlist Size", fontsize=20, fontweight='bold')
@@ -316,18 +299,17 @@ def main(args):
 
     # Legend
     # Create custom legend labels with R² values
-    legend_labels = []
-    for algorithm, r2 in zip(algorithms, r2_values):
-        legend_labels.append(f"{algorithm}")
-        legend_labels.append(f"R²={r2:.2f}")
-    plt.legend(legend_labels, fontsize=14, loc="upper center", ncol=len(algorithms), bbox_to_anchor=(0.44, 1.12))
-
-    # Ticks
-    # plt.tick_params(axis="both", which="major", labelsize=13)
+    if len(valid_algorithms) > 0:
+        legend_labels = []
+        for algorithm, r2 in zip(valid_algorithms, r2_values):
+            legend_labels.append(f"{algorithm}")
+            legend_labels.append(f"R²={r2:.2f}")
+        plt.legend(legend_labels, fontsize=14, loc="upper center", ncol=len(valid_algorithms), bbox_to_anchor=(0.44, 1.12))
 
     # Layout
     plt.tight_layout()
     plt.savefig(args.output_dir + "/placement_solving_time_vs_netlist_size_legend.svg", format="svg", bbox_inches='tight')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plotting script for placement results")

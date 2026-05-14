@@ -1,11 +1,42 @@
 #!/bin/bash
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-OUTPUT_PATH="./Results"
+OUTPUT_PATH="./Results_test"
 tasklist="benchmarks/tasklist.yml"
 num_runs=5
 declare -A results_csv_list
 declare -A run_name_list
 declare -a results_order
+
+if [ -n "$1" ]; then
+  case "$1" in
+    mini)
+      tasklist="benchmarks/tasklist_mini.yml"
+      ;;
+    small)
+      tasklist="benchmarks/tasklist_small.yml"
+      ;;
+    medium)
+      tasklist="benchmarks/tasklist_medium.yml"
+      ;;
+    large)
+      tasklist="benchmarks/tasklist_large.yml"
+      ;;
+    all)
+      tasklist="benchmarks/tasklist.yml"
+      ;;
+    *)
+      echo "Invalid option. Please choose small, medium, large, or all."
+      exit 1
+      ;;
+  esac
+else
+  tasklist="benchmarks/tasklist.yml"
+fi
+
+echo "Output Path: ${OUTPUT_PATH}"
+echo "Timestamp: ${TIMESTAMP}"
+echo "Tasklist: $input"
+echo "Number of runs per algorithm: ${num_runs}"
 
 # Collect hand placed results with PNR MILP router
 RUN_NAME="Hand_Placed_PNR_MILP_Router"
@@ -14,7 +45,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type pnr \
     --router.pnr.type milp \
-    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
@@ -33,7 +63,6 @@ PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type hand_placed \
     --router.type aie \
-    --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
@@ -52,7 +81,6 @@ PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_${TIMESTAMP}"
 python3 utils/build_benchmarks.py "${tasklist}" \
     --placer.type aie \
     --router.type aie \
-    --run \
     --output-dir "${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
@@ -90,7 +118,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
-    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
@@ -128,7 +155,6 @@ python3 utils/build_benchmarks.py "${tasklist}" \
         --logger.verbose minimal \
         --timeout_secs 3600 \
     " \
-    --run \
     --output-dir="${PNR_OUTPUT_DIR}" \
     -j 20
 python utils/parse_results.py \
@@ -141,96 +167,98 @@ if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
 fi
 results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
 
-# Collect SAPlacer results with MILP Costing Estimation
-RUN_NAME="SAPlacer_MILP_Cost"
-PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py "${tasklist}" \
-    --placer.type pnr \
-    --placer.pnr.type sa \
-    --router.type pnr \
-    --router.pnr.type milp \
-    --placer.pnr.args=" \
-        --placer.greedy_stage_entering_temperature 1e-1 \
-        --placer.greedy_stage_entering_acceptance_ratio 0.001 \
-        --placer.greedy_stage_num_iters_scaling_factor 2 \
-        --placer.max_iters 1000000 \
-        --placer.greedy_stage_max_iters 10000 \
-        --placer.max_move_attempts 2000000000 \
-        --placer.num_moves_per_iter 10000 \
-        --placer.enable_dynamic_temperature_scheduling \
-        --placer.initial_temperature_multiplier 1 \
-        --placer.cost_estimator milp \
-        --placer.random_seed ${seed} \
-        --logger.verbose minimal \
-        --timeout_secs 3600 \
-    " \
-    --run \
-    --output-dir="${PNR_OUTPUT_DIR}" \
-    -j 20
-python utils/parse_results.py \
-    --tasklists "${tasklist}" \
-    --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
-if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
-    results_order+=("${RUN_NAME}")
-    run_name_list["${RUN_NAME}"]="SA_MILP"
-fi
-results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
+# =====================================================================
+# Commented out by default as these take much longer to run
+# =====================================================================
 
-# Collect One shot MILP results
-RUN_NAME="MILPPlacer"
-PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py "${tasklist}" \
-    --placer.type pnr \
-    --placer.pnr.type milp \
-    --router.type pnr \
-    --router.pnr.type milp \
-    --placer.pnr.args=" \
-        --placer.random_seed ${seed} \
-        --logger.verbose minimal \
-        --timeout_secs 3600 \
-    " \
-    --run \
-    --output-dir="${PNR_OUTPUT_DIR}" \
-    -j 20
-python utils/parse_results.py \
-    --tasklists "${tasklist}" \
-    --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
-if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
-    results_order+=("${RUN_NAME}")
-    run_name_list["${RUN_NAME}"]="MILP"
-fi
-results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
+# # Collect SAPlacer results with MILP Costing Estimation
+# RUN_NAME="SAPlacer_MILP_Cost"
+# PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+# python3 utils/build_benchmarks.py "${tasklist}" \
+#     --placer.type pnr \
+#     --placer.pnr.type sa \
+#     --router.type pnr \
+#     --router.pnr.type milp \
+#     --placer.pnr.args=" \
+#         --placer.greedy_stage_entering_temperature 1e-1 \
+#         --placer.greedy_stage_entering_acceptance_ratio 0.001 \
+#         --placer.greedy_stage_num_iters_scaling_factor 2 \
+#         --placer.max_iters 1000000 \
+#         --placer.greedy_stage_max_iters 10000 \
+#         --placer.max_move_attempts 2000000000 \
+#         --placer.num_moves_per_iter 10000 \
+#         --placer.enable_dynamic_temperature_scheduling \
+#         --placer.initial_temperature_multiplier 1 \
+#         --placer.cost_estimator milp \
+#         --placer.random_seed ${seed} \
+#         --logger.verbose minimal \
+#         --timeout_secs 3600 \
+#     " \
+#     --output-dir="${PNR_OUTPUT_DIR}" \
+#     -j 20
+# python utils/parse_results.py \
+#     --tasklists "${tasklist}" \
+#     --input-dir "${PNR_OUTPUT_DIR}" \
+#     --output-csv "${PNR_OUTPUT_DIR}/results.csv"
+# if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
+#     results_order+=("${RUN_NAME}")
+#     run_name_list["${RUN_NAME}"]="SA_MILP"
+# fi
+# results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
 
-# Collect LSMO results
-RUN_NAME="LSMOPlacer"
-PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
-python3 utils/build_benchmarks.py "${tasklist}" \
-    --placer.type pnr \
-    --placer.pnr.type ls \
-    --router.type pnr \
-    --router.pnr.type milp \
-    --placer.pnr.args=" \
-        --placer.enable_aggressive_local_search \
-        --placer.neighbor_region_shape cross \
-        --placer.max_consecutive_iters_no_best_cost_improvement_scaling_factor 0.1 \
-        --placer.random_seed ${seed} \
-        --logger.verbose minimal \
-        --timeout_secs 3600 \
-    " \
-    --run \
-    --output-dir="${PNR_OUTPUT_DIR}" \
-    -j 20
-python utils/parse_results.py \
-    --tasklists "${tasklist}" \
-    --input-dir "${PNR_OUTPUT_DIR}" \
-    --output-csv "${PNR_OUTPUT_DIR}/results.csv"
-if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
-    results_order+=("${RUN_NAME}")
-    run_name_list["${RUN_NAME}"]="LSMO"
-fi
-results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
+# # Collect One shot MILP results
+# RUN_NAME="MILPPlacer"
+# PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+# python3 utils/build_benchmarks.py "${tasklist}" \
+#     --placer.type pnr \
+#     --placer.pnr.type milp \
+#     --router.type pnr \
+#     --router.pnr.type milp \
+#     --placer.pnr.args=" \
+#         --placer.random_seed ${seed} \
+#         --logger.verbose minimal \
+#         --timeout_secs 3600 \
+#     " \
+#     --output-dir="${PNR_OUTPUT_DIR}" \
+#     -j 20
+# python utils/parse_results.py \
+#     --tasklists "${tasklist}" \
+#     --input-dir "${PNR_OUTPUT_DIR}" \
+#     --output-csv "${PNR_OUTPUT_DIR}/results.csv"
+# if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
+#     results_order+=("${RUN_NAME}")
+#     run_name_list["${RUN_NAME}"]="MILP"
+# fi
+# results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
+
+# # Collect LSMO results
+# RUN_NAME="LSMOPlacer"
+# PNR_OUTPUT_DIR="${OUTPUT_PATH}/${RUN_NAME}_seed_${seed}_${TIMESTAMP}"
+# python3 utils/build_benchmarks.py "${tasklist}" \
+#     --placer.type pnr \
+#     --placer.pnr.type ls \
+#     --router.type pnr \
+#     --router.pnr.type milp \
+#     --placer.pnr.args=" \
+#         --placer.enable_aggressive_local_search \
+#         --placer.neighbor_region_shape cross \
+#         --placer.max_consecutive_iters_no_best_cost_improvement_scaling_factor 0.1 \
+#         --placer.random_seed ${seed} \
+#         --logger.verbose minimal \
+#         --timeout_secs 3600 \
+#     " \
+#     --output-dir="${PNR_OUTPUT_DIR}" \
+#     -j 20
+# python utils/parse_results.py \
+#     --tasklists "${tasklist}" \
+#     --input-dir "${PNR_OUTPUT_DIR}" \
+#     --output-csv "${PNR_OUTPUT_DIR}/results.csv"
+# if [[ ! -v run_name_list["${RUN_NAME}"] ]]; then
+#     results_order+=("${RUN_NAME}")
+#     run_name_list["${RUN_NAME}"]="LSMO"
+# fi
+# results_csv_list["${RUN_NAME}"]+=" ${PNR_OUTPUT_DIR}/results.csv"
+
 done
 
 # After collecting all results, average the runs with different seeds
@@ -256,7 +284,7 @@ python3 utils/compare_results.py \
     -g  synthetic_vs_real_world_and_pipelined_vs_feedback_loop_by_size \
     -o "${OUTPUT_PATH}/Results_across_all_algorithms_${TIMESTAMP}.xlsx"
 
-# Compare only the SA + BBCG with LSMO 
+# Head-to-head comparison of SA + BBCG with LSMO 
 results_list=""
 results_labels=""
 for run_name in "${results_order[@]}"; do

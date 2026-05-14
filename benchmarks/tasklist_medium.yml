@@ -1,0 +1,97 @@
+# Edge Detection
+- edge_detection/col_3
+- edge_detection/col_4
+- edge_detection/col_5
+
+# General Matrix Multiplication (GEMM)
+- GEMM/GEMM_R6_C4
+
+# Microbenchmark
+- microbenchmark/2d_mesh_R3_C6
+- microbenchmark/2d_mesh_R3_C7
+- microbenchmark/2d_mesh_R3_C8
+- microbenchmark/2d_mesh_R4_C5
+- microbenchmark/2d_mesh_R4_C6
+- microbenchmark/2d_mesh_R4_C7
+- microbenchmark/2d_mesh_R4_C8
+- microbenchmark/2d_mesh_R5_C4
+- microbenchmark/2d_mesh_R5_C5
+- microbenchmark/2d_mesh_R5_C6
+- microbenchmark/2d_mesh_R6_C3
+- microbenchmark/2d_mesh_R6_C4
+- microbenchmark/2d_mesh_R6_C5
+- microbenchmark/tree_R3_C6
+- microbenchmark/tree_R3_C7
+- microbenchmark/tree_R3_C8
+- microbenchmark/tree_R4_C5
+- microbenchmark/tree_R4_C6
+- microbenchmark/tree_R4_C7
+- microbenchmark/tree_R4_C8
+- microbenchmark/tree_R5_C4
+- microbenchmark/tree_R5_C5
+- microbenchmark/tree_R5_C6
+- microbenchmark/tree_R6_C3
+- microbenchmark/tree_R6_C4
+- microbenchmark/tree_R6_C5
+- microbenchmark/line_R3_C6
+- microbenchmark/line_R3_C7
+- microbenchmark/line_R3_C8
+- microbenchmark/line_R4_C5
+- microbenchmark/line_R4_C6
+- microbenchmark/line_R4_C7
+- microbenchmark/line_R4_C8
+- microbenchmark/line_R5_C4
+- microbenchmark/line_R5_C5
+- microbenchmark/line_R5_C6
+- microbenchmark/line_R6_C3
+- microbenchmark/line_R6_C4
+- microbenchmark/line_R6_C5
+
+# ResNet 
+# (sequential_placer fails because it relied on partially-hinted placement, which we removed)
+- ResNet/default
+
+# microbenchmark line topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_13
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_14
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_15
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_16
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_17
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_18
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_19
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_20
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_21
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_22
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_23
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_24
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_25
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_26
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_27
+- microbenchmark_with_feedback_loop/feedback_loop_line_length_28
+
+# microbenchmark mesh topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R4_C5
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R4_C6
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R4_C7
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R4_C8
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R5_C4
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R5_C5
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R5_C6
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C3
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C4
+- microbenchmark_with_feedback_loop/feedback_loop_mesh_R6_C5
+
+# microbenchmark tree topology with feedback
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R3_C6
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R3_C7
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R3_C8
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R4_C5
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R4_C6
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R4_C7
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R4_C8
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R5_C4
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R5_C5
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R5_C6
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C3
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C4
+- microbenchmark_with_feedback_loop/feedback_loop_tree_R6_C5
