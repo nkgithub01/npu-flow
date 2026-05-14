@@ -2,7 +2,7 @@
 
 [**Benchmarks**](benchmarks/) | [**MLIR-AIE**](https://github.com/ueqri/mlir-aie) | [**NPU PnR**](npu-pnr/)
 
-[![License](https://img.shields.io/github/license/ueqri/npu-flow)](LICENSE)
+![GitHub](https://img.shields.io/github/license/ueqri/npu-flow?style=flat-square)
 
 NPU Flow is an open-source placement and routing (PnR) framework for spatial dataflow architectures, with first-class support for AMD's AI Engine (AIE) arrays in Ryzen AI NPUs. It explicitly models the three AIE interconnect types -- shared memory, circuit-switched NoC, and packet-switched NoC -- and jointly reasons about them during placement and routing. NPU Flow offers several key features:
 
