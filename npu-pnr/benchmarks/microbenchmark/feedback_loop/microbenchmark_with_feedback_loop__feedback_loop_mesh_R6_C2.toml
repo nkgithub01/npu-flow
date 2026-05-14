@@ -1,0 +1,61 @@
+[node]
+shim_9 = "0,1"
+shim_8 = "0,0"
+mem_10 = "1,0"
+comp_1 = "2,1"
+comp_0 = "2,0"
+comp_5 = "4,1"
+mem_11 = "1,1"
+comp_2 = "3,0"
+comp_7 = "5,1"
+comp_3 = "3,1"
+comp_4 = "4,0"
+comp_6 = "5,0"
+
+[edge]
+2 = [ "comp_1->comp_3", [ 2, 2 ], 4 ]
+19 = [ "mem_11->shim_9", [ 2, 2 ], 4 ]
+6 = [ "comp_3->comp_5", [ 2, 2 ], 4 ]
+17 = [ "mem_10->comp_2", [ 2, 2 ], 4 ]
+7 = [ "comp_3->comp_2", [ 2, 2 ], 4 ]
+16 = [ "shim_8->mem_10", [ 2, 2 ], 4 ]
+3 = [ "comp_1->comp_0", [ 2, 2 ], 4 ]
+8 = [ "comp_4->comp_6", [ 2, 2 ], 4 ]
+5 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+4 = [ "comp_2->comp_4", [ 2, 2 ], 4 ]
+10 = [ "comp_5->comp_7", [ 2, 2 ], 4 ]
+1 = [ "comp_0->comp_1", [ 2, 2 ], 4 ]
+0 = [ "comp_0->comp_2", [ 2, 2 ], 4 ]
+9 = [ "comp_4->comp_5", [ 2, 2 ], 4 ]
+18 = [ "comp_1->mem_11", [ 2, 2 ], 4 ]
+11 = [ "comp_5->comp_4", [ 2, 2 ], 4 ]
+12 = [ "comp_6->comp_0", [ 2, 2 ], 4 ]
+15 = [ "comp_7->comp_6", [ 2, 2 ], 4 ]
+13 = [ "comp_6->comp_7", [ 2, 2 ], 4 ]
+14 = [ "comp_7->comp_1", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "16->17"
+link_1 = "18->19"
+
+[route]
+2 = [ "neighbor_sharing", { comp_3 = [ "2,1" ] } ]
+19 = [ "circuit_switch", { shim_9 = [ "1,1", "0,1" ] } ]
+6 = [ "neighbor_sharing", { comp_5 = [ "3,1" ] } ]
+17 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0", "3,0" ] } ]
+7 = [ "neighbor_sharing", { comp_2 = [ "3,0" ] } ]
+16 = [ "circuit_switch", { mem_10 = [ "0,0", "1,0" ] } ]
+3 = [ "neighbor_sharing", { comp_0 = [ "2,0" ] } ]
+8 = [ "neighbor_sharing", { comp_6 = [ "4,0" ] } ]
+5 = [ "neighbor_sharing", { comp_3 = [ "3,0" ] } ]
+4 = [ "neighbor_sharing", { comp_4 = [ "3,0" ] } ]
+10 = [ "neighbor_sharing", { comp_7 = [ "4,1" ] } ]
+1 = [ "neighbor_sharing", { comp_1 = [ "2,0" ] } ]
+0 = [ "neighbor_sharing", { comp_2 = [ "2,0" ] } ]
+9 = [ "neighbor_sharing", { comp_5 = [ "4,0" ] } ]
+18 = [ "circuit_switch", { mem_11 = [ "2,1", "1,1" ] } ]
+11 = [ "neighbor_sharing", { comp_4 = [ "4,0" ] } ]
+12 = [ "circuit_switch", { comp_0 = [ "5,0", "4,0", "3,0", "2,0" ] } ]
+15 = [ "neighbor_sharing", { comp_6 = [ "5,0" ] } ]
+13 = [ "neighbor_sharing", { comp_7 = [ "5,0" ] } ]
+14 = [ "circuit_switch", { comp_1 = [ "5,1", "4,1", "3,1", "2,1" ] } ]

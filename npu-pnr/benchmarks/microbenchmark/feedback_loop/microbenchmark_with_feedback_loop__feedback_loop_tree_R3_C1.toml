@@ -1,0 +1,22 @@
+[node]
+shim_1 = "0,0"
+mem_2 = "1,0"
+comp_0 = "2,0"
+
+[edge]
+0 = [ "comp_0->mem_2", [ 2, 2 ], 4 ]
+1 = [ "mem_2->shim_1", [ 2, 2 ], 4 ]
+3 = [ "mem_2->comp_0", [ 2, 2 ], 4 ]
+2 = [ "shim_1->mem_2", [ 2, 2 ], 4 ]
+4 = [ "comp_0->comp_0", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "0->1"
+link_1 = "2->3"
+
+[route]
+0 = [ "circuit_switch", { mem_2 = [ "2,0", "1,0" ] } ]
+1 = [ "circuit_switch", { shim_1 = [ "1,0", "0,0" ] } ]
+3 = [ "circuit_switch", { comp_0 = [ "1,0", "2,0" ] } ]
+2 = [ "circuit_switch", { mem_2 = [ "0,0", "1,0" ] } ]
+4 = [ "intra_tile", { comp_0 = [ "2,0" ] } ]

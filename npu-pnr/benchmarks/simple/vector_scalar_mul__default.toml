@@ -1,0 +1,13 @@
+[node]
+comp_1 = "2,0"
+shim_0 = "0,0"
+
+[edge]
+0 = [ "shim_0->comp_1", [ 2, 2 ], 2048 ]
+1 = [ "shim_0->comp_1", [ 2, 2 ], 4 ]
+2 = [ "comp_1->shim_0", [ 2, 2 ], 2048 ]
+
+[route]
+0 = [ "circuit_switch", { comp_1 = [ "0,0", "1,0", "2,0" ] } ]
+1 = [ "circuit_switch", { comp_1 = [ "0,0", "1,0", "2,0" ] } ]
+2 = [ "circuit_switch", { shim_0 = [ "2,0", "1,0", "0,0" ] } ]

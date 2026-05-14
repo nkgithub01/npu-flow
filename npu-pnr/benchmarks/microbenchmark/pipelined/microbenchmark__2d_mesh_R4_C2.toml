@@ -1,0 +1,43 @@
+[node]
+comp_2 = "2,0"
+mem_1 = "1,0"
+shim_0 = "0,0"
+shim_4 = "0,1"
+mem_5 = "1,1"
+comp_6 = "2,1"
+comp_3 = "3,0"
+comp_7 = "3,1"
+
+[edge]
+0 = [ "shim_0->mem_1", [ 2, 2 ], 4 ]
+10 = [ "comp_7->mem_5", [ 2, 2 ], 4 ]
+1 = [ "mem_1->comp_2", [ 2, 2 ], 4 ]
+3 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+5 = [ "comp_3->mem_1", [ 2, 2 ], 4 ]
+11 = [ "mem_5->shim_4", [ 2, 2 ], 4 ]
+2 = [ "comp_2->comp_6", [ 2, 2 ], 4 ]
+4 = [ "comp_3->comp_7", [ 2, 2 ], 4 ]
+6 = [ "mem_1->shim_0", [ 2, 2 ], 4 ]
+7 = [ "shim_4->mem_5", [ 2, 2 ], 4 ]
+8 = [ "mem_5->comp_6", [ 2, 2 ], 4 ]
+9 = [ "comp_6->comp_7", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "0->1"
+link_2 = "7->8"
+link_3 = "10->11"
+link_1 = "5->6"
+
+[route]
+0 = [ "circuit_switch", { mem_1 = [ "0,0", "1,0" ] } ]
+10 = [ "circuit_switch", { mem_5 = [ "3,1", "2,1", "1,1" ] } ]
+1 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0" ] } ]
+3 = [ "neighbor_sharing", { comp_3 = [ "2,0" ] } ]
+5 = [ "circuit_switch", { mem_1 = [ "3,0", "2,0", "1,0" ] } ]
+11 = [ "circuit_switch", { shim_4 = [ "1,1", "0,1" ] } ]
+2 = [ "neighbor_sharing", { comp_6 = [ "2,0" ] } ]
+4 = [ "neighbor_sharing", { comp_7 = [ "3,0" ] } ]
+6 = [ "circuit_switch", { shim_0 = [ "1,0", "0,0" ] } ]
+7 = [ "circuit_switch", { mem_5 = [ "0,1", "1,1" ] } ]
+8 = [ "circuit_switch", { comp_6 = [ "1,1", "2,1" ] } ]
+9 = [ "neighbor_sharing", { comp_7 = [ "2,1" ] } ]

@@ -1,0 +1,64 @@
+[node]
+shim_15 = "0,7"
+mem_16 = "1,7"
+shim_9 = "0,5"
+comp_17 = "2,7"
+comp_5 = "2,3"
+comp_14 = "2,6"
+comp_4 = "2,2"
+shim_6 = "0,4"
+comp_2 = "2,0"
+mem_13 = "1,6"
+comp_8 = "2,4"
+mem_7 = "1,4"
+mem_10 = "1,5"
+shim_12 = "0,6"
+mem_1 = "1,0"
+comp_11 = "2,5"
+shim_0 = "0,0"
+comp_3 = "2,1"
+
+[edge]
+4 = [ "comp_3->comp_5", [ 2, 2 ], 4 ]
+2 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+16 = [ "mem_16->shim_15", [ 2, 2 ], 4 ]
+3 = [ "comp_2->comp_4", [ 2, 2 ], 4 ]
+8 = [ "comp_5->comp_17", [ 2, 2 ], 4 ]
+7 = [ "comp_4->comp_14", [ 2, 2 ], 4 ]
+6 = [ "comp_4->comp_11", [ 2, 2 ], 4 ]
+10 = [ "mem_7->shim_6", [ 2, 2 ], 4 ]
+13 = [ "comp_14->mem_13", [ 2, 2 ], 4 ]
+15 = [ "comp_17->mem_16", [ 2, 2 ], 4 ]
+0 = [ "shim_0->mem_1", [ 2, 2 ], 4 ]
+9 = [ "comp_8->mem_7", [ 2, 2 ], 4 ]
+1 = [ "mem_1->comp_2", [ 2, 2 ], 4 ]
+5 = [ "comp_3->comp_8", [ 2, 2 ], 4 ]
+11 = [ "comp_11->mem_10", [ 2, 2 ], 4 ]
+12 = [ "mem_10->shim_9", [ 2, 2 ], 4 ]
+14 = [ "mem_13->shim_12", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "0->1"
+link_2 = "11->12"
+link_3 = "13->14"
+link_1 = "9->10"
+link_4 = "15->16"
+
+[route]
+4 = [ "circuit_switch", { comp_5 = [ "2,1", "2,2", "2,3" ] } ]
+2 = [ "neighbor_sharing", { comp_3 = [ "2,0" ] } ]
+16 = [ "circuit_switch", { shim_15 = [ "1,7", "0,7" ] } ]
+3 = [ "circuit_switch", { comp_4 = [ "2,0", "2,1", "2,2" ] } ]
+8 = [ "circuit_switch", { comp_17 = [ "2,3", "2,4", "2,5", "2,6", "2,7" ] } ]
+7 = [ "circuit_switch", { comp_14 = [ "2,2", "2,3", "2,4", "2,5", "2,6" ] } ]
+6 = [ "circuit_switch", { comp_11 = [ "2,2", "2,3", "2,4", "2,5" ] } ]
+10 = [ "circuit_switch", { shim_6 = [ "1,4", "0,4" ] } ]
+13 = [ "circuit_switch", { mem_13 = [ "2,6", "1,6" ] } ]
+15 = [ "circuit_switch", { mem_16 = [ "2,7", "1,7" ] } ]
+0 = [ "circuit_switch", { mem_1 = [ "0,0", "1,0" ] } ]
+9 = [ "circuit_switch", { mem_7 = [ "2,4", "1,4" ] } ]
+1 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0" ] } ]
+5 = [ "circuit_switch", { comp_8 = [ "2,1", "2,2", "2,3", "2,4" ] } ]
+11 = [ "circuit_switch", { mem_10 = [ "2,5", "1,5" ] } ]
+12 = [ "circuit_switch", { shim_9 = [ "1,5", "0,5" ] } ]
+14 = [ "circuit_switch", { shim_12 = [ "1,6", "0,6" ] } ]

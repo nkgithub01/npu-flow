@@ -1,0 +1,140 @@
+[node]
+comp_29 = "4,5"
+comp_27 = "2,5"
+comp_28 = "3,5"
+comp_18 = "3,3"
+mem_16 = "1,3"
+mem_1 = "1,0"
+mem_6 = "1,1"
+shim_0 = "0,0"
+mem_21 = "1,4"
+shim_20 = "0,4"
+mem_31 = "1,6"
+shim_25 = "0,5"
+comp_7 = "2,1"
+comp_32 = "2,6"
+comp_9 = "4,1"
+comp_17 = "2,3"
+comp_8 = "3,1"
+comp_4 = "4,0"
+comp_12 = "2,2"
+mem_11 = "1,2"
+comp_24 = "4,4"
+shim_5 = "0,1"
+mem_26 = "1,5"
+comp_2 = "2,0"
+comp_33 = "3,6"
+comp_14 = "4,2"
+comp_13 = "3,2"
+shim_10 = "0,2"
+comp_34 = "4,6"
+shim_15 = "0,3"
+comp_22 = "2,4"
+comp_3 = "3,0"
+comp_19 = "4,3"
+shim_30 = "0,6"
+comp_23 = "3,4"
+
+[edge]
+34 = [ "comp_29->mem_26", [ 2, 2 ], 4 ]
+14 = [ "comp_12->comp_13", [ 2, 2 ], 4 ]
+33 = [ "comp_28->comp_29", [ 2, 2 ], 4 ]
+31 = [ "mem_26->comp_27", [ 2, 2 ], 4 ]
+32 = [ "comp_27->comp_28", [ 2, 2 ], 4 ]
+26 = [ "comp_22->comp_23", [ 2, 2 ], 4 ]
+30 = [ "shim_25->mem_26", [ 2, 2 ], 4 ]
+3 = [ "comp_3->comp_4", [ 2, 2 ], 4 ]
+6 = [ "shim_5->mem_6", [ 2, 2 ], 4 ]
+25 = [ "mem_21->comp_22", [ 2, 2 ], 4 ]
+2 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+24 = [ "shim_20->mem_21", [ 2, 2 ], 4 ]
+29 = [ "mem_21->shim_20", [ 2, 2 ], 4 ]
+15 = [ "comp_13->comp_14", [ 2, 2 ], 4 ]
+13 = [ "mem_11->comp_12", [ 2, 2 ], 4 ]
+19 = [ "mem_16->comp_17", [ 2, 2 ], 4 ]
+37 = [ "mem_31->comp_32", [ 2, 2 ], 4 ]
+38 = [ "comp_32->comp_33", [ 2, 2 ], 4 ]
+8 = [ "comp_7->comp_8", [ 2, 2 ], 4 ]
+4 = [ "comp_4->mem_1", [ 2, 2 ], 4 ]
+5 = [ "mem_1->shim_0", [ 2, 2 ], 4 ]
+16 = [ "comp_14->mem_11", [ 2, 2 ], 4 ]
+41 = [ "mem_31->shim_30", [ 2, 2 ], 4 ]
+28 = [ "comp_24->mem_21", [ 2, 2 ], 4 ]
+10 = [ "comp_9->mem_6", [ 2, 2 ], 4 ]
+7 = [ "mem_6->comp_7", [ 2, 2 ], 4 ]
+9 = [ "comp_8->comp_9", [ 2, 2 ], 4 ]
+40 = [ "comp_34->mem_31", [ 2, 2 ], 4 ]
+17 = [ "mem_11->shim_10", [ 2, 2 ], 4 ]
+0 = [ "shim_0->mem_1", [ 2, 2 ], 4 ]
+22 = [ "comp_19->mem_16", [ 2, 2 ], 4 ]
+12 = [ "shim_10->mem_11", [ 2, 2 ], 4 ]
+39 = [ "comp_33->comp_34", [ 2, 2 ], 4 ]
+11 = [ "mem_6->shim_5", [ 2, 2 ], 4 ]
+18 = [ "shim_15->mem_16", [ 2, 2 ], 4 ]
+1 = [ "mem_1->comp_2", [ 2, 2 ], 4 ]
+36 = [ "shim_30->mem_31", [ 2, 2 ], 4 ]
+27 = [ "comp_23->comp_24", [ 2, 2 ], 4 ]
+35 = [ "mem_26->shim_25", [ 2, 2 ], 4 ]
+20 = [ "comp_17->comp_18", [ 2, 2 ], 4 ]
+23 = [ "mem_16->shim_15", [ 2, 2 ], 4 ]
+21 = [ "comp_18->comp_19", [ 2, 2 ], 4 ]
+
+[linking]
+link_9 = "28->29"
+link_0 = "0->1"
+link_2 = "6->7"
+link_3 = "10->11"
+link_6 = "18->19"
+link_8 = "24->25"
+link_1 = "4->5"
+link_11 = "34->35"
+link_4 = "12->13"
+link_7 = "22->23"
+link_13 = "40->41"
+link_5 = "16->17"
+link_12 = "36->37"
+link_10 = "30->31"
+
+[route]
+34 = [ "circuit_switch", { mem_26 = [ "4,5", "3,5", "2,5", "1,5" ] } ]
+14 = [ "neighbor_sharing", { comp_13 = [ "2,2" ] } ]
+33 = [ "neighbor_sharing", { comp_29 = [ "3,5" ] } ]
+31 = [ "circuit_switch", { comp_27 = [ "1,5", "2,5" ] } ]
+32 = [ "neighbor_sharing", { comp_28 = [ "3,5" ] } ]
+26 = [ "neighbor_sharing", { comp_23 = [ "2,4" ] } ]
+30 = [ "circuit_switch", { mem_26 = [ "0,5", "1,5" ] } ]
+3 = [ "neighbor_sharing", { comp_4 = [ "3,0" ] } ]
+6 = [ "circuit_switch", { mem_6 = [ "0,1", "1,1" ] } ]
+25 = [ "circuit_switch", { comp_22 = [ "1,4", "2,4" ] } ]
+2 = [ "neighbor_sharing", { comp_3 = [ "2,0" ] } ]
+24 = [ "circuit_switch", { mem_21 = [ "0,4", "1,4" ] } ]
+29 = [ "circuit_switch", { shim_20 = [ "1,4", "0,4" ] } ]
+15 = [ "neighbor_sharing", { comp_14 = [ "3,2" ] } ]
+13 = [ "circuit_switch", { comp_12 = [ "1,2", "2,2" ] } ]
+19 = [ "circuit_switch", { comp_17 = [ "1,3", "2,3" ] } ]
+37 = [ "circuit_switch", { comp_32 = [ "1,6", "2,6" ] } ]
+38 = [ "neighbor_sharing", { comp_33 = [ "2,6" ] } ]
+8 = [ "neighbor_sharing", { comp_8 = [ "2,1" ] } ]
+4 = [ "circuit_switch", { mem_1 = [ "4,0", "3,0", "2,0", "1,0" ] } ]
+5 = [ "circuit_switch", { shim_0 = [ "1,0", "0,0" ] } ]
+16 = [ "circuit_switch", { mem_11 = [ "4,2", "3,2", "2,2", "1,2" ] } ]
+41 = [ "circuit_switch", { shim_30 = [ "1,6", "0,6" ] } ]
+28 = [ "circuit_switch", { mem_21 = [ "4,4", "3,4", "2,4", "1,4" ] } ]
+10 = [ "circuit_switch", { mem_6 = [ "4,1", "3,1", "2,1", "1,1" ] } ]
+7 = [ "circuit_switch", { comp_7 = [ "1,1", "2,1" ] } ]
+9 = [ "neighbor_sharing", { comp_9 = [ "3,1" ] } ]
+40 = [ "circuit_switch", { mem_31 = [ "4,6", "3,6", "2,6", "1,6" ] } ]
+17 = [ "circuit_switch", { shim_10 = [ "1,2", "0,2" ] } ]
+0 = [ "circuit_switch", { mem_1 = [ "0,0", "1,0" ] } ]
+22 = [ "circuit_switch", { mem_16 = [ "4,3", "3,3", "2,3", "1,3" ] } ]
+12 = [ "circuit_switch", { mem_11 = [ "0,2", "1,2" ] } ]
+39 = [ "neighbor_sharing", { comp_34 = [ "3,6" ] } ]
+11 = [ "circuit_switch", { shim_5 = [ "1,1", "0,1" ] } ]
+18 = [ "circuit_switch", { mem_16 = [ "0,3", "1,3" ] } ]
+1 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0" ] } ]
+36 = [ "circuit_switch", { mem_31 = [ "0,6", "1,6" ] } ]
+27 = [ "neighbor_sharing", { comp_24 = [ "3,4" ] } ]
+35 = [ "circuit_switch", { shim_25 = [ "1,5", "0,5" ] } ]
+20 = [ "neighbor_sharing", { comp_18 = [ "2,3" ] } ]
+23 = [ "circuit_switch", { shim_15 = [ "1,3", "0,3" ] } ]
+21 = [ "neighbor_sharing", { comp_19 = [ "3,3" ] } ]

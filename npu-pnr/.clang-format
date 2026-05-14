@@ -1,0 +1,7 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+# Force pointer to align on the type for C++
+DerivePointerAlignment: false
+PointerAlignment: Left
+...

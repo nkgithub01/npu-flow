@@ -1,0 +1,20 @@
+add_executable(netlist_translator netlist_translator.cpp)
+target_compile_features(netlist_translator PRIVATE cxx_std_20)
+target_link_libraries(netlist_translator PRIVATE npu_pnr)
+target_include_directories(netlist_translator PUBLIC ${PROJECT_SOURCE_DIR}/external_libs)
+
+add_executable(netlist_visualizer netlist_visualizer.cpp)
+target_compile_features(netlist_visualizer PRIVATE cxx_std_20)
+target_link_libraries(netlist_visualizer PRIVATE npu_pnr)
+target_include_directories(netlist_visualizer PUBLIC ${PROJECT_SOURCE_DIR}/external_libs)
+
+find_package(SQLite3 REQUIRED)
+add_executable(telemetry_query telemetry_query.cpp)
+target_compile_features(telemetry_query PRIVATE cxx_std_20)
+target_link_libraries(telemetry_query PRIVATE npu_pnr ${SQLite3_LIBRARIES})
+target_include_directories(telemetry_query PUBLIC ${PROJECT_SOURCE_DIR}/external_libs)
+
+add_executable(update_regression_cases update_regression_cases.cpp)
+target_compile_features(update_regression_cases PRIVATE cxx_std_20)
+target_link_libraries(update_regression_cases PRIVATE npu_pnr)
+target_include_directories(update_regression_cases PUBLIC ${PROJECT_SOURCE_DIR}/external_libs)

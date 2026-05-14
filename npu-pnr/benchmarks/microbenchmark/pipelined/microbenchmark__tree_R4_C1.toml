@@ -1,0 +1,23 @@
+[node]
+comp_2 = "2,0"
+comp_3 = "3,0"
+mem_1 = "1,0"
+shim_0 = "0,0"
+
+[edge]
+0 = [ "shim_0->mem_1", [ 2, 2 ], 4 ]
+1 = [ "mem_1->comp_2", [ 2, 2 ], 4 ]
+3 = [ "comp_3->mem_1", [ 2, 2 ], 4 ]
+2 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+4 = [ "mem_1->shim_0", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "0->1"
+link_1 = "3->4"
+
+[route]
+0 = [ "circuit_switch", { mem_1 = [ "0,0", "1,0" ] } ]
+1 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0" ] } ]
+3 = [ "circuit_switch", { mem_1 = [ "3,0", "2,0", "1,0" ] } ]
+2 = [ "neighbor_sharing", { comp_3 = [ "2,0" ] } ]
+4 = [ "circuit_switch", { shim_0 = [ "1,0", "0,0" ] } ]

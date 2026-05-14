@@ -1,0 +1,66 @@
+[node]
+shim_18 = "0,1"
+comp_14 = "4,1"
+comp_13 = "4,2"
+comp_12 = "4,3"
+comp_9 = "5,4"
+comp_4 = "4,0"
+comp_5 = "5,0"
+comp_7 = "5,2"
+mem_17 = "1,1"
+comp_3 = "3,0"
+comp_6 = "5,1"
+comp_10 = "5,5"
+comp_16 = "2,1"
+mem_1 = "1,0"
+comp_11 = "4,4"
+shim_0 = "0,0"
+comp_2 = "2,0"
+comp_8 = "5,3"
+comp_15 = "3,1"
+
+[edge]
+2 = [ "comp_2->comp_3", [ 2, 2 ], 1024 ]
+17 = [ "mem_17->shim_18", [ 2, 2 ], 1024 ]
+7 = [ "comp_7->comp_8", [ 2, 2 ], 1024 ]
+16 = [ "comp_16->mem_17", [ 2, 2 ], 1024 ]
+3 = [ "comp_3->comp_4", [ 2, 2 ], 1024 ]
+14 = [ "comp_14->comp_15", [ 2, 2 ], 1024 ]
+8 = [ "comp_8->comp_9", [ 2, 2 ], 1024 ]
+6 = [ "comp_6->comp_7", [ 2, 2 ], 1024 ]
+5 = [ "comp_5->comp_6", [ 2, 2 ], 1024 ]
+4 = [ "comp_4->comp_5", [ 2, 2 ], 1024 ]
+10 = [ "comp_10->comp_11", [ 2, 2 ], 1024 ]
+1 = [ "mem_1->comp_2", [ 2, 2 ], 1024 ]
+0 = [ "shim_0->mem_1", [ 2, 2 ], 1024 ]
+9 = [ "comp_9->comp_10", [ 2, 2 ], 1024 ]
+18 = [ "comp_15->comp_3", [ 2, 2 ], 1024 ]
+11 = [ "comp_11->comp_12", [ 2, 2 ], 1024 ]
+12 = [ "comp_12->comp_13", [ 2, 2 ], 1024 ]
+15 = [ "comp_15->comp_16", [ 2, 2 ], 1024 ]
+13 = [ "comp_13->comp_14", [ 2, 2 ], 1024 ]
+
+[linking]
+link_0 = "0->1"
+link_1 = "16->17"
+
+[route]
+2 = [ "neighbor_sharing", { comp_3 = [ "2,0" ] } ]
+17 = [ "circuit_switch", { shim_18 = [ "1,1", "0,1" ] } ]
+7 = [ "neighbor_sharing", { comp_8 = [ "5,2" ] } ]
+16 = [ "circuit_switch", { mem_17 = [ "2,1", "1,1" ] } ]
+3 = [ "neighbor_sharing", { comp_4 = [ "3,0" ] } ]
+14 = [ "neighbor_sharing", { comp_15 = [ "4,1" ] } ]
+8 = [ "neighbor_sharing", { comp_9 = [ "5,3" ] } ]
+6 = [ "neighbor_sharing", { comp_7 = [ "5,1" ] } ]
+5 = [ "neighbor_sharing", { comp_6 = [ "5,0" ] } ]
+4 = [ "neighbor_sharing", { comp_5 = [ "4,0" ] } ]
+10 = [ "circuit_switch", { comp_11 = [ "5,5", "5,4", "4,4" ] } ]
+1 = [ "circuit_switch", { comp_2 = [ "1,0", "2,0" ] } ]
+0 = [ "circuit_switch", { mem_1 = [ "0,0", "1,0" ] } ]
+9 = [ "neighbor_sharing", { comp_10 = [ "5,4" ] } ]
+18 = [ "neighbor_sharing", { comp_3 = [ "3,0" ] } ]
+11 = [ "neighbor_sharing", { comp_12 = [ "4,3" ] } ]
+12 = [ "neighbor_sharing", { comp_13 = [ "4,2" ] } ]
+15 = [ "neighbor_sharing", { comp_16 = [ "3,1" ] } ]
+13 = [ "neighbor_sharing", { comp_14 = [ "4,1" ] } ]

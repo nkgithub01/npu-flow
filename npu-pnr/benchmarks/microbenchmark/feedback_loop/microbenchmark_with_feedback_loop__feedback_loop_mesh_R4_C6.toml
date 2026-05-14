@@ -1,0 +1,81 @@
+[node]
+comp_7 = "3,1"
+comp_9 = "3,3"
+comp_1 = "2,1"
+comp_10 = "3,4"
+shim_13 = "0,5"
+comp_3 = "2,3"
+comp_2 = "2,2"
+comp_8 = "3,2"
+shim_12 = "0,0"
+mem_15 = "1,5"
+comp_5 = "2,5"
+comp_4 = "2,4"
+comp_0 = "2,0"
+comp_6 = "3,0"
+mem_14 = "1,0"
+comp_11 = "3,5"
+
+[edge]
+2 = [ "comp_1->comp_7", [ 2, 2 ], 4 ]
+19 = [ "comp_9->comp_10", [ 2, 2 ], 4 ]
+6 = [ "comp_3->comp_9", [ 2, 2 ], 4 ]
+17 = [ "comp_8->comp_9", [ 2, 2 ], 4 ]
+7 = [ "comp_3->comp_4", [ 2, 2 ], 4 ]
+16 = [ "comp_8->comp_2", [ 2, 2 ], 4 ]
+3 = [ "comp_1->comp_2", [ 2, 2 ], 4 ]
+14 = [ "comp_7->comp_1", [ 2, 2 ], 4 ]
+26 = [ "comp_5->mem_15", [ 2, 2 ], 4 ]
+13 = [ "comp_6->comp_7", [ 2, 2 ], 4 ]
+15 = [ "comp_7->comp_8", [ 2, 2 ], 4 ]
+12 = [ "comp_6->comp_0", [ 2, 2 ], 4 ]
+11 = [ "comp_5->comp_0", [ 2, 2 ], 4 ]
+18 = [ "comp_9->comp_3", [ 2, 2 ], 4 ]
+8 = [ "comp_4->comp_10", [ 2, 2 ], 4 ]
+5 = [ "comp_2->comp_3", [ 2, 2 ], 4 ]
+4 = [ "comp_2->comp_8", [ 2, 2 ], 4 ]
+25 = [ "mem_14->comp_6", [ 2, 2 ], 4 ]
+24 = [ "shim_12->mem_14", [ 2, 2 ], 4 ]
+23 = [ "comp_11->comp_6", [ 2, 2 ], 4 ]
+21 = [ "comp_10->comp_11", [ 2, 2 ], 4 ]
+20 = [ "comp_10->comp_4", [ 2, 2 ], 4 ]
+27 = [ "mem_15->shim_13", [ 2, 2 ], 4 ]
+10 = [ "comp_5->comp_11", [ 2, 2 ], 4 ]
+1 = [ "comp_0->comp_1", [ 2, 2 ], 4 ]
+22 = [ "comp_11->comp_5", [ 2, 2 ], 4 ]
+9 = [ "comp_4->comp_5", [ 2, 2 ], 4 ]
+0 = [ "comp_0->comp_6", [ 2, 2 ], 4 ]
+
+[linking]
+link_0 = "24->25"
+link_1 = "26->27"
+
+[route]
+2 = [ "neighbor_sharing", { comp_7 = [ "2,1" ] } ]
+19 = [ "neighbor_sharing", { comp_10 = [ "3,3" ] } ]
+6 = [ "neighbor_sharing", { comp_9 = [ "2,3" ] } ]
+17 = [ "neighbor_sharing", { comp_9 = [ "3,2" ] } ]
+7 = [ "neighbor_sharing", { comp_4 = [ "2,3" ] } ]
+16 = [ "neighbor_sharing", { comp_2 = [ "2,2" ] } ]
+3 = [ "neighbor_sharing", { comp_2 = [ "2,1" ] } ]
+14 = [ "neighbor_sharing", { comp_1 = [ "3,1" ] } ]
+26 = [ "circuit_switch", { mem_15 = [ "2,5", "1,5" ] } ]
+13 = [ "neighbor_sharing", { comp_7 = [ "3,0" ] } ]
+15 = [ "neighbor_sharing", { comp_8 = [ "3,1" ] } ]
+12 = [ "neighbor_sharing", { comp_0 = [ "2,0" ] } ]
+11 = [ "circuit_switch", { comp_0 = [ "2,5", "2,4", "2,3", "2,2", "2,1", "2,0" ] } ]
+18 = [ "neighbor_sharing", { comp_3 = [ "3,3" ] } ]
+8 = [ "neighbor_sharing", { comp_10 = [ "2,4" ] } ]
+5 = [ "neighbor_sharing", { comp_3 = [ "2,2" ] } ]
+4 = [ "neighbor_sharing", { comp_8 = [ "2,2" ] } ]
+25 = [ "circuit_switch", { comp_6 = [ "1,0", "2,0", "3,0" ] } ]
+24 = [ "circuit_switch", { mem_14 = [ "0,0", "1,0" ] } ]
+23 = [ "circuit_switch", { comp_6 = [ "3,5", "3,4", "3,3", "3,2", "3,1", "3,0" ] } ]
+21 = [ "neighbor_sharing", { comp_11 = [ "3,4" ] } ]
+20 = [ "neighbor_sharing", { comp_4 = [ "3,4" ] } ]
+27 = [ "circuit_switch", { shim_13 = [ "1,5", "0,5" ] } ]
+10 = [ "neighbor_sharing", { comp_11 = [ "2,5" ] } ]
+1 = [ "neighbor_sharing", { comp_1 = [ "2,0" ] } ]
+22 = [ "neighbor_sharing", { comp_5 = [ "3,5" ] } ]
+9 = [ "neighbor_sharing", { comp_5 = [ "2,4" ] } ]
+0 = [ "neighbor_sharing", { comp_6 = [ "2,0" ] } ]
