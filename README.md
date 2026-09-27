@@ -29,17 +29,17 @@ Please check out [`docs/`](docs/) for installation instructions and tutorials. I
 
 ## Publication
 
-If you use NPU Flow in your research, please cite our FCCM'26 paper:
+If you use NPU Flow in your research, please cite [our FCCM'26 paper (best paper nominee)](https://doi.org/10.1109/FCCM68464.2026.00015):
 
-> Hang Yan, James Yen, Rongbo Zhang, Andrew Boutros, and Vaughn Betz, "**The Optimal, The Fast, and The Hybrid: Automatic Placement and Routing for AIE Arrays**", *IEEE International Symposium on Field-Programmable Custom Computing Machines (FCCM)*, to appear, 2026.
+> Hang Yan, James Yen, Rongbo Zhang, Andrew Boutros, and Vaughn Betz, "**The Optimal, The Fast, and The Hybrid: Automatic Placement and Routing for AIE Arrays**," *2026 IEEE 34th Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM)*, Atlanta, GA, USA, 2026.
 
 ```bibtex
 @inproceedings{npu-flow-fccm26,
   title     = {The Optimal, The Fast, and The Hybrid: Automatic Placement and Routing for {AIE} Arrays},
   author    = {Yan, Hang and Yen, James and Zhang, Rongbo and Boutros, Andrew and Betz, Vaughn},
-  booktitle = {IEEE International Symposium on Field-Programmable Custom Computing Machines (FCCM)},
+  booktitle = {IEEE 34th Annual International Symposium on Field-Programmable Custom Computing Machines (FCCM)},
   year      = {2026},
-  note      = {To appear}
+  doi       = {10.1109/FCCM68464.2026.00015}
 }
 ```
 
